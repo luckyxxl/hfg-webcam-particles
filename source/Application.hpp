@@ -18,5 +18,7 @@ class Application {
   uint32_t webcam_width, webcam_height;
   std::vector<float> webcam_frame;
 
-  GLuint position_buffer, rgb_buffer;
+  GLuint program;
+
+  GLuint vertex_buffer;
 };

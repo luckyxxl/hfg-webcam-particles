@@ -5,7 +5,6 @@
 Resources::Resources(const char *argv0) {
   rootPath = argv0;
   rootPath.erase(rootPath.find_last_of("/") + 1);
-  std::cout << rootPath << "\n";
 }
 
 Resources::~Resources() {

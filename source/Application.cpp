@@ -2,6 +2,11 @@
 
 #include "Application.hpp"
 
+struct Particle {
+  float position[2];
+  float rgb[3];
+};
+
 Application::Application(Resources *resources, Webcam *_webcam) : webcam(_webcam) {
   webcam->getFrameSize(webcam_width, webcam_height);
   webcam_frame.resize(webcam_width * webcam_height * 3);
@@ -19,7 +24,7 @@ Application::Application(Resources *resources, Webcam *_webcam) : webcam(_webcam
     glShaderSource(fragment_shader, 1, &fs, nullptr);
     glCompileShader(fragment_shader);
 
-    GLuint program = glCreateProgram();
+    program = glCreateProgram();
     glAttachShader(program, vertex_shader);
     glAttachShader(program, fragment_shader);
     glBindAttribLocation(program, 0, "v_position");
@@ -27,31 +32,26 @@ Application::Application(Resources *resources, Webcam *_webcam) : webcam(_webcam
     glLinkProgram(program);
 
     glUseProgram(program);
+
+    glDeleteShader(fragment_shader);
+    glDeleteShader(vertex_shader);
   }
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_ONE, GL_ONE);
 
-  glGenBuffers(1, &position_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, position_buffer);
-  {
-    std::vector<float> data(webcam_width * webcam_height * 2);
-    for(uint32_t y=0; y<webcam_height; ++y) for(uint32_t x=0; x<webcam_width; ++x) {
-      data[(y*webcam_width+x)*2+0] = x / (float)webcam_width;
-      data[(y*webcam_width+x)*2+1] = y / (float)webcam_height;
-    }
-    glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), data.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glEnableVertexAttribArray(0);
-  }
-  glGenBuffers(1, &rgb_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, rgb_buffer);
-  glBufferData(GL_ARRAY_BUFFER, webcam_width * webcam_height * 3 * sizeof(float), nullptr, GL_STATIC_DRAW);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+  glGenBuffers(1, &vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+  glBufferData(GL_ARRAY_BUFFER, webcam_width * webcam_height * sizeof(Particle), nullptr, GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Particle), reinterpret_cast<void*>(offsetof(Particle, position)));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), reinterpret_cast<void*>(offsetof(Particle, rgb)));
   glEnableVertexAttribArray(1);
 }
 
 Application::~Application() {
+  glDeleteBuffers(1, &vertex_buffer);
+  glDeleteProgram(program);
 }
 
 void Application::reshape(uint32_t width, uint32_t height) {
@@ -64,8 +64,21 @@ void Application::handleEvent(const SDL_Event &event) {
 }
 
 void Application::update(float dt) {
-	webcam->getFrame(webcam_frame.data());
-	glBufferSubData(GL_ARRAY_BUFFER, 0, webcam_frame.size() * sizeof(float), webcam_frame.data());
+  webcam->getFrame(webcam_frame.data());
+  {
+    std::vector<Particle> data(webcam_width * webcam_height);
+    for(size_t i=0; i<data.size(); ++i) {
+      auto &particle = data[i];
+      auto x = i % webcam_width;
+      auto y = i / webcam_width;
+      particle.position[0] = x / (float)webcam_width;
+      particle.position[1] = y / (float)webcam_height;
+      particle.rgb[0] = webcam_frame[(y*webcam_width+x)*3+0];
+      particle.rgb[1] = webcam_frame[(y*webcam_width+x)*3+1];
+      particle.rgb[2] = webcam_frame[(y*webcam_width+x)*3+2];
+    }
+    glBufferSubData(GL_ARRAY_BUFFER, 0, data.size() * sizeof(Particle), data.data());
+  }
 }
 
 void Application::render() {
