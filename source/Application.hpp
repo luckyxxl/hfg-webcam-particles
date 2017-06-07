@@ -19,6 +19,7 @@ class Application {
   std::vector<float> webcam_frame;
 
   GLuint program;
+  GLint time_location;
 
   GLuint vertex_array;
   GLuint vertex_buffer;
