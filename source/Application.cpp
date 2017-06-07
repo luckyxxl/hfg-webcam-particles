@@ -11,6 +11,8 @@ Application::Application(Resources *resources, Webcam *_webcam) : webcam(_webcam
   webcam->getFrameSize(webcam_width, webcam_height);
   webcam_frame.resize(webcam_width * webcam_height * 3);
 
+  glEnable(GL_PROGRAM_POINT_SIZE);
+
   {
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     auto vertex_shader_source = resources->readWholeFile("test.glslv");
@@ -40,6 +42,9 @@ Application::Application(Resources *resources, Webcam *_webcam) : webcam(_webcam
   glEnable(GL_BLEND);
   glBlendFunc(GL_ONE, GL_ONE);
 
+  glGenVertexArrays(1, &vertex_array);
+  glBindVertexArray(vertex_array);
+
   glGenBuffers(1, &vertex_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER, webcam_width * webcam_height * sizeof(Particle), nullptr, GL_STATIC_DRAW);
@@ -51,6 +56,7 @@ Application::Application(Resources *resources, Webcam *_webcam) : webcam(_webcam
 
 Application::~Application() {
   glDeleteBuffers(1, &vertex_buffer);
+  glDeleteVertexArrays(1, &vertex_array);
   glDeleteProgram(program);
 }
 

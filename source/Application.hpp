@@ -20,5 +20,6 @@ class Application {
 
   GLuint program;
 
+  GLuint vertex_array;
   GLuint vertex_buffer;
 };
