@@ -110,9 +110,8 @@ static void rgb2Hsv(float *hsv, const float *rgb) {
 }
 
 void Application::update(float dt) {
-  auto frame = webcam_buffer.startCopyNew(current_frame_dataId_state);
+  auto frame = webcam_buffer.startCopyNew();
   if(frame) {
-    //TODO: do this conversion in the webcam thread ?
     for(size_t i=0; i<current_frame_data.size(); ++i) {
       auto &particle = current_frame_data[i];
       auto x = i % webcam_width;

@@ -30,7 +30,6 @@ class Application {
   std::thread webcam_thread;
   ThreadSyncTripleBuffer<std::vector<float>> webcam_buffer;
 
-  uint32_t current_frame_dataId_state = 0;
   std::vector<Particle> current_frame_data;
 
   GLuint program;
