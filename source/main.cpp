@@ -1,7 +1,6 @@
 #include "main.hpp"
 
 #include "Resources.hpp"
-#include "Webcam.hpp"
 #include "Application.hpp"
 
 static bool handleEvents(Application *application) {
@@ -33,7 +32,6 @@ int main(int argc, const char *argv[]) {
   Resources *resources = nullptr;
   SDL_Window *window = nullptr;
   SDL_GLContext gl_context = nullptr;
-  Webcam *webcam = nullptr;
   Application *application = nullptr;
 
   resources = new Resources(argv[0]);
@@ -61,9 +59,7 @@ int main(int argc, const char *argv[]) {
 
   SDL_GL_SetSwapInterval(1);
 
-  webcam = new Webcam();
-
-  application = new Application(resources, webcam);
+  application = new Application(resources);
 
   {
     int w, h;
@@ -82,7 +78,6 @@ int main(int argc, const char *argv[]) {
 
   quit:
   delete application;
-  delete webcam;
   if(gl_context) SDL_GL_DeleteContext(gl_context);
   if(window) SDL_DestroyWindow(window);
   SDL_Quit();

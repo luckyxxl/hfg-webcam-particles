@@ -1,9 +1,11 @@
 #pragma once
 
 #include <algorithm>
+#include <atomic>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <SDL.h>

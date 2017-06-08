@@ -2,15 +2,20 @@
 
 #include "Application.hpp"
 
-struct Particle {
-  float position[2];
-  float rgb[3];
-  float hsv[3];
-};
-
-Application::Application(Resources *resources, Webcam *_webcam) : webcam(_webcam) {
+Application::Application(Resources *resources)
+  : kill_threads(false) {
+  webcam = new Webcam();
   webcam->getFrameSize(webcam_width, webcam_height);
-  webcam_frame.resize(webcam_width * webcam_height * 3);
+
+  for(auto i=0; i<webcam_buffer.size; ++i) {
+    auto &b = webcam_buffer.getBuffer(i);
+    b.resize(webcam_width * webcam_height * 3);
+    std::fill(b.begin(), b.end(), 0.f);
+  }
+
+  webcam_thread = std::thread([this] { this->webcamThreadFunc(); });
+
+  current_frame_data.resize(webcam_width * webcam_height);
 
   glEnable(GL_PROGRAM_POINT_SIZE);
 
@@ -61,9 +66,13 @@ Application::Application(Resources *resources, Webcam *_webcam) : webcam(_webcam
 }
 
 Application::~Application() {
+  kill_threads = true;
+
   glDeleteBuffers(1, &vertex_buffer);
   glDeleteVertexArrays(1, &vertex_array);
   glDeleteProgram(program);
+
+  webcam_thread.join();
 }
 
 void Application::reshape(uint32_t width, uint32_t height) {
@@ -101,22 +110,23 @@ static void rgb2Hsv(float *hsv, const float *rgb) {
 }
 
 void Application::update(float dt) {
-  webcam->getFrame(webcam_frame.data());
-  {
-    std::vector<Particle> data(webcam_width * webcam_height);
-    for(size_t i=0; i<data.size(); ++i) {
-      auto &particle = data[i];
+  auto frame = webcam_buffer.startCopyNew(current_frame_dataId_state);
+  if(frame) {
+    //TODO: do this conversion in the webcam thread ?
+    for(size_t i=0; i<current_frame_data.size(); ++i) {
+      auto &particle = current_frame_data[i];
       auto x = i % webcam_width;
       auto y = i / webcam_width;
       particle.position[0] = x / (float)webcam_width;
       particle.position[1] = y / (float)webcam_height;
-      particle.rgb[0] = webcam_frame[(y*webcam_width+x)*3+0];
-      particle.rgb[1] = webcam_frame[(y*webcam_width+x)*3+1];
-      particle.rgb[2] = webcam_frame[(y*webcam_width+x)*3+2];
+      particle.rgb[0] = (*frame)[(y*webcam_width+x)*3+0];
+      particle.rgb[1] = (*frame)[(y*webcam_width+x)*3+1];
+      particle.rgb[2] = (*frame)[(y*webcam_width+x)*3+2];
       rgb2Hsv(particle.hsv, particle.rgb);
     }
-    glBufferSubData(GL_ARRAY_BUFFER, 0, data.size() * sizeof(Particle), data.data());
+    glBufferSubData(GL_ARRAY_BUFFER, 0, current_frame_data.size() * sizeof(Particle), current_frame_data.data());
   }
+  webcam_buffer.finishCopy();
 }
 
 void Application::render() {
@@ -128,5 +138,13 @@ void Application::render() {
   {
     GLenum error = glGetError();
     if(error != GL_NO_ERROR) printf("opengl error: %d\n", error);
+  }
+}
+
+void Application::webcamThreadFunc() {
+  while(!kill_threads) {
+    auto &frame = webcam_buffer.startWrite();
+    webcam->getFrame(frame.data());
+    webcam_buffer.finishWrite();
   }
 }

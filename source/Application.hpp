@@ -2,10 +2,17 @@
 
 #include "Resources.hpp"
 #include "Webcam.hpp"
+#include "ThreadSyncTripleBuffer.hpp"
+
+struct Particle {
+  float position[2];
+  float rgb[3];
+  float hsv[3];
+};
 
 class Application {
   public:
-  Application(Resources *resources, Webcam *webcam);
+  Application(Resources *resources);
   ~Application();
 
   void handleEvent(const SDL_Event &event);
@@ -14,9 +21,17 @@ class Application {
   void render();
 
   private:
+  std::atomic<bool> kill_threads;
+
   Webcam *webcam;
   uint32_t webcam_width, webcam_height;
-  std::vector<float> webcam_frame;
+
+  void webcamThreadFunc();
+  std::thread webcam_thread;
+  ThreadSyncTripleBuffer<std::vector<float>> webcam_buffer;
+
+  uint32_t current_frame_dataId_state = 0;
+  std::vector<Particle> current_frame_data;
 
   GLuint program;
   GLint time_location;

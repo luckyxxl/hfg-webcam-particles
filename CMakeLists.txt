@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(hfg-webcam-particles LANGUAGES CXX)
 
-list(APPEND CMAKE_CXX_FLAGS "-std=c++14 -Wall")
+list(APPEND CMAKE_CXX_FLAGS "-std=c++14 -Wall -pthread")
 
 add_executable(webcam-particles
   source/Application.cpp
@@ -11,6 +11,7 @@ add_executable(webcam-particles
   source/main.hpp
   source/Resources.cpp
   source/Resources.hpp
+  source/ThreadSyncTripleBuffer.hpp
   source/Webcam.cpp
   source/Webcam.hpp
 )
