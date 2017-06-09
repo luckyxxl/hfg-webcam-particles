@@ -39,6 +39,7 @@ Application::Application(Resources *resources)
     glBindAttribLocation(program, 0, "v_position");
     glBindAttribLocation(program, 1, "v_rgb");
     glBindAttribLocation(program, 2, "v_hsv");
+    glBindAttribLocation(program, 3, "v_localEffectStrength");
     glLinkProgram(program);
 
     glUseProgram(program);
@@ -48,6 +49,7 @@ Application::Application(Resources *resources)
   }
 
   time_location = glGetUniformLocation(program, "time");
+  globalEffectTime_location = glGetUniformLocation(program, "globalEffectTime");
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_ONE, GL_ONE);
@@ -64,6 +66,8 @@ Application::Application(Resources *resources)
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), reinterpret_cast<void*>(offsetof(Particle, hsv)));
   glEnableVertexAttribArray(2);
+  glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), reinterpret_cast<void*>(offsetof(Particle, localEffectStrength)));
+  glEnableVertexAttribArray(3);
 }
 
 Application::~Application() {
@@ -113,19 +117,62 @@ static void rgb2Hsv(float *hsv, const float *rgb) {
 void Application::update(float dt) {
   auto frame = webcam_buffer.startCopyNew();
   if(frame) {
+    // first frame is background plate
+    //TODO: update this dynamically during runtime
+    if(background_frame.empty()) {
+      background_frame = *frame;
+    }
+
+    auto totalDifference = 0.f;
+
     for(size_t i=0; i<current_frame_data.size(); ++i) {
       auto &particle = current_frame_data[i];
       auto x = i % webcam_width;
       auto y = i / webcam_width;
       particle.position[0] = x / (float)webcam_width;
       particle.position[1] = y / (float)webcam_height;
-      particle.rgb[0] = (*frame)[(y*webcam_width+x)*3+0];
-      particle.rgb[1] = (*frame)[(y*webcam_width+x)*3+1];
-      particle.rgb[2] = (*frame)[(y*webcam_width+x)*3+2];
+      particle.rgb[0] = (*frame)[i*3+0];
+      particle.rgb[1] = (*frame)[i*3+1];
+      particle.rgb[2] = (*frame)[i*3+2];
       rgb2Hsv(particle.hsv, particle.rgb);
+
+      const auto backgroundDifference =
+        ((*frame)[i*3+0] - background_frame[i*3+0]) * ((*frame)[i*3+0] - background_frame[i*3+0]) +
+        ((*frame)[i*3+1] - background_frame[i*3+1]) * ((*frame)[i*3+1] - background_frame[i*3+1]) +
+        ((*frame)[i*3+2] - background_frame[i*3+2]) * ((*frame)[i*3+2] - background_frame[i*3+2]);
+
+      totalDifference += backgroundDifference;
+
+      //TODO: animate this
+      particle.localEffectStrength = std::min(std::max(backgroundDifference - .2f, 0.f) * 100.f, 1.f);
     }
     glBufferSubData(GL_ARRAY_BUFFER, 0, current_frame_data.size() * sizeof(Particle), current_frame_data.data());
+
+    if(totalDifference / (webcam_width * webcam_height) > .05f) {
+      if(!globalEffectTimeoutActive) {
+        std::cout << "trigger\n";
+        globalEffectTimeoutActive = true;
+      }
+    }
+
     webcam_buffer.finishCopy();
+  }
+
+  if(globalEffectTimeoutActive) {
+    globalEffectTimeout -= dt;
+    if(globalEffectTimeout <= 0.f && !globalEffectActive) {
+      globalEffectActive = true;
+    }
+  }
+
+  if(globalEffectActive) {
+    globalEffectTime += dt;
+    if(globalEffectTime > 3.f) {
+      globalEffectActive = false;
+      globalEffectTime = 0.f;
+      globalEffectTimeoutActive = false;
+      globalEffectTimeout = 1.f;
+    }
   }
 }
 
@@ -133,6 +180,7 @@ void Application::render() {
   glClear(GL_COLOR_BUFFER_BIT);
 
   glUniform1f(time_location, SDL_GetTicks() / 1000.f);
+  glUniform1f(globalEffectTime_location, globalEffectTime);
   glDrawArrays(GL_POINTS, 0, webcam_width * webcam_height);
 
   {

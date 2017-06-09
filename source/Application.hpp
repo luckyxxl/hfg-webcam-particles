@@ -8,6 +8,7 @@ struct Particle {
   float position[2];
   float rgb[3];
   float hsv[3];
+  float localEffectStrength;
 };
 
 class Application {
@@ -33,8 +34,16 @@ class Application {
   std::vector<Particle> current_frame_data;
 
   GLuint program;
-  GLint time_location;
+  GLint time_location, globalEffectTime_location;
 
   GLuint vertex_array;
   GLuint vertex_buffer;
+
+  std::vector<float> background_frame;
+
+  bool globalEffectTimeoutActive = false;
+  float globalEffectTimeout = 1.f;
+
+  bool globalEffectActive = false;
+  float globalEffectTime = 0.f;
 };
