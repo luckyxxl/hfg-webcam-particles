@@ -28,6 +28,8 @@ static bool handleEvents(Application *application) {
   return true;
 }
 
+static const char *windowTitle = "webcam-particles";
+
 int main(int argc, const char *argv[]) {
   Resources *resources = nullptr;
   SDL_Window *window = nullptr;
@@ -45,7 +47,7 @@ int main(int argc, const char *argv[]) {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-  window = SDL_CreateWindow("hfg-webcam-particles", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+  window = SDL_CreateWindow(windowTitle, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
   if(!window) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not create window", SDL_GetError(), nullptr);
     goto quit;
@@ -74,6 +76,23 @@ int main(int argc, const char *argv[]) {
     application->render();
 
     SDL_GL_SwapWindow(window);
+
+    {
+      static auto lastTime = SDL_GetTicks();
+      static auto counter = 0;
+      const auto currentTime = SDL_GetTicks();
+
+      counter += 1;
+
+      if(currentTime - lastTime >= 1000) {
+        char title[64];
+        strcpy(title, windowTitle);
+        sprintf(title + strlen(windowTitle), " (%d FPS)", counter);
+        SDL_SetWindowTitle(window, title);
+        lastTime = currentTime;
+        counter = 0;
+      }
+    }
   }
 
   quit:
