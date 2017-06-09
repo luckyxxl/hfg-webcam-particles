@@ -5,6 +5,7 @@
 Application::Application(Resources *resources)
   : kill_threads(false) {
   webcam = new Webcam();
+  //TODO: handle error
   webcam->getFrameSize(webcam_width, webcam_height);
 
   for(auto i=0; i<webcam_buffer.size; ++i) {
@@ -124,8 +125,8 @@ void Application::update(float dt) {
       rgb2Hsv(particle.hsv, particle.rgb);
     }
     glBufferSubData(GL_ARRAY_BUFFER, 0, current_frame_data.size() * sizeof(Particle), current_frame_data.data());
+    webcam_buffer.finishCopy();
   }
-  webcam_buffer.finishCopy();
 }
 
 void Application::render() {
@@ -142,8 +143,11 @@ void Application::render() {
 
 void Application::webcamThreadFunc() {
   while(!kill_threads) {
-    auto &frame = webcam_buffer.startWrite();
-    webcam->getFrame(frame.data());
+    auto frame = webcam_buffer.startWrite();
+    if(!webcam->getFrame(frame->data())) {
+      std::cerr << "webcam lost, you need to restart the app\n";
+      break;
+    }
     webcam_buffer.finishWrite();
   }
 }

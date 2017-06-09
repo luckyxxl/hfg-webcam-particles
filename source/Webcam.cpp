@@ -14,34 +14,36 @@ Webcam::~Webcam() {
   capture.release();
 }
 
-void Webcam::getFrameSize(uint32_t &width, uint32_t &height) {
+bool Webcam::getFrameSize(uint32_t &width, uint32_t &height) {
   width = capture.get(CV_CAP_PROP_FRAME_WIDTH);
   height = capture.get(CV_CAP_PROP_FRAME_HEIGHT);
+  return width != 0 && height != 0;
 }
 
-void Webcam::getFrame(float *frame) {
+bool Webcam::getFrame(float *frame) {
   if(!capture.isOpened()) {
-    uint32_t w, h;
-    getFrameSize(w, h);
-    std::fill(frame, frame + w * h * 3, 0.f);
-    return;
+    return false;
   }
 
   cv::Mat mat;
-  capture.read(mat);
-
+  if(capture.read(mat)) {
 #ifndef NDEBUG
-  {
-    uint32_t w, h;
-    getFrameSize(w, h);
-    assert(static_cast<int>(w) == mat.cols && static_cast<int>(h) == mat.rows);
-  }
+    {
+      uint32_t w, h;
+      getFrameSize(w, h);
+      assert(static_cast<int>(w) == mat.cols && static_cast<int>(h) == mat.rows);
+    }
 #endif
 
-  cv::Mat result;
-  cv::cvtColor(mat, result, CV_BGR2RGB);
-  cv::flip(result, result, 0);
-  result.convertTo(result, CV_32F, 1 / 255.);
+    cv::Mat result;
+    cv::cvtColor(mat, result, CV_BGR2RGB);
+    cv::flip(result, result, 0);
+    result.convertTo(result, CV_32F, 1 / 255.);
 
-  memcpy(frame, result.data, result.cols * result.rows * 3 * sizeof(float));
+    memcpy(frame, result.data, result.cols * result.rows * 3 * sizeof(float));
+
+    return true;
+  }
+
+  return false;
 }

@@ -12,9 +12,9 @@ class ThreadSyncTripleBuffer {
     }
   }
 
-  T &startWrite() {
+  T *startWrite() {
     buffers[writeBuffer].dataId = ++writeId;
-    return buffers[writeBuffer].data;
+    return &buffers[writeBuffer].data;
   }
 
   void finishWrite() {
