@@ -25,22 +25,21 @@ bool Webcam::getFrame(float *frame) {
     return false;
   }
 
-  cv::Mat mat;
-  if(capture.read(mat)) {
+  cv::Mat image;
+  if(capture.read(image)) {
 #ifndef NDEBUG
     {
       uint32_t w, h;
       getFrameSize(w, h);
-      assert(static_cast<int>(w) == mat.cols && static_cast<int>(h) == mat.rows);
+      assert(static_cast<int>(w) == image.cols && static_cast<int>(h) == image.rows);
     }
 #endif
 
-    cv::Mat result;
-    cv::cvtColor(mat, result, CV_BGR2RGB);
-    cv::flip(result, result, 0);
-    result.convertTo(result, CV_32F, 1 / 255.);
+    cv::cvtColor(image, image, CV_BGR2RGB);
+    cv::flip(image, image, 0);
 
-    memcpy(frame, result.data, result.cols * result.rows * 3 * sizeof(float));
+    cv::Mat result(image.rows, image.cols, CV_32FC3, frame);
+    image.convertTo(result, CV_32F, 1 / 255.);
 
     return true;
   }
