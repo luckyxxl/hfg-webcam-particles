@@ -7,6 +7,10 @@ find_package(OpenCV REQUIRED)
 list(APPEND CMAKE_CXX_FLAGS "-std=c++14 -Wall -pthread")
 
 add_executable(webcam-particles
+  source/graphics/ParticleBuffer.cpp
+  source/graphics/ParticleBuffer.hpp
+  source/graphics/Pipeline.cpp
+  source/graphics/Pipeline.hpp
   source/graphics/Window.cpp
   source/graphics/Window.hpp
   source/Application.cpp

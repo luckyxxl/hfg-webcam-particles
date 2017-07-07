@@ -16,58 +16,17 @@ bool Application::create(Resources *resources) {
 
   webcam_thread = std::thread([this] { this->webcamThreadFunc(); });
 
-  current_frame_data.resize(webcam_width * webcam_height);
-
-  glEnable(GL_PROGRAM_POINT_SIZE);
-
   {
-    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    auto vertex_shader_source = resources->readWholeFile("test.glslv");
-    auto vs = vertex_shader_source.c_str();
-    glShaderSource(vertex_shader, 1, &vs, nullptr);
-    glCompileShader(vertex_shader);
-
-    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    auto fragment_shader_source = resources->readWholeFile("test.glslf");
-    auto fs = fragment_shader_source.c_str();
-    glShaderSource(fragment_shader, 1, &fs, nullptr);
-    glCompileShader(fragment_shader);
-
-    program = glCreateProgram();
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
-    glBindAttribLocation(program, 0, "v_position");
-    glBindAttribLocation(program, 1, "v_rgb");
-    glBindAttribLocation(program, 2, "v_hsv");
-    glBindAttribLocation(program, 3, "v_localEffectStrength");
-    glLinkProgram(program);
-
-    glUseProgram(program);
-
-    glDeleteShader(fragment_shader);
-    glDeleteShader(vertex_shader);
+    const auto vertexShaderSource = resources->readWholeFile("test.glslv");
+    const auto fragmentShaderSource = resources->readWholeFile("test.glslf");
+    pipeline.create(vertexShaderSource.c_str(), fragmentShaderSource.c_str());
   }
 
-  time_location = glGetUniformLocation(program, "time");
-  globalEffectTime_location = glGetUniformLocation(program, "globalEffectTime");
+  time_location = pipeline.getUniformLocation("time");
+  globalEffectTime_location = pipeline.getUniformLocation("globalEffectTime");
 
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_ONE, GL_ONE);
-
-  glGenVertexArrays(1, &vertex_array);
-  glBindVertexArray(vertex_array);
-
-  glGenBuffers(1, &vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, webcam_width * webcam_height * sizeof(Particle), nullptr, GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Particle), reinterpret_cast<void*>(offsetof(Particle, position)));
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), reinterpret_cast<void*>(offsetof(Particle, rgb)));
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), reinterpret_cast<void*>(offsetof(Particle, hsv)));
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), reinterpret_cast<void*>(offsetof(Particle, localEffectStrength)));
-  glEnableVertexAttribArray(3);
+  current_frame_data.resize(webcam_width * webcam_height);
+  particleBuffer.create(webcam_width * webcam_height);
 
   return true;
 }
@@ -75,9 +34,9 @@ bool Application::create(Resources *resources) {
 void Application::destroy() {
   kill_threads = true;
 
-  glDeleteBuffers(1, &vertex_buffer);
-  glDeleteVertexArrays(1, &vertex_array);
-  glDeleteProgram(program);
+  particleBuffer.destroy();
+
+  pipeline.destroy();
 
   webcam_thread.join();
 
@@ -150,7 +109,8 @@ void Application::update(float dt) {
       //TODO: animate this
       particle.localEffectStrength = std::min(std::max(backgroundDifference - .2f, 0.f) * 100.f, 1.f);
     }
-    glBufferSubData(GL_ARRAY_BUFFER, 0, current_frame_data.size() * sizeof(Particle), current_frame_data.data());
+
+    particleBuffer.setParticleData(current_frame_data.data(), current_frame_data.size());
 
     if(totalDifference / (webcam_width * webcam_height) > .05f) {
       if(!globalEffectTimeoutActive) {
@@ -183,9 +143,11 @@ void Application::update(float dt) {
 void Application::render() {
   glClear(GL_COLOR_BUFFER_BIT);
 
+  pipeline.bind();
+
   glUniform1f(time_location, SDL_GetTicks() / 1000.f);
   glUniform1f(globalEffectTime_location, globalEffectTime);
-  glDrawArrays(GL_POINTS, 0, webcam_width * webcam_height);
+  particleBuffer.draw();
 
   {
     GLenum error = glGetError();

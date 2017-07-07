@@ -3,13 +3,8 @@
 #include "Resources.hpp"
 #include "Webcam.hpp"
 #include "ThreadSyncTripleBuffer.hpp"
-
-struct Particle {
-  float position[2];
-  float rgb[3];
-  float hsv[3];
-  float localEffectStrength;
-};
+#include "graphics/Pipeline.hpp"
+#include "graphics/ParticleBuffer.hpp"
 
 class Application {
   public:
@@ -31,13 +26,12 @@ class Application {
   void webcamThreadFunc();
   std::thread webcam_thread;
 
-  std::vector<Particle> current_frame_data;
-
-  GLuint program;
+  graphics::Pipeline pipeline;
   GLint time_location, globalEffectTime_location;
 
-  GLuint vertex_array;
-  GLuint vertex_buffer;
+  // remove this and use glMapBuffer?  thought mapping is probably slower...
+  std::vector<graphics::Particle> current_frame_data;
+  graphics::ParticleBuffer particleBuffer;
 
   std::vector<float> background_frame;
 
