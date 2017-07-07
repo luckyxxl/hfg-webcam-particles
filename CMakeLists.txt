@@ -7,6 +7,8 @@ find_package(OpenCV REQUIRED)
 list(APPEND CMAKE_CXX_FLAGS "-std=c++14 -Wall -pthread")
 
 add_executable(webcam-particles
+  source/graphics/Window.cpp
+  source/graphics/Window.hpp
   source/Application.cpp
   source/Application.hpp
   source/main.cpp
@@ -18,7 +20,7 @@ add_executable(webcam-particles
   source/Webcam.hpp
 )
 
-target_include_directories(webcam-particles PRIVATE /usr/include/SDL2)
+target_include_directories(webcam-particles PRIVATE source /usr/include/SDL2)
 target_link_libraries(webcam-particles ${OpenCV_LIBS} SDL2 GL m)
 
 add_custom_command(TARGET webcam-particles POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:webcam-particles>")

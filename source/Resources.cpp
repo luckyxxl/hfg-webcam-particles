@@ -2,12 +2,13 @@
 
 #include "Resources.hpp"
 
-Resources::Resources(const char *argv0) {
+bool Resources::create(const char *argv0) {
   rootPath = argv0;
   rootPath.erase(rootPath.find_last_of("/") + 1);
+  return true;
 }
 
-Resources::~Resources() {
+void Resources::destroy() {
 }
 
 std::string Resources::readWholeFile(const char *filename) {

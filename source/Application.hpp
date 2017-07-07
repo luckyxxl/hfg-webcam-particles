@@ -13,8 +13,8 @@ struct Particle {
 
 class Application {
   public:
-  Application(Resources *resources);
-  ~Application();
+  bool create(Resources *resources);
+  void destroy();
 
   void handleEvent(const SDL_Event &event);
   void reshape(uint32_t width, uint32_t height);
@@ -22,14 +22,14 @@ class Application {
   void render();
 
   private:
-  std::atomic<bool> kill_threads;
-
-  Webcam *webcam;
+  Webcam webcam;
   uint32_t webcam_width, webcam_height;
+  ThreadSyncTripleBuffer<std::vector<float>> webcam_buffer;
+
+  std::atomic<bool> kill_threads{false};
 
   void webcamThreadFunc();
   std::thread webcam_thread;
-  ThreadSyncTripleBuffer<std::vector<float>> webcam_buffer;
 
   std::vector<Particle> current_frame_data;
 

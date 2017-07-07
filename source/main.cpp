@@ -1,6 +1,7 @@
 #include "main.hpp"
 
 #include "Resources.hpp"
+#include "graphics/Window.hpp"
 #include "Application.hpp"
 
 static bool handleEvents(Application *application) {
@@ -28,45 +29,36 @@ static bool handleEvents(Application *application) {
   return true;
 }
 
-static const char *windowTitle = "webcam-particles";
-
 int main(int argc, const char *argv[]) {
   Resources *resources = nullptr;
-  SDL_Window *window = nullptr;
-  SDL_GLContext gl_context = nullptr;
+  graphics::Window *window = nullptr;
   Application *application = nullptr;
 
-  resources = new Resources(argv[0]);
+  resources = new Resources();
+  if(!resources->create(argv[0])) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not initialize resources", "Could not initialize resources", NULL);
+    goto quit;
+  }
 
-  if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not init SDL2", SDL_GetError(), nullptr);
     goto quit;
   }
 
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-  window = SDL_CreateWindow(windowTitle, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-  if(!window) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not create window", SDL_GetError(), nullptr);
+  window = new graphics::Window();
+  if(!window->create()) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not create window", "Could not create window", NULL);
     goto quit;
   }
 
-  gl_context = SDL_GL_CreateContext(window);
-  if(!gl_context) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not create OpenGL context", SDL_GetError(), nullptr);
+  application = new Application();
+  if(!application->create(resources)) {
     goto quit;
   }
-
-  SDL_GL_SetSwapInterval(1);
-
-  application = new Application(resources);
 
   {
-    int w, h;
-    SDL_GetWindowSize(window, &w, &h);
-    application->reshape(w, h);
+    const auto size = window->getSize();
+    application->reshape(std::get<0>(size), std::get<1>(size));
   }
 
   for(;;) {
@@ -75,31 +67,16 @@ int main(int argc, const char *argv[]) {
     application->update(1.f / 60.f);
     application->render();
 
-    SDL_GL_SwapWindow(window);
-
-    {
-      static auto lastTime = SDL_GetTicks();
-      static auto counter = 0;
-      const auto currentTime = SDL_GetTicks();
-
-      counter += 1;
-
-      if(currentTime - lastTime >= 1000) {
-        char title[64];
-        strcpy(title, windowTitle);
-        sprintf(title + strlen(windowTitle), " (%d FPS)", counter);
-        SDL_SetWindowTitle(window, title);
-        lastTime = currentTime;
-        counter = 0;
-      }
-    }
+    window->swap();
   }
 
   quit:
+  if(application) application->destroy();
   delete application;
-  if(gl_context) SDL_GL_DeleteContext(gl_context);
-  if(window) SDL_DestroyWindow(window);
+  if(window) window->destroy();
+  delete window;
   SDL_Quit();
+  if(resources) resources->destroy();
   delete resources;
 
   return 0;

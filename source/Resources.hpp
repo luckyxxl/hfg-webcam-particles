@@ -2,8 +2,8 @@
 
 class Resources {
   public:
-  Resources(const char *argv0);
-  ~Resources();
+  bool create(const char *argv0);
+  void destroy();
 
   std::string readWholeFile(const char *filename);
 

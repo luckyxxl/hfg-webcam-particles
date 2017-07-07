@@ -2,15 +2,15 @@
 
 #include "Webcam.hpp"
 
-Webcam::Webcam() {
+bool Webcam::open() {
   capture.open(0);
   if(!capture.isOpened()) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open webcam", "Could not open webcam", NULL);
-    return;
+    return false;
   }
+  return true;
 }
 
-Webcam::~Webcam() {
+void Webcam::close() {
   capture.release();
 }
 

@@ -2,11 +2,11 @@
 
 #include "Application.hpp"
 
-Application::Application(Resources *resources)
-  : kill_threads(false) {
-  webcam = new Webcam();
-  //TODO: handle error
-  webcam->getFrameSize(webcam_width, webcam_height);
+bool Application::create(Resources *resources) {
+  if(!webcam.open() || !webcam.getFrameSize(webcam_width, webcam_height)) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open webcam", "Could not open webcam", NULL);
+    return false;
+  }
 
   for(auto i=0; i<webcam_buffer.size; ++i) {
     auto &b = webcam_buffer.getBuffer(i);
@@ -68,9 +68,11 @@ Application::Application(Resources *resources)
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), reinterpret_cast<void*>(offsetof(Particle, localEffectStrength)));
   glEnableVertexAttribArray(3);
+
+  return true;
 }
 
-Application::~Application() {
+void Application::destroy() {
   kill_threads = true;
 
   glDeleteBuffers(1, &vertex_buffer);
@@ -78,6 +80,8 @@ Application::~Application() {
   glDeleteProgram(program);
 
   webcam_thread.join();
+
+  webcam.close();
 }
 
 void Application::reshape(uint32_t width, uint32_t height) {
@@ -192,7 +196,7 @@ void Application::render() {
 void Application::webcamThreadFunc() {
   while(!kill_threads) {
     auto frame = webcam_buffer.startWrite();
-    if(!webcam->getFrame(frame->data())) {
+    if(!webcam.getFrame(frame->data())) {
       std::cerr << "webcam lost, you need to restart the app\n";
       break;
     }

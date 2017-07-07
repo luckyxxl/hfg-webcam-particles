@@ -2,8 +2,8 @@
 
 class Webcam {
   public:
-  Webcam();
-  ~Webcam();
+  bool open();
+  void close();
 
   bool getFrameSize(uint32_t &width, uint32_t &height);
   bool getFrame(float *frame);
