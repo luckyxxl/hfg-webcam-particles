@@ -11,6 +11,15 @@ bool Resources::create(const char *argv0) {
 void Resources::destroy() {
 }
 
+SDL_RWops *Resources::openFile(const char *filename) {
+  std::string systemFileName(rootPath + filename);
+  auto result = SDL_RWFromFile(systemFileName.c_str(), "rb");
+  if(!result) {
+    std::cout << "could not open file " << systemFileName << "\n";
+  }
+  return result;
+}
+
 std::string Resources::readWholeFile(const char *filename) {
   std::string result;
 

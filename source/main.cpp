@@ -2,6 +2,7 @@
 
 #include "Resources.hpp"
 #include "graphics/Window.hpp"
+#include "sound/Renderer.hpp"
 #include "Application.hpp"
 
 static bool handleEvents(Application *application) {
@@ -32,11 +33,11 @@ static bool handleEvents(Application *application) {
 int main(int argc, const char *argv[]) {
   Resources *resources = nullptr;
   graphics::Window *window = nullptr;
+  sound::Renderer *soundRenderer = nullptr;
   Application *application = nullptr;
 
   resources = new Resources();
   if(!resources->create(argv[0])) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not initialize resources", "Could not initialize resources", NULL);
     goto quit;
   }
 
@@ -47,12 +48,16 @@ int main(int argc, const char *argv[]) {
 
   window = new graphics::Window();
   if(!window->create()) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not create window", "Could not create window", NULL);
+    goto quit;
+  }
+
+  soundRenderer = new sound::Renderer();
+  if(!soundRenderer->create()) {
     goto quit;
   }
 
   application = new Application();
-  if(!application->create(resources)) {
+  if(!application->create(resources, soundRenderer)) {
     goto quit;
   }
 
@@ -67,12 +72,16 @@ int main(int argc, const char *argv[]) {
     application->update(1.f / 60.f);
     application->render();
 
+    soundRenderer->update();
+
     window->swap();
   }
 
   quit:
   if(application) application->destroy();
   delete application;
+  if(soundRenderer) soundRenderer->destroy();
+  delete soundRenderer;
   if(window) window->destroy();
   delete window;
   SDL_Quit();

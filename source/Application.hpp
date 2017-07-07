@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Resources.hpp"
+#include "sound/Renderer.hpp"
 #include "Webcam.hpp"
 #include "ThreadSyncTripleBuffer.hpp"
 #include "graphics/Pipeline.hpp"
@@ -8,7 +9,7 @@
 
 class Application {
   public:
-  bool create(Resources *resources);
+  bool create(Resources *resources, sound::Renderer *soundRenderer);
   void destroy();
 
   void handleEvent(const SDL_Event &event);
@@ -17,6 +18,9 @@ class Application {
   void render();
 
   private:
+  sound::Renderer *soundRenderer;
+  sound::SampleBuffer testSample;
+
   Webcam webcam;
   uint32_t webcam_width, webcam_height;
   ThreadSyncTripleBuffer<std::vector<float>> webcam_buffer;

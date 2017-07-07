@@ -13,6 +13,10 @@ add_executable(webcam-particles
   source/graphics/Pipeline.hpp
   source/graphics/Window.cpp
   source/graphics/Window.hpp
+  source/sound/Renderer.hpp
+  source/sound/Renderer.cpp
+  source/sound/SampleBuffer.hpp
+  source/sound/SampleBuffer.cpp
   source/Application.cpp
   source/Application.hpp
   source/main.cpp

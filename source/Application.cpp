@@ -2,7 +2,11 @@
 
 #include "Application.hpp"
 
-bool Application::create(Resources *resources) {
+bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
+  this->soundRenderer = soundRenderer;
+
+  testSample.loadFromFile(resources, "test.wav");
+
   if(!webcam.open() || !webcam.getFrameSize(webcam_width, webcam_height)) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open webcam", "Could not open webcam", NULL);
     return false;
@@ -49,6 +53,16 @@ void Application::reshape(uint32_t width, uint32_t height) {
 
 void Application::handleEvent(const SDL_Event &event) {
   switch(event.type) {
+    case SDL_KEYDOWN:
+    switch(event.key.keysym.scancode) {
+      case SDL_SCANCODE_A:
+      soundRenderer->play(&testSample);
+      break;
+
+      default:
+      break;
+    }
+    break;
   }
 }
 
