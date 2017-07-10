@@ -50,9 +50,9 @@ void Renderer::update() {
     assert(voice.state == Voice::State::Playing);
 
     const auto sampleBufferValue = voice.sampleBuffer.load(std::memory_order_relaxed);
-    const auto cursorValue = voice.cursor.load(std::memory_order_relaxed);
+    const int32_t cursorValue = voice.cursor.load(std::memory_order_relaxed);
 
-    auto sampleBufferLengthSamples = sampleBufferValue->getBufferLengthSamples();
+    const int32_t sampleBufferLengthSamples = sampleBufferValue->getBufferLengthSamples();
 
     if(cursorValue == sampleBufferLengthSamples) {
       voice.state.store(Voice::State::Empty);
@@ -60,14 +60,14 @@ void Renderer::update() {
   }
 }
 
-bool Renderer::play(const SampleBuffer *sampleBuffer) {
+bool Renderer::play(const SampleBuffer *sampleBuffer, double delay) {
   auto success = false;
 
   for(auto &voice : voices) {
     if(voice.state.load() != Voice::State::Empty) continue;
 
     voice.sampleBuffer.store(sampleBuffer, std::memory_order_relaxed);
-    voice.cursor.store(0, std::memory_order_relaxed);
+    voice.cursor.store(-delay * audioSpec.freq, std::memory_order_relaxed);
 
     voice.state.store(Voice::State::Playing, std::memory_order_release);
 
@@ -86,28 +86,30 @@ void Renderer::audioCallback(Uint8 *stream, int len) {
   memset(stream, 0, len);
 
   float *const buffer = reinterpret_cast<float*>(stream);
-  const uint32_t bufferLengthSamples = len / sizeof(float) / 2; // two channels per sample
+  const int32_t bufferLengthSamples = len / sizeof(float) / 2; // two channels per sample
 
   for(auto &voice : voices) {
     if(voice.state.load() == Voice::State::Empty) continue;
 
     const auto sampleBufferValue = voice.sampleBuffer.load(std::memory_order_relaxed);
-    const auto cursorValue = voice.cursor.load(std::memory_order_relaxed);
+    const int32_t cursorValue = voice.cursor.load(std::memory_order_relaxed);
 
-    auto sampleBuffer = sampleBufferValue->getBuffer();
-    auto sampleBufferLengthSamples = sampleBufferValue->getBufferLengthSamples();
+    const auto sampleBuffer = sampleBufferValue->getBuffer();
+    const int32_t sampleBufferLengthSamples = sampleBufferValue->getBufferLengthSamples();
 
     if(cursorValue == sampleBufferLengthSamples) continue;
 
-    const auto copyStart = sampleBuffer + 2 * cursorValue;
-    const auto copySamplesCount = std::min(bufferLengthSamples, sampleBufferLengthSamples - cursorValue);
+    const int32_t destinationOffset = cursorValue < 0 ? -cursorValue : 0;
+    const int32_t copySamplesCount = std::min(bufferLengthSamples - destinationOffset, sampleBufferLengthSamples - std::max(cursorValue, 0)); // can be negative
 
-    for(uint32_t i=0u; i<copySamplesCount; ++i) {
-      buffer[2*i+0] += copyStart[2*i+0] / static_cast<float>(-std::numeric_limits<int16_t>::min());
-      buffer[2*i+1] += copyStart[2*i+1] / static_cast<float>(-std::numeric_limits<int16_t>::min());
+    auto copySrcStart = sampleBuffer + 2 * std::max(cursorValue, 0);
+
+    for(auto i=destinationOffset; i<copySamplesCount; ++i) {
+      buffer[2*i+0] += copySrcStart[2*i+0] / static_cast<float>(-std::numeric_limits<int16_t>::min());
+      buffer[2*i+1] += copySrcStart[2*i+1] / static_cast<float>(-std::numeric_limits<int16_t>::min());
     }
 
-    voice.cursor.store(cursorValue + copySamplesCount);
+    voice.cursor.store(std::min(cursorValue + bufferLengthSamples, sampleBufferLengthSamples));
   }
 }
 

@@ -11,7 +11,7 @@ class Renderer {
 
   void update();
 
-  bool play(const SampleBuffer *sampleBuffer);
+  bool play(const SampleBuffer *sampleBuffer, double delay = 0.);
 
   // don't call this!
   void audioCallback(Uint8 *stream, int len);
@@ -29,7 +29,7 @@ class Renderer {
     std::atomic<const SampleBuffer*> sampleBuffer; // modified by host thread
 
     std::atomic<State> state; // modified by host thread
-    std::atomic<uint32_t> cursor; // modified by host thread and audio thread
+    std::atomic<int32_t> cursor; // modified by host thread and audio thread
   };
 
   std::array<Voice, 16> voices;
