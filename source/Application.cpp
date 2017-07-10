@@ -53,16 +53,6 @@ void Application::reshape(uint32_t width, uint32_t height) {
 
 void Application::handleEvent(const SDL_Event &event) {
   switch(event.type) {
-    case SDL_KEYDOWN:
-    switch(event.key.keysym.scancode) {
-      case SDL_SCANCODE_A:
-      soundRenderer->play(&testSample);
-      break;
-
-      default:
-      break;
-    }
-    break;
   }
 }
 
@@ -130,6 +120,7 @@ void Application::update(float dt) {
       if(!globalEffectTimeoutActive) {
         std::cout << "trigger\n";
         globalEffectTimeoutActive = true;
+        soundRenderer->play(&testSample);
       }
     }
 
