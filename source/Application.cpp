@@ -42,7 +42,7 @@ void Application::destroy() {
 
   pipeline.destroy();
 
-  webcam_thread.join();
+  if(webcam_thread.joinable()) webcam_thread.join();
 
   webcam.close();
 }
