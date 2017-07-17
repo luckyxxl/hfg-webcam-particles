@@ -21,6 +21,8 @@ class Application {
   sound::Renderer *soundRenderer;
   sound::SampleBuffer testSample;
 
+  uint32_t screen_width, screen_height;
+
   Webcam webcam;
   uint32_t webcam_width, webcam_height;
   ThreadSyncTripleBuffer<std::vector<float>> webcam_buffer;
@@ -31,7 +33,9 @@ class Application {
   std::thread webcam_thread;
 
   graphics::Pipeline pipeline;
-  GLint time_location, globalEffectTime_location;
+  GLint invImageAspectRatio_location, invScreenAspectRatio_location;
+  GLint viewProjectionMatrix_location, invViewProjectionMatrix_location;
+  GLint globalTime_location, globalEffectTime_location;
 
   // remove this and use glMapBuffer?  thought mapping is probably slower...
   std::vector<graphics::Particle> current_frame_data;

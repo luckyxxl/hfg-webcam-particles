@@ -1,6 +1,10 @@
 #version 330 core
 
-uniform float time;
+uniform float invImageAspectRatio;
+uniform float invScreenAspectRatio;
+uniform mat4 viewProjectionMatrix;
+uniform mat4 invViewProjectionMatrix;
+uniform float globalTime;
 uniform float globalEffectTime;
 
 in vec2 v_position;
@@ -17,14 +21,16 @@ vec2 getDirectionVector(float angle) {
 }
 
 void main() {
-  vec3 initialPosition = vec3(v_position * vec2(2.) - vec2(1.), 0.);
+  vec3 initialPosition = vec3(v_position, 0.);
+  initialPosition.y *= invImageAspectRatio;
   vec3 position = initialPosition;
   {
-    float offset = (-cos(time * PI) + 1.) / 2. * v_localEffectStrength * .2;
+    float offset = (-cos(globalTime * PI) + 1.) / 2. * v_localEffectStrength * .2;
     position.xy += offset * getDirectionVector(v_hsv.x) * .1;
   }
   {
-    vec2 target = getDirectionVector(v_hsv.x + globalEffectTime * .25) * vec2(.8);
+    vec2 screenTarget = getDirectionVector(v_hsv.x + globalEffectTime * .25) * vec2(.8) * vec2(invScreenAspectRatio, 1.);
+    vec2 target = (invViewProjectionMatrix * vec4(screenTarget, 0, 1)).xy;
 
     vec2 d = target - initialPosition.xy;
     float d_len = length(d);
@@ -47,7 +53,7 @@ void main() {
 
     position.xy += result;
   }
-  gl_Position = vec4(position, 1.);
   color = v_rgb;
   gl_PointSize = 4.;
+  gl_Position = viewProjectionMatrix * vec4(position, 1.);
 }

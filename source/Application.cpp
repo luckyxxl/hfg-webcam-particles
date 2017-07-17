@@ -26,7 +26,11 @@ bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
     pipeline.create(vertexShaderSource.c_str(), fragmentShaderSource.c_str());
   }
 
-  time_location = pipeline.getUniformLocation("time");
+  invImageAspectRatio_location = pipeline.getUniformLocation("invImageAspectRatio");
+  invScreenAspectRatio_location = pipeline.getUniformLocation("invScreenAspectRatio");
+  viewProjectionMatrix_location = pipeline.getUniformLocation("viewProjectionMatrix");
+  invViewProjectionMatrix_location = pipeline.getUniformLocation("invViewProjectionMatrix");
+  globalTime_location = pipeline.getUniformLocation("globalTime");
   globalEffectTime_location = pipeline.getUniformLocation("globalEffectTime");
 
   current_frame_data.resize(webcam_width * webcam_height);
@@ -48,6 +52,9 @@ void Application::destroy() {
 }
 
 void Application::reshape(uint32_t width, uint32_t height) {
+  screen_width = width;
+  screen_height = height;
+
   glViewport(0, 0, width, height);
 }
 
@@ -151,7 +158,33 @@ void Application::render() {
 
   pipeline.bind();
 
-  glUniform1f(time_location, SDL_GetTicks() / 1000.f);
+  glUniform1f(invImageAspectRatio_location, (float)webcam_height / webcam_width);
+  glUniform1f(invScreenAspectRatio_location, (float)screen_height / screen_width);
+  {
+    const float aspect = (float)screen_width / screen_height;
+    const float underscan = 1 - ((float)screen_width / screen_height) / ((float)webcam_width / webcam_height);
+    const GLfloat mat[4*4] = {
+      //column-major
+      2.f, 0.f, 0.f, 0.f,
+      0.f, 2.f*aspect, 0.f, 0.f,
+      0.f, 0.f, 0.f, 0.f,
+      -1.f, (underscan * 2.f) - 1.f, 0.f, 1.f
+    };
+    glUniformMatrix4fv(viewProjectionMatrix_location, 1, GL_FALSE, mat);
+  }
+  {
+    const float aspect = (float)screen_width / screen_height;
+    const float underscan = 1 - ((float)screen_width / screen_height) / ((float)webcam_width / webcam_height);
+    const GLfloat mat[4*4] = {
+      //column-major
+      .5f, 0.f, 0.f, 0.f,
+      0.f, .5f / aspect, 0.f, 0.f,
+      0.f, 0.f, 0.f, 0.f,
+      .5f, (-.5f * ((underscan * 2.f) - 1.f)) / aspect, 0.f, 1.f
+    };
+    glUniformMatrix4fv(invViewProjectionMatrix_location, 1, GL_FALSE, mat);
+  }
+  glUniform1f(globalTime_location, SDL_GetTicks() / 1000.f);
   glUniform1f(globalEffectTime_location, globalEffectTime);
   particleBuffer.draw();
 
