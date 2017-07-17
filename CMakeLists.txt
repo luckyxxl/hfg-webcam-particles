@@ -31,4 +31,4 @@ add_executable(webcam-particles
 target_include_directories(webcam-particles PRIVATE source /usr/include/SDL2)
 target_link_libraries(webcam-particles ${OpenCV_LIBS} SDL2 GL m)
 
-add_custom_command(TARGET webcam-particles POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:webcam-particles>")
+add_custom_command(TARGET webcam-particles POST_BUILD COMMAND ln -sf "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:webcam-particles>")
