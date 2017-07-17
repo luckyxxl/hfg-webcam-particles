@@ -22,7 +22,7 @@ vec2 getDirectionVector(float angle) {
 
 void main() {
   vec3 initialPosition = vec3(v_position, 0.);
-  initialPosition.y *= invImageAspectRatio;
+  initialPosition.x /= invImageAspectRatio;
   vec3 position = initialPosition;
   {
     float offset = (-cos(globalTime * PI) + 1.) / 2. * v_localEffectStrength * .2;

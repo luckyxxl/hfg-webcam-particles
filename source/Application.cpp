@@ -162,25 +162,25 @@ void Application::render() {
   glUniform1f(invScreenAspectRatio_location, (float)screen_height / screen_width);
   {
     const float aspect = (float)screen_width / screen_height;
-    const float underscan = 1 - ((float)screen_width / screen_height) / ((float)webcam_width / webcam_height);
+    const float underscan = 1 - ((float)screen_height / screen_width) / ((float)webcam_height / webcam_width);
     const GLfloat mat[4*4] = {
       //column-major
-      2.f, 0.f, 0.f, 0.f,
-      0.f, 2.f*aspect, 0.f, 0.f,
+      2.f/aspect, 0.f, 0.f, 0.f,
+      0.f, 2.f, 0.f, 0.f,
       0.f, 0.f, 0.f, 0.f,
-      -1.f, (underscan * 2.f) - 1.f, 0.f, 1.f
+      underscan - 1.f, -1.f, 0.f, 1.f
     };
     glUniformMatrix4fv(viewProjectionMatrix_location, 1, GL_FALSE, mat);
   }
   {
     const float aspect = (float)screen_width / screen_height;
-    const float underscan = 1 - ((float)screen_width / screen_height) / ((float)webcam_width / webcam_height);
+    const float underscan = 1 - ((float)screen_height / screen_width) / ((float)webcam_height / webcam_width);
     const GLfloat mat[4*4] = {
       //column-major
-      .5f, 0.f, 0.f, 0.f,
-      0.f, .5f / aspect, 0.f, 0.f,
+      .5f*aspect, 0.f, 0.f, 0.f,
+      0.f, .5f, 0.f, 0.f,
       0.f, 0.f, 0.f, 0.f,
-      .5f, (-.5f * ((underscan * 2.f) - 1.f)) / aspect, 0.f, 1.f
+      (-.5f * (underscan - 1.f)) * aspect, .5f, 0.f, 1.f
     };
     glUniformMatrix4fv(invViewProjectionMatrix_location, 1, GL_FALSE, mat);
   }
