@@ -102,11 +102,12 @@ void Renderer::audioCallback(Uint8 *stream, int len) {
     const int32_t destinationOffset = cursorValue < 0 ? -cursorValue : 0;
     const int32_t copySamplesCount = std::min(bufferLengthSamples - destinationOffset, sampleBufferLengthSamples - std::max(cursorValue, 0)); // can be negative
 
-    auto copySrcStart = sampleBuffer + 2 * std::max(cursorValue, 0);
+    auto copySrc = sampleBuffer + 2 * std::max(cursorValue, 0);
+    auto copyDest = buffer + 2 * destinationOffset;
 
-    for(auto i=destinationOffset; i<copySamplesCount; ++i) {
-      buffer[2*i+0] += copySrcStart[2*i+0] / static_cast<float>(-std::numeric_limits<int16_t>::min());
-      buffer[2*i+1] += copySrcStart[2*i+1] / static_cast<float>(-std::numeric_limits<int16_t>::min());
+    for(auto i=0; i<copySamplesCount; ++i) {
+      copyDest[2*i+0] += copySrc[2*i+0] / static_cast<float>(-std::numeric_limits<int16_t>::min());
+      copyDest[2*i+1] += copySrc[2*i+1] / static_cast<float>(-std::numeric_limits<int16_t>::min());
     }
 
     voice.cursor.store(std::min(cursorValue + bufferLengthSamples, sampleBufferLengthSamples));
