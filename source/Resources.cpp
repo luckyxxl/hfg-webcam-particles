@@ -21,7 +21,7 @@ SDL_RWops *Resources::openFile(const char *filename) {
   return result;
 }
 
-std::string Resources::readWholeFile(const char *filename) {
+std::string Resources::readWholeTextFile(const char *filename) {
   std::string result;
 
   std::ifstream file(rootPath + filename);
@@ -30,6 +30,18 @@ std::string Resources::readWholeFile(const char *filename) {
     std::getline(file, line);
     result += line + "\n";
   }
+
+  return result;
+}
+
+std::vector<uint8_t> Resources::readWholeBinaryFile(const char *filename) {
+  // https://stackoverflow.com/questions/18816126/c-read-the-whole-file-in-buffer
+  std::ifstream file(rootPath + filename, std::ios::binary | std::ios::ate);
+  const auto size = file.tellg();
+  file.seekg(0, std::ios::beg);
+
+  std::vector<uint8_t> result(size);
+  file.read(reinterpret_cast<char*>(result.data()), result.size());
 
   return result;
 }

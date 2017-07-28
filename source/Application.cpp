@@ -5,10 +5,20 @@
 bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
   this->soundRenderer = soundRenderer;
 
-  testSample.loadFromFile(resources, "sound_debug/test.wav");
+  //testSample.loadFromFile(resources, "sound_debug/test.wav");
 
-  loopTestSample.loadFromFile(resources, "sound_debug/warning_beep2.wav");
+  //loopTestSample.loadFromFile(resources, "sound_debug/warning_beep.wav");
   //soundRenderer->play(&loopTestSample, sound::Renderer::PlayParameters().setLooping(true));
+
+  backgroundLoop.loadFromFile(resources, "sound/DroneLoopStereo01.wav");
+  soundRenderer->play(&backgroundLoop, sound::Renderer::PlayParameters().setLooping(true));
+
+  whooshSamples.resize(5);
+  whooshSamples[0].loadFromFile(resources, "sound/FXStereo01.wav");
+  whooshSamples[1].loadFromFile(resources, "sound/FXStereo02.wav");
+  whooshSamples[2].loadFromFile(resources, "sound/FXStereo03.wav");
+  whooshSamples[3].loadFromFile(resources, "sound/FXStereo04.wav");
+  whooshSamples[4].loadFromFile(resources, "sound/FXStereo05.wav");
 
   if(!webcam.open() || !webcam.getFrameSize(webcam_width, webcam_height)) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open webcam", "Could not open webcam", NULL);
@@ -24,8 +34,8 @@ bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
   webcam_thread = std::thread([this] { this->webcamThreadFunc(); });
 
   {
-    const auto vertexShaderSource = resources->readWholeFile("test.glslv");
-    const auto fragmentShaderSource = resources->readWholeFile("test.glslf");
+    const auto vertexShaderSource = resources->readWholeTextFile("test.glslv");
+    const auto fragmentShaderSource = resources->readWholeTextFile("test.glslf");
     pipeline.create(vertexShaderSource.c_str(), fragmentShaderSource.c_str());
   }
 
@@ -63,6 +73,29 @@ void Application::reshape(uint32_t width, uint32_t height) {
 
 void Application::handleEvent(const SDL_Event &event) {
   switch(event.type) {
+    case SDL_KEYDOWN:
+    switch(event.key.keysym.scancode) {
+      /*
+      case SDL_SCANCODE_1:
+      soundRenderer->play(&whooshSamples[0]);
+      break;
+      case SDL_SCANCODE_2:
+      soundRenderer->play(&whooshSamples[1]);
+      break;
+      case SDL_SCANCODE_3:
+      soundRenderer->play(&whooshSamples[2]);
+      break;
+      case SDL_SCANCODE_4:
+      soundRenderer->play(&whooshSamples[3]);
+      break;
+      case SDL_SCANCODE_5:
+      soundRenderer->play(&whooshSamples[4]);
+      break;
+      */
+      default:
+      break;
+    }
+    break;
   }
 }
 
@@ -130,8 +163,15 @@ void Application::update(float dt) {
       if(!globalEffectTimeoutActive) {
         std::cout << "trigger\n";
         globalEffectTimeoutActive = true;
-        soundRenderer->play(&testSample);
-        soundRenderer->play(&testSample, sound::Renderer::PlayParameters().setStartDelay(2.5));
+
+        //soundRenderer->play(&testSample);
+        //soundRenderer->play(&testSample, sound::Renderer::PlayParameters().setStartDelay(2.5));
+
+        {
+          std::uniform_int_distribution<> dis(0, whooshSamples.size()-1);
+          soundRenderer->play(&whooshSamples[dis(random)], sound::Renderer::PlayParameters().setStartDelay(1.));
+          soundRenderer->play(&whooshSamples[dis(random)], sound::Renderer::PlayParameters().setStartDelay(2.5));
+        }
       }
     }
 

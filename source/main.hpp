@@ -4,6 +4,7 @@
 #include <atomic>
 #include <fstream>
 #include <iostream>
+#include <random>
 #include <string>
 #include <thread>
 #include <tuple>

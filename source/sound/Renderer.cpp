@@ -113,12 +113,31 @@ void Renderer::audioCallback(Uint8 *stream, int len) {
       const auto copySamplesCount = std::min(bufferLengthSamples - destinationOffset, sampleBufferLengthSamples - std::max(cursorValue, 0));
       assert(copySamplesCount > 0);
 
-      const auto copySrc = sampleBuffer + 2 * std::max(cursorValue, 0);
-      const auto copyDest = buffer + 2 * destinationOffset;
+      // please don't generalize/combine the cases, so that there's a better chance for optimization
+      switch(sampleBufferValue->getChannels()) {
+        case 1:
+        {
+          const auto copySrc = sampleBuffer + 1 * std::max(cursorValue, 0);
+          const auto copyDest = buffer + 2 * destinationOffset;
 
-      for(auto i=0; i<copySamplesCount; ++i) {
-        copyDest[2*i+0] += copySrc[2*i+0] / static_cast<float>(-std::numeric_limits<int16_t>::min());
-        copyDest[2*i+1] += copySrc[2*i+1] / static_cast<float>(-std::numeric_limits<int16_t>::min());
+          for(auto i=0; i<copySamplesCount; ++i) {
+            copyDest[2*i+0] += copySrc[i];
+            copyDest[2*i+1] += copySrc[i];
+          }
+        }
+        break;
+
+        case 2:
+        {
+          const auto copySrc = sampleBuffer + 2 * std::max(cursorValue, 0);
+          const auto copyDest = buffer + 2 * destinationOffset;
+
+          for(auto i=0; i<copySamplesCount; ++i) {
+            copyDest[2*i+0] += copySrc[2*i+0];
+            copyDest[2*i+1] += copySrc[2*i+1];
+          }
+        }
+        break;
       }
 
       cursorValue += copySamplesCount;

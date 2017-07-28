@@ -20,8 +20,13 @@ class Application {
   private:
   sound::Renderer *soundRenderer;
 
-  sound::SampleBuffer testSample;
-  sound::SampleBuffer loopTestSample;
+  //sound::SampleBuffer testSample;
+  //sound::SampleBuffer loopTestSample;
+
+  sound::SampleBuffer backgroundLoop;
+  std::vector<sound::SampleBuffer> whooshSamples;
+
+  std::default_random_engine random;
 
   uint32_t screen_width, screen_height;
 
