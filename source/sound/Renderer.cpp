@@ -60,26 +60,21 @@ void Renderer::update() {
   }
 }
 
-bool Renderer::play(const SampleBuffer *sampleBuffer, double delay) {
-  auto success = false;
-
+Voice *Renderer::play(const SampleBuffer *sampleBuffer, const PlayParameters &parameters) {
   for(auto &voice : voices) {
     if(voice.state.load() != Voice::State::Empty) continue;
 
     voice.sampleBuffer.store(sampleBuffer, std::memory_order_relaxed);
-    voice.cursor.store(-delay * audioSpec.freq, std::memory_order_relaxed);
+    voice.cursor.store(-parameters.startDelay * audioSpec.freq, std::memory_order_relaxed);
 
     voice.state.store(Voice::State::Playing, std::memory_order_release);
 
-    success = true;
-    break;
+    return &voice;
   }
 
-  if(!success) {
-    std::cout << "out of voices\n";
-  }
+  std::cout << "out of voices\n";
 
-  return success;
+  return nullptr;
 }
 
 void Renderer::audioCallback(Uint8 *stream, int len) {

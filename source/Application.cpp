@@ -128,7 +128,7 @@ void Application::update(float dt) {
         std::cout << "trigger\n";
         globalEffectTimeoutActive = true;
         soundRenderer->play(&testSample);
-        soundRenderer->play(&testSample, 2.5);
+        soundRenderer->play(&testSample, sound::Renderer::PlayParameters().setStartDelay(2.5));
       }
     }
 
