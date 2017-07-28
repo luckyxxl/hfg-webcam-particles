@@ -5,7 +5,10 @@
 bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
   this->soundRenderer = soundRenderer;
 
-  testSample.loadFromFile(resources, "test.wav");
+  testSample.loadFromFile(resources, "sound_debug/test.wav");
+
+  loopTestSample.loadFromFile(resources, "sound_debug/warning_beep2.wav");
+  //soundRenderer->play(&loopTestSample, sound::Renderer::PlayParameters().setLooping(true));
 
   if(!webcam.open() || !webcam.getFrameSize(webcam_width, webcam_height)) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open webcam", "Could not open webcam", NULL);

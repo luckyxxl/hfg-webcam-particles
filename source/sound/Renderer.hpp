@@ -20,10 +20,14 @@ class Voice {
     Playing,
   };
 
+  //TODO: rethink this lock-free stuff
+
   std::atomic<const SampleBuffer*> sampleBuffer; // modified by host thread
 
   std::atomic<State> state; // modified by host thread
   std::atomic<int32_t> cursor; // modified by host thread and audio thread
+
+  std::atomic<bool> looping; // modified by host thread
 };
 
 class Renderer {
@@ -36,6 +40,9 @@ class Renderer {
   struct PlayParameters {
     double startDelay = 0.;
     PlayParameters &setStartDelay(double _startDelay) { startDelay = _startDelay; return *this; }
+
+    bool looping = false;
+    PlayParameters &setLooping(bool _looping) { looping = _looping; return *this; }
   };
 
   Voice *play(const SampleBuffer *sampleBuffer, const PlayParameters &parameters);

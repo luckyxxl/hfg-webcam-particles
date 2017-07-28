@@ -19,7 +19,9 @@ class Application {
 
   private:
   sound::Renderer *soundRenderer;
+
   sound::SampleBuffer testSample;
+  sound::SampleBuffer loopTestSample;
 
   uint32_t screen_width, screen_height;
 
