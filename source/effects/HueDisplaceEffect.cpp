@@ -2,8 +2,10 @@
 
 #include "HueDisplaceEffect.hpp"
 
+constexpr const char *HueDisplaceEffect::Name;
+
 const char *HueDisplaceEffect::getName() const {
-  return "HueDisplace";
+  return Name;
 }
 const char *HueDisplaceEffect::getDescriptiveName() const {
   return "Displace by hue";
@@ -12,36 +14,41 @@ const char *HueDisplaceEffect::getDescription() const {
   return "Particles move into different directions depending on their hue";
 }
 
-void HueDisplaceEffect::Config::load(const json &json) {
-  distance = json.value("distance", 0.f);
-  scaleByValue = json.value("scaleByValue", 0.f);
-  randomDirectionOffset = json.value("randomDirectionOffset", false);
-  rotate = json.value("rotate", 0.f);
-}
-void HueDisplaceEffect::Config::save(json &json) const {
-  json.emplace("distance", distance);
-  json.emplace("scaleByValue", scaleByValue);
-  json.emplace("randomDirectionOffset", randomDirectionOffset);
-  json.emplace("rotate", rotate);
+void HueDisplaceEffect::randomizeConfig() {
+  
 }
 
-std::unique_ptr<IEffect::IConfig> HueDisplaceEffect::getDefaultConfig() const {
-  return std::make_unique<Config>();
+void HueDisplaceEffect::loadConfig(const json &json) {
+  loadInstanceConfig(json);
+
+  auto config = json.value("config", json::object());
+  distance = config.value("distance", 0.f);
+  scaleByValue = config.value("scaleByValue", 0.f);
+  randomDirectionOffset = config.value("randomDirectionOffset", false);
+  rotate = config.value("rotate", 0.f);
 }
-std::unique_ptr<IEffect::IConfig> HueDisplaceEffect::getRandomConfig() const {
-  return std::make_unique<Config>();
+void HueDisplaceEffect::saveConfig(json &json) const {
+  saveInstanceConfig(json);
+
+  auto config = json::object();
+  config.emplace("distance", distance);
+  config.emplace("scaleByValue", scaleByValue);
+  config.emplace("randomDirectionOffset", randomDirectionOffset);
+  config.emplace("rotate", rotate);
+
+  json.emplace("config", config);
 }
 
-void HueDisplaceEffect::writeVertexShader(const IConfig *config) const {
+void HueDisplaceEffect::writeVertexShader() const {
   
 }
 
 /*
-void HueDisplaceEffect::writeFragmentShader(const IConfig *config) const {
+void HueDisplaceEffect::writeFragmentShader() const {
   
 }
 
-void HueDisplaceEffect::scheduleSound(const IConfig *config) const {
+void HueDisplaceEffect::scheduleSound() const {
   
 }
 */

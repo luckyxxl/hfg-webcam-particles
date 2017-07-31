@@ -6,29 +6,31 @@ class IEffect {
   virtual const char *getDescriptiveName() const = 0;
   virtual const char *getDescription() const = 0;
 
-  class IConfig {
-    public:
-    virtual void load(const json &json) = 0;
-    virtual void save(json &json) const = 0;
-  };
+  virtual void randomizeConfig() = 0;
 
-  virtual std::unique_ptr<IConfig> getDefaultConfig() const = 0;
-  virtual std::unique_ptr<IConfig> getRandomConfig() const = 0;
+  virtual void loadConfig(const json &json) = 0;
+  virtual void saveConfig(json &json) const = 0;
 
-  virtual void writeVertexShader(const IConfig *config) const = 0;
-  //virtual void writeFragmentShader(const IConfig *config) const = 0;
-  //virtual void scheduleSound(const IConfig *config) const = 0;
+  virtual void writeVertexShader() const = 0;
+  //virtual void writeFragmentShader() const = 0;
+  //virtual void scheduleSound() const = 0;
+
+  protected:
+  float timeBegin = 0.f;
+  float timeEnd = 1.f;
+  unsigned repetitions = 1u;
+
+  void loadInstanceConfig(const json &json);
+  void saveInstanceConfig(json &json) const;
 };
 
 class EffectRegistry {
   public:
   template<class Effect>
   void registerEffect() {
-    effects.push_back(std::make_unique<Effect>());
+    effects.emplace(Effect::Name, std::make_unique<Effect>);
   }
 
-  const IEffect *getEffectByName(const char *name) const;
-
   private:
-  std::vector<std::unique_ptr<IEffect>> effects;
+  std::map<std::string, std::function<std::unique_ptr<IEffect>()>> effects;
 };
