@@ -59,8 +59,6 @@ bool SampleBuffer::loadFromFile(Resources *resources, const char *filename) {
   channels = header->numChannels;
   buffer.resize(header->subchunk2Size / (header->bitsPerSample / 8));
 
-  std::cout << int(channels) << "\n";
-
   switch(header->bitsPerSample) {
     case 16:
     {
