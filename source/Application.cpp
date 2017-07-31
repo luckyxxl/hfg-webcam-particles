@@ -2,6 +2,9 @@
 
 #include "Application.hpp"
 
+#include "effects/HueDisplaceEffect.hpp"
+#include "effects/ConvergeCircleEffect.hpp"
+
 bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
   this->soundRenderer = soundRenderer;
 
@@ -48,6 +51,9 @@ bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
 
   current_frame_data.resize(webcam_width * webcam_height);
   particleBuffer.create(webcam_width * webcam_height);
+
+  effectRegistry.registerEffect<HueDisplaceEffect>();
+  effectRegistry.registerEffect<ConvergeCircleEffect>();
 
   return true;
 }

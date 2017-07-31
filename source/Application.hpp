@@ -6,6 +6,7 @@
 #include "ThreadSyncTripleBuffer.hpp"
 #include "graphics/Pipeline.hpp"
 #include "graphics/ParticleBuffer.hpp"
+#include "effects/EffectRegistry.hpp"
 
 class Application {
   public:
@@ -49,6 +50,8 @@ class Application {
   graphics::ParticleBuffer particleBuffer;
 
   std::vector<float> background_frame;
+
+  EffectRegistry effectRegistry;
 
   bool globalEffectTimeoutActive = false;
   float globalEffectTimeout = 1.f;

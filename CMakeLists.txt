@@ -7,6 +7,12 @@ find_package(OpenCV REQUIRED)
 list(APPEND CMAKE_CXX_FLAGS "-std=c++14 -Wall -pthread")
 
 add_executable(webcam-particles
+  source/effects/ConvergeCircleEffect.cpp
+  source/effects/ConvergeCircleEffect.hpp
+  source/effects/EffectRegistry.cpp
+  source/effects/EffectRegistry.hpp
+  source/effects/HueDisplaceEffect.cpp
+  source/effects/HueDisplaceEffect.hpp
   source/graphics/ParticleBuffer.cpp
   source/graphics/ParticleBuffer.hpp
   source/graphics/Pipeline.cpp

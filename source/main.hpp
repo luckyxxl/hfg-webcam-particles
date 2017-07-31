@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <atomic>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <random>
 #include <string>
@@ -16,5 +17,8 @@
 
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+
+#include "json.hpp"
+using json = nlohmann::json;
 
 constexpr auto PI = 3.14159265f;
