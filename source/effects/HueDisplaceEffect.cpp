@@ -3,7 +3,7 @@
 #include "HueDisplaceEffect.hpp"
 
 const char *HueDisplaceEffect::getName() const {
-  return "HueDisplace";
+  return "HueDisplaceEffect";
 }
 const char *HueDisplaceEffect::getDescriptiveName() const {
   return "Displace by hue";

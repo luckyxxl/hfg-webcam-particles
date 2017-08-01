@@ -4,8 +4,9 @@
 
 void EffectInstance::load(const json &json) {
   timeBegin = json.value("timeBegin", 0.f);
-  timeEnd = json.value("timeEnd", 1.f);
+  timeEnd = json.value("timeEnd", 1000.f);
   repetitions = json.value("repetitions", 1u);
+  config = effect->getDefaultConfig();
   config->load(json.value("config", json::object()));
 }
 

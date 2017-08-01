@@ -3,7 +3,7 @@
 #include "ConvergeCircleEffect.hpp"
 
 const char *ConvergeCircleEffect::getName() const {
-  return "ConvergeCircle";
+  return "ConvergeCircleEffect";
 }
 const char *ConvergeCircleEffect::getDescriptiveName() const {
   return "Converge to circle";

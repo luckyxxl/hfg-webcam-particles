@@ -7,6 +7,7 @@
 #include "graphics/Pipeline.hpp"
 #include "graphics/ParticleBuffer.hpp"
 #include "effects/EffectRegistry.hpp"
+#include "Timeline.hpp"
 
 class Application {
   public:

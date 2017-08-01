@@ -56,18 +56,23 @@ bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
   effectRegistry.registerEffect<ConvergeCircleEffect>();
 
   {
-    auto testInstance = effectRegistry.createInstance("HueDisplace");
-    testInstance->config = testInstance->effect->getDefaultConfig();
-    static_cast<HueDisplaceEffect::Config*>(testInstance->config.get())->distance = 1.f;
+    Timeline testTimeline(&effectRegistry);
 
-    auto testInstance2 = effectRegistry.createInstance("ConvergeCircle");
-    testInstance2->config = testInstance2->effect->getDefaultConfig();
+    auto testJson = resources->readWholeTextFile("debug/particles.json");
+    testTimeline.load(json::parse(testJson)["effects"]);
 
     ShaderBuilder vertexShader, fragmentShader;
-    testInstance->effect->registerEffect(*testInstance.get(), vertexShader, fragmentShader);
-    testInstance2->effect->registerEffect(*testInstance2.get(), vertexShader, fragmentShader);
+
+    testTimeline.forEachInstance([&](const EffectInstance &i) {
+      i.effect->registerEffect(i, vertexShader, fragmentShader);
+    });
 
     std::cout << vertexShader.assemble() << "\n" /*<< fragmentShader.assemble()*/;
+
+    json testSave;
+    testTimeline.save(testSave);
+
+    std::cout << testSave.dump(2) << "\n";
   }
 
   return true;
