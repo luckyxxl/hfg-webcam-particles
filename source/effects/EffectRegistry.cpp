@@ -16,3 +16,14 @@ void EffectInstance::save(json &json) const {
   json.emplace("config", json::object());
   config->save(json["config"]);
 }
+
+std::unique_ptr<EffectInstance> EffectRegistry::createInstance(const char *effectName) const {
+  for(auto &e : effects) {
+    if(strcmp(e->getName(), effectName) == 0) {
+      auto result = std::make_unique<EffectInstance>();
+      result->effect = e.get();
+      return result;
+    }
+  }
+  return std::unique_ptr<EffectInstance>();
+}

@@ -18,7 +18,5 @@ class ConvergeCircleEffect : public IEffect {
   std::unique_ptr<IConfig> getDefaultConfig() const override;
   std::unique_ptr<IConfig> getRandomConfig() const override;
 
-  void writeVertexShader(const EffectInstance &instance) const override;
-  void writeFragmentShader(const EffectInstance &instance) const override;
-  void scheduleSound(const EffectInstance &instance) const override;
+  void registerEffect(const EffectInstance &instance, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const override;
 };

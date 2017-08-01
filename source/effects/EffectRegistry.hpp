@@ -1,6 +1,6 @@
 #pragma once
 
-struct EffectInstance;
+#include "../ShaderBuilder.hpp"
 
 class IEffect {
   public:
@@ -16,9 +16,7 @@ class IEffect {
   virtual std::unique_ptr<IConfig> getDefaultConfig() const = 0;
   virtual std::unique_ptr<IConfig> getRandomConfig() const = 0;
 
-  virtual void writeVertexShader(const EffectInstance &instance) const = 0;
-  virtual void writeFragmentShader(const EffectInstance &instance) const = 0;
-  virtual void scheduleSound(const EffectInstance &instance) const = 0;
+  virtual void registerEffect(const EffectInstance &instance, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const = 0;
 };
 
 struct EffectInstance {
@@ -28,6 +26,10 @@ struct EffectInstance {
   float timeBegin = 0.f;
   float timeEnd = 1.f;
   unsigned repetitions = 1u;
+
+  float getPeriod() const {
+    return (timeEnd - timeBegin) / repetitions;
+  }
 
   void load(const json &json);
   void save(json &json) const;
@@ -39,6 +41,8 @@ class EffectRegistry {
   void registerEffect() {
     effects.emplace_back(std::make_unique<Effect>());
   }
+
+  std::unique_ptr<EffectInstance> createInstance(const char *effectName) const;
 
   private:
   std::vector<std::unique_ptr<IEffect>> effects;

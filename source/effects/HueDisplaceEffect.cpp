@@ -32,14 +32,41 @@ std::unique_ptr<IEffect::IConfig> HueDisplaceEffect::getRandomConfig() const {
   return std::make_unique<Config>();
 }
 
-void HueDisplaceEffect::writeVertexShader(const EffectInstance &instance) const {
-  
-}
+void HueDisplaceEffect::registerEffect(const EffectInstance &instance, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
+  const Config *config = static_cast<const Config*>(instance.config.get());
+  if(config->distance != 0.f) {
+    ShaderBuilder::UniformMap uniforms(42);
 
-void HueDisplaceEffect::writeFragmentShader(const EffectInstance &instance) const {
-  
-}
+    uniforms.addUniform("distance", GLSLType::Float, [](const EffectInstance &instance) {
+      const Config *config = static_cast<const Config*>(instance.config.get());
+      return UniformValue(config->distance);
+    });
+    uniforms.addUniform("time", GLSLType::Float, [](const EffectInstance &instance) {
+      //const Config *config = static_cast<const Config*>(instance.config.get());
+      return UniformValue((/*props.clock.getTime() -*/ instance.timeBegin) / instance.getPeriod() * 2 * PI);
+    });
+    uniforms.addUniform("directionOffset", GLSLType::Float, [](const EffectInstance &instance) {
+      const Config *config = static_cast<const Config*>(instance.config.get());
+      auto result = config->rotate * (/*props.clock.getTime() -*/ instance.timeBegin) / instance.getPeriod() * 2 * PI;
+      if(config->randomDirectionOffset) {
+        if(std::isnan(config->randomDirectionOffsetValue)) {
+          const_cast<Config*>(config)->randomDirectionOffsetValue = /* random() **/ 2 * PI;
+        }
+        result += config->randomDirectionOffsetValue;
+      }
+      return UniformValue(result);
+    });
+    uniforms.addUniform("scaleByVal", GLSLType::Float, [](const EffectInstance &instance) {
+      const Config *config = static_cast<const Config*>(instance.config.get());
+      return UniformValue(config->scaleByValue);
+    });
 
-void HueDisplaceEffect::scheduleSound(const EffectInstance &instance) const {
-  
+    vertexShader.appendMainBody(uniforms, R"glsl(
+    {
+      float angle = hsv[0] + ${directionOffset};
+      float offset = (-cos(${time}) + 1.) / 2.;
+      position.xy += offset * getDirectionVector(angle) * ${distance} * (1. - ${scaleByVal} * (1. - hsv[2]));
+    }
+    )glsl");
+  }
 }

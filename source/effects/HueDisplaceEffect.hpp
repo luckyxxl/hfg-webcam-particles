@@ -16,12 +16,12 @@ class HueDisplaceEffect : public IEffect {
 
     void load(const json &json) override;
     void save(json &json) const override;
+
+    float randomDirectionOffsetValue = NAN; // updated during rendering
   };
 
   std::unique_ptr<IConfig> getDefaultConfig() const override;
   std::unique_ptr<IConfig> getRandomConfig() const override;
 
-  void writeVertexShader(const EffectInstance &instance) const override;
-  void writeFragmentShader(const EffectInstance &instance) const override;
-  void scheduleSound(const EffectInstance &instance) const override;
+  void registerEffect(const EffectInstance &instance, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const override;
 };

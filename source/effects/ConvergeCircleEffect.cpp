@@ -26,14 +26,53 @@ std::unique_ptr<IEffect::IConfig> ConvergeCircleEffect::getRandomConfig() const 
   return std::make_unique<Config>();
 }
 
-void ConvergeCircleEffect::writeVertexShader(const EffectInstance &instance) const {
-  
-}
+void ConvergeCircleEffect::registerEffect(const EffectInstance &instance, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
+  //const Config *config = static_cast<const Config*>(instance.config.get());
 
-void ConvergeCircleEffect::writeFragmentShader(const EffectInstance &instance) const {
-  
-}
+  ShaderBuilder::UniformMap uniforms(42);
 
-void ConvergeCircleEffect::scheduleSound(const EffectInstance &instance) const {
-  
+  uniforms.addUniform("time", GLSLType::Float, [](const EffectInstance &instance){
+    //const Config *config = static_cast<const Config*>(instance.config.get());
+    return UniformValue(std::fmod(/*props.clock.getTime() -*/ instance.timeBegin, instance.getPeriod()));
+  });
+  uniforms.addUniform("speed", GLSLType::Float, [](const EffectInstance &instance){
+    //const Config *config = static_cast<const Config*>(instance.config.get());
+    return UniformValue(2 * 2 / (instance.getPeriod() / 2 * instance.getPeriod() / 2));
+  });
+  uniforms.addUniform("rotationSpeed", GLSLType::Float, [](const EffectInstance &instance){
+    const Config *config = static_cast<const Config*>(instance.config.get());
+    return UniformValue(config->rotationSpeed);
+  });
+  uniforms.addUniform("maxTravelTime", GLSLType::Float, [](const EffectInstance &instance){
+    //const Config *config = static_cast<const Config*>(instance.config.get());
+    return UniformValue(instance.getPeriod() / 2);
+  });
+
+  vertexShader.appendMainBody(uniforms, R"glsl(
+  {
+    vec2 screenTarget = getDirectionVector(hsv[0] + ${time} * ${rotationSpeed}) * vec2(.8) * vec2(invScreenAspectRatio, 1.);
+    vec2 target = (invViewProjectionMatrix * vec4(screenTarget, 0, 1)).xy;
+
+    vec2 d = target - initialPosition.xy;
+    float d_len = length(d);
+
+    float stop_t = sqrt(2. * d_len / ${speed});
+
+    vec2 result;
+
+    if(${time} < stop_t) {
+      float t = min(${time}, stop_t);
+      result = .5 * d / d_len * ${speed} * t * t;
+    } else if(${time} < ${maxTravelTime}) {
+      result = d;
+    } else {
+      float t = ${time} - ${maxTravelTime};
+      //result = mix(d, vec2(0.), 1. - (1.-t) * (1.-t));
+      //result = mix(d, vec2(0.), t * t);
+      result = mix(d, vec2(0.), -cos(t / ${maxTravelTime} * PI) * .5 + .5);
+    }
+
+    position.xy += result;
+  }
+  )glsl");
 }

@@ -55,6 +55,21 @@ bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
   effectRegistry.registerEffect<HueDisplaceEffect>();
   effectRegistry.registerEffect<ConvergeCircleEffect>();
 
+  {
+    auto testInstance = effectRegistry.createInstance("HueDisplace");
+    testInstance->config = testInstance->effect->getDefaultConfig();
+    static_cast<HueDisplaceEffect::Config*>(testInstance->config.get())->distance = 1.f;
+
+    auto testInstance2 = effectRegistry.createInstance("ConvergeCircle");
+    testInstance2->config = testInstance2->effect->getDefaultConfig();
+
+    ShaderBuilder vertexShader, fragmentShader;
+    testInstance->effect->registerEffect(*testInstance.get(), vertexShader, fragmentShader);
+    testInstance2->effect->registerEffect(*testInstance2.get(), vertexShader, fragmentShader);
+
+    std::cout << vertexShader.assemble() << "\n" /*<< fragmentShader.assemble()*/;
+  }
+
   return true;
 }
 
