@@ -4,21 +4,21 @@
 
 class ConvergeCircleEffect : public IEffect {
   public:
-  static constexpr auto Name = "ConvergeCircle";
-
   const char *getName() const override;
   const char *getDescriptiveName() const override;
   const char *getDescription() const override;
 
-  void randomizeConfig() override;
+  struct Config : IConfig {
+    float rotationSpeed;
 
-  void loadConfig(const json &json) override;
-  void saveConfig(json &json) const override;
+    void load(const json &json) override;
+    void save(json &json) const override;
+  };
 
-  void writeVertexShader() const override;
-  //void writeFragmentShader() const override;
-  //void scheduleSound() const override;
+  std::unique_ptr<IConfig> getDefaultConfig() const override;
+  std::unique_ptr<IConfig> getRandomConfig() const override;
 
-  protected:
-  float rotationSpeed;
+  void writeVertexShader(const EffectInstance &instance) const override;
+  void writeFragmentShader(const EffectInstance &instance) const override;
+  void scheduleSound(const EffectInstance &instance) const override;
 };

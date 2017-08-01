@@ -2,10 +2,8 @@
 
 #include "ConvergeCircleEffect.hpp"
 
-constexpr const char *ConvergeCircleEffect::Name;
-
 const char *ConvergeCircleEffect::getName() const {
-  return Name;
+  return "ConvergeCircle";
 }
 const char *ConvergeCircleEffect::getDescriptiveName() const {
   return "Converge to circle";
@@ -14,35 +12,28 @@ const char *ConvergeCircleEffect::getDescription() const {
   return "Particles are attracted towards their position on an HSV color wheel centered around the center of the screen";
 }
 
-void ConvergeCircleEffect::randomizeConfig() {
+void ConvergeCircleEffect::Config::load(const json &json) {
+  rotationSpeed = json.value("rotationSpeed", 0.f);
+}
+void ConvergeCircleEffect::Config::save(json &json) const {
+  json.emplace("rotationSpeed", rotationSpeed);
+}
+
+std::unique_ptr<IEffect::IConfig> ConvergeCircleEffect::getDefaultConfig() const {
+  return std::make_unique<Config>();
+}
+std::unique_ptr<IEffect::IConfig> ConvergeCircleEffect::getRandomConfig() const {
+  return std::make_unique<Config>();
+}
+
+void ConvergeCircleEffect::writeVertexShader(const EffectInstance &instance) const {
   
 }
 
-void ConvergeCircleEffect::loadConfig(const json &json) {
-  loadInstanceConfig(json);
-
-  auto config = json.value("config", json::object());
-  rotationSpeed = config.value("rotationSpeed", 0.f);
-}
-void ConvergeCircleEffect::saveConfig(json &json) const {
-  saveInstanceConfig(json);
-
-  auto config = json::object();
-  config.emplace("rotationSpeed", rotationSpeed);
-
-  json.emplace("config", config);
-}
-
-void ConvergeCircleEffect::writeVertexShader() const {
+void ConvergeCircleEffect::writeFragmentShader(const EffectInstance &instance) const {
   
 }
 
-/*
-void ConvergeCircleEffect::writeFragmentShader() const {
+void ConvergeCircleEffect::scheduleSound(const EffectInstance &instance) const {
   
 }
-
-void ConvergeCircleEffect::scheduleSound() const {
-  
-}
-*/
