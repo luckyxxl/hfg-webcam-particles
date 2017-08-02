@@ -1,8 +1,7 @@
 #pragma once
 
-#include "SampleBuffer.hpp"
-
 namespace sound {
+class SampleBuffer;
 
 class Voice {
   public:

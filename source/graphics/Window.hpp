@@ -3,15 +3,16 @@
 namespace graphics {
 
 class Window {
-  public:
+public:
   bool create();
   void destroy();
 
   void swap();
+  bool toggleFullscreen();
 
   std::tuple<uint32_t, uint32_t> getSize() const;
   
-  private:
+private:
   SDL_Window *window = nullptr;
   SDL_GLContext gl_context = nullptr;
 
@@ -22,5 +23,4 @@ class Window {
 
   void updateFPS();
 };
-
 }

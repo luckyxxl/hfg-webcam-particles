@@ -2,12 +2,16 @@
 
 #include "Application.hpp"
 
+#include "Resources.hpp"
+#include "graphics/Window.hpp"
+#include "sound/Renderer.hpp"
 #include "effects/HueDisplaceEffect.hpp"
 #include "effects/ConvergeCircleEffect.hpp"
 
 Application::Application() : testParticleRenderer(random) {}
 
-bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
+bool Application::create(Resources *resources, graphics::Window *window, sound::Renderer *soundRenderer) {
+  this->window = window;
   this->soundRenderer = soundRenderer;
 
   //testSample.loadFromFile(resources, "sound_debug/test.wav");
@@ -95,32 +99,55 @@ void Application::reshape(uint32_t width, uint32_t height) {
   glViewport(0, 0, width, height);
 }
 
-void Application::handleEvent(const SDL_Event &event) {
-  switch(event.type) {
-    case SDL_KEYDOWN:
-    switch(event.key.keysym.scancode) {
-      /*
-      case SDL_SCANCODE_1:
-      soundRenderer->play(&whooshSamples[0]);
-      break;
-      case SDL_SCANCODE_2:
-      soundRenderer->play(&whooshSamples[1]);
-      break;
-      case SDL_SCANCODE_3:
-      soundRenderer->play(&whooshSamples[2]);
-      break;
-      case SDL_SCANCODE_4:
-      soundRenderer->play(&whooshSamples[3]);
-      break;
-      case SDL_SCANCODE_5:
-      soundRenderer->play(&whooshSamples[4]);
-      break;
-      */
-      default:
-      break;
+bool Application::handleEvents() {
+  SDL_Event event;
+  while(SDL_PollEvent(&event)) {
+    switch(event.type) {
+      case SDL_QUIT: {
+        return false;
+        break;
+      }
+      case SDL_WINDOWEVENT: {
+        switch(event.window.event) {
+          case SDL_WINDOWEVENT_RESIZED: {
+            reshape(event.window.data1, event.window.data2);
+            break;
+          }
+        }
+        break;
+      }
+      case SDL_KEYDOWN: {
+        switch(event.key.keysym.scancode) {
+          /*
+          case SDL_SCANCODE_1:
+          soundRenderer->play(&whooshSamples[0]);
+          break;
+          case SDL_SCANCODE_2:
+          soundRenderer->play(&whooshSamples[1]);
+          break;
+          case SDL_SCANCODE_3:
+          soundRenderer->play(&whooshSamples[2]);
+          break;
+          case SDL_SCANCODE_4:
+          soundRenderer->play(&whooshSamples[3]);
+          break;
+          case SDL_SCANCODE_5:
+          soundRenderer->play(&whooshSamples[4]);
+          break;
+          */
+          default:
+            break;
+        }
+      }
+      case SDL_MOUSEBUTTONDOWN: {
+        if (event.button.button == SDL_BUTTON_LEFT && event.button.clicks == 2) {
+          window->toggleFullscreen(); // FIXME handle return value
+        }
+        break;
+      }
     }
-    break;
   }
+  return true;
 }
 
 static void rgb2Hsv(float *hsv, const float *rgb) {

@@ -1,7 +1,7 @@
 #pragma once
 
 class Resources {
-  public:
+public:
   bool create(const char *argv0);
   void destroy();
 
@@ -10,6 +10,6 @@ class Resources {
   std::string readWholeTextFile(const char *filename);
   std::vector<uint8_t> readWholeBinaryFile(const char *filename);
 
-  private:
+private:
   std::string rootPath;
 };

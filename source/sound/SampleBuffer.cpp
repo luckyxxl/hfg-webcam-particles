@@ -1,6 +1,7 @@
 #include "main.hpp"
 
 #include "SampleBuffer.hpp"
+#include "Resources.hpp"
 
 namespace sound {
 

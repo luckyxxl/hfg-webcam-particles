@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Resources.hpp"
+class Resources;
 
 namespace sound {
 

@@ -1,28 +1,36 @@
 #pragma once
 
-#include "Resources.hpp"
-#include "sound/Renderer.hpp"
 #include "Webcam.hpp"
 #include "ThreadSyncTripleBuffer.hpp"
 #include "graphics/Pipeline.hpp"
 #include "graphics/ParticleBuffer.hpp"
+#include "sound/SampleBuffer.hpp"
 #include "effects/EffectRegistry.hpp"
 #include "Timeline.hpp"
 #include "ParticleRenderer.hpp"
 
+class Resources;
+namespace sound {
+  class Renderer;
+}
+namespace graphics {
+  class Window;
+}
+
 class Application {
-  public:
+public:
   Application();
 
-  bool create(Resources *resources, sound::Renderer *soundRenderer);
+  bool create(Resources *, graphics::Window *, sound::Renderer *);
   void destroy();
 
-  void handleEvent(const SDL_Event &event);
+  bool handleEvents();
   void reshape(uint32_t width, uint32_t height);
   void update(float dt);
   void render();
 
-  private:
+private:
+  graphics::Window *window;
   sound::Renderer *soundRenderer;
 
   //sound::SampleBuffer testSample;

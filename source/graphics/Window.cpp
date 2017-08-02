@@ -61,4 +61,11 @@ void Window::updateFPS() {
   }
 }
 
+bool Window::toggleFullscreen() {
+  auto flag = SDL_WINDOW_FULLSCREEN_DESKTOP; // FIXME this can be SDL_WINDOW_FULLSCREEN, too
+  bool isFullscreen = SDL_GetWindowFlags(window) & flag;
+  bool success = !SDL_SetWindowFullscreen(window, isFullscreen ? 0 : flag);
+  return success;
+}
+
 }

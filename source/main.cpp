@@ -5,31 +5,6 @@
 #include "sound/Renderer.hpp"
 #include "Application.hpp"
 
-static bool handleEvents(Application *application) {
-  SDL_Event event;
-  while(SDL_PollEvent(&event)) {
-    switch(event.type) {
-      case SDL_QUIT:
-      return false;
-      break;
-
-      case SDL_WINDOWEVENT:
-      switch(event.window.event) {
-        case SDL_WINDOWEVENT_RESIZED:
-        application->reshape(event.window.data1, event.window.data2);
-        break;
-      }
-      break;
-
-      default:
-      application->handleEvent(event);
-      break;
-    }
-  }
-
-  return true;
-}
-
 int main(int argc, const char *argv[]) {
   Resources *resources = nullptr;
   graphics::Window *window = nullptr;
@@ -57,7 +32,7 @@ int main(int argc, const char *argv[]) {
   }
 
   application = new Application();
-  if(!application->create(resources, soundRenderer)) {
+  if(!application->create(resources, window, soundRenderer)) {
     goto quit;
   }
 
@@ -67,7 +42,7 @@ int main(int argc, const char *argv[]) {
   }
 
   for(;;) {
-    if(!handleEvents(application)) break;
+    if(!application->handleEvents()) break;
 
     application->update(1.f / 60.f);
     application->render();
