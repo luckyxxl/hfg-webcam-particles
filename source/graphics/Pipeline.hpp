@@ -9,7 +9,6 @@ class Pipeline {
 
   void bind() const;
 
-  //TODO: remove this
   GLint getUniformLocation(const char *uniformName) const {
     return glGetUniformLocation(program, uniformName);
   }

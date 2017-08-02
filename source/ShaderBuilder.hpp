@@ -8,6 +8,7 @@ enum class GLSLType {
   Float,
   Vec2,
   Vec3,
+  Vec4,
   Mat4,
 };
 
@@ -24,25 +25,26 @@ struct UniformValue {
 
 using UniformValueFunction = std::function<UniformValue(const RenderProps&)>;
 
+struct UniformDescription {
+  std::string name;
+  GLSLType type;
+  UniformValueFunction value;
+
+  UniformDescription(const std::string &name, GLSLType type, UniformValueFunction value) : name(name), type(type), value(value) {}
+};
+
 //TODO: rename
 class Uniforms {
   public:
   static constexpr auto undefinedId = std::numeric_limits<unsigned>::max();
-  Uniforms(unsigned id = undefinedId) : id(id) {}
+
+  Uniforms(std::vector<UniformDescription> &uniforms, unsigned id = undefinedId) : uniforms(uniforms), id(id) {}
 
   const char *addUniform(const char *name, GLSLType type, UniformValueFunction value);
 
-  struct Element {
-    std::string name;
-    GLSLType type;
-    UniformValueFunction value;
-  };
-
-  const std::vector<Element> &getUniforms() const { return uniforms; }
-
   private:
+  std::vector<UniformDescription> &uniforms;
   unsigned id;
-  std::vector<Element> uniforms;
 };
 
 //simplification for specifying uniforms directly in the TEMPLATE(...).compile() list
@@ -51,7 +53,11 @@ class Uniforms {
 
 class ShaderBuilder {
   public:
-  void appendUniforms(const Uniforms &uniforms);
+  void appendUniform(const UniformDescription &uniform);
+  void appendIn(const std::string &name, GLSLType type);
+  void appendOut(const std::string &name, GLSLType type);
+  void appendGlobal(const std::string &name, GLSLType type, const std::string &value);
+  void appendFunction(const std::string &function);
   void appendMainBody(const char *source);
 
   std::string assemble() const;

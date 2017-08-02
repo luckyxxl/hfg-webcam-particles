@@ -5,6 +5,8 @@
 #include "effects/HueDisplaceEffect.hpp"
 #include "effects/ConvergeCircleEffect.hpp"
 
+Application::Application() : testParticleRenderer(random) {}
+
 bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
   this->soundRenderer = soundRenderer;
 
@@ -56,28 +58,19 @@ bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
   effectRegistry.registerEffect<ConvergeCircleEffect>();
 
   {
-    Timeline testTimeline(&effectRegistry);
+    auto testTimeline = std::make_unique<Timeline>(&effectRegistry);
 
     auto testJson = resources->readWholeTextFile("debug/particles.json");
-    testTimeline.load(json::parse(testJson)["effects"]);
+    testTimeline->load(json::parse(testJson)["effects"]);
 
-    ShaderBuilder vertexShader, fragmentShader;
+    {
+      json testSave;
+      testTimeline->save(testSave);
 
-    unsigned instanceId = 0;
-    testTimeline.forEachInstance([&](const IEffect &i) {
-      Uniforms uniforms(instanceId);
-      i.registerEffect(uniforms, vertexShader, fragmentShader);
-      vertexShader.appendUniforms(uniforms);
-      fragmentShader.appendUniforms(uniforms);
-      ++instanceId;
-    });
+      std::cout << testSave.dump(2) << "\n";
+    }
 
-    std::cout << vertexShader.assemble() << "\n" /*<< fragmentShader.assemble()*/;
-
-    json testSave;
-    testTimeline.save(testSave);
-
-    std::cout << testSave.dump(2) << "\n";
+    testParticleRenderer.setTimeline(std::move(testTimeline));
   }
 
   return true;

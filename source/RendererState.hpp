@@ -53,4 +53,6 @@ struct RendererState {
 struct RenderProps {
   const RendererState &state;
   std::default_random_engine &random;
+
+  RenderProps(const RendererState &state, std::default_random_engine &random) : state(state), random(random) {}
 };

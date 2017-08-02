@@ -8,9 +8,12 @@
 #include "graphics/ParticleBuffer.hpp"
 #include "effects/EffectRegistry.hpp"
 #include "Timeline.hpp"
+#include "ParticleRenderer.hpp"
 
 class Application {
   public:
+  Application();
+
   bool create(Resources *resources, sound::Renderer *soundRenderer);
   void destroy();
 
@@ -40,6 +43,8 @@ class Application {
 
   void webcamThreadFunc();
   std::thread webcam_thread;
+
+  ParticleRenderer testParticleRenderer;
 
   graphics::Pipeline pipeline;
   GLint invImageAspectRatio_location, invScreenAspectRatio_location;

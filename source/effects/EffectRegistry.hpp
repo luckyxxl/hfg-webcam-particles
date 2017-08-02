@@ -19,6 +19,9 @@ class IEffect {
   void loadInstanceConfig(const json &json);
   void saveInstanceConfig(json &json) const;
 
+  float getTimeBegin() const { return timeBegin; }
+  float getTimeEnd() const { return timeEnd; }
+
   protected:
   float timeBegin = 0.f;
   float timeEnd = 1.f;
