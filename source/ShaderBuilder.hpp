@@ -45,6 +45,10 @@ class Uniforms {
   std::vector<Element> uniforms;
 };
 
+//simplification for specifying uniforms directly in the TEMPLATE(...).compile() list
+#define UNIFORM(name, type, lambda) \
+  { name, uniforms.addUniform(name, type, lambda) }
+
 class ShaderBuilder {
   public:
   void appendUniforms(const Uniforms &uniforms);

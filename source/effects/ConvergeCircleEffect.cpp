@@ -26,21 +26,6 @@ void ConvergeCircleEffect::randomizeConfig() {
 }
 
 void ConvergeCircleEffect::registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
-
-  const auto time = uniforms.addUniform("time", GLSLType::Float, [this](const RenderProps &props){
-    return UniformValue(std::fmod(props.state.clock.getTime() - timeBegin, getPeriod()));
-  });
-  const auto speed = uniforms.addUniform("speed", GLSLType::Float, [this](const RenderProps &props){
-    return UniformValue(2 * 2 / (getPeriod() / 2 * getPeriod() / 2));
-  });
-  const auto rotationSpeed = uniforms.addUniform("rotationSpeed", GLSLType::Float, [this](const RenderProps &props){
-    //TODO: remove this->
-    return UniformValue(this->rotationSpeed);
-  });
-  const auto maxTravelTime = uniforms.addUniform("maxTravelTime", GLSLType::Float, [this](const RenderProps &props){
-    return UniformValue(getPeriod() / 2);
-  });
-
   vertexShader.appendMainBody(TEMPLATE(R"glsl(
   {
     vec2 screenTarget = getDirectionVector(hsv[0] + ${time} * ${rotationSpeed}) * vec2(.8) * vec2(invScreenAspectRatio, 1.);
@@ -68,9 +53,17 @@ void ConvergeCircleEffect::registerEffect(Uniforms &uniforms, ShaderBuilder &ver
     position.xy += result;
   }
   )glsl").compile({
-    {"time", time},
-    {"speed", speed},
-    {"rotationSpeed", rotationSpeed},
-    {"maxTravelTime", maxTravelTime},
+    UNIFORM("time", GLSLType::Float, [this](const RenderProps &props){
+      return UniformValue(std::fmod(props.state.clock.getTime() - timeBegin, getPeriod()));
+    }),
+    UNIFORM("speed", GLSLType::Float, [this](const RenderProps &props){
+      return UniformValue(2 * 2 / (getPeriod() / 2 * getPeriod() / 2));
+    }),
+    UNIFORM("rotationSpeed", GLSLType::Float, [this](const RenderProps &props){
+      return UniformValue(this->rotationSpeed);
+    }),
+    UNIFORM("maxTravelTime", GLSLType::Float, [this](const RenderProps &props){
+      return UniformValue(getPeriod() / 2);
+    }),
   }).c_str());
 }

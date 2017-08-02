@@ -33,29 +33,6 @@ void HueDisplaceEffect::randomizeConfig() {
 
 void HueDisplaceEffect::registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
   if(distance != 0.f) {
-    const auto distance = uniforms.addUniform("distance", GLSLType::Float, [this](const RenderProps &props) {
-      //TODO: remove this->
-      return UniformValue(this->distance);
-    });
-    const auto time = uniforms.addUniform("time", GLSLType::Float, [this](const RenderProps &props) {
-      return UniformValue((props.state.clock.getTime() - timeBegin) / getPeriod() * 2 * PI);
-    });
-    const auto directionOffset = uniforms.addUniform("directionOffset", GLSLType::Float, [this](const RenderProps &props) {
-      auto result = rotate * (props.state.clock.getTime() - timeBegin) / getPeriod() * 2 * PI;
-      if(randomDirectionOffset) {
-        if(std::isnan(randomDirectionOffsetValue)) {
-          std::uniform_real_distribution<float> dist;
-          const_cast<HueDisplaceEffect*>(this)->randomDirectionOffsetValue = dist(props.random) * 2 * PI;
-        }
-        result += randomDirectionOffsetValue;
-      }
-      return UniformValue(result);
-    });
-    const auto scaleByVal = uniforms.addUniform("scaleByVal", GLSLType::Float, [this](const RenderProps &props) {
-      //TODO: remove this->
-      return UniformValue(this->scaleByValue);
-    });
-
     vertexShader.appendMainBody(TEMPLATE(R"glsl(
     {
       float angle = hsv[0] + ${directionOffset};
@@ -63,10 +40,27 @@ void HueDisplaceEffect::registerEffect(Uniforms &uniforms, ShaderBuilder &vertex
       position.xy += offset * getDirectionVector(angle) * ${distance} * (1. - ${scaleByVal} * (1. - hsv[2]));
     }
     )glsl").compile({
-      {"distance", distance},
-      {"time", time},
-      {"directionOffset", directionOffset},
-      {"scaleByVal", scaleByVal},
+      UNIFORM("distance", GLSLType::Float, [this](const RenderProps &props) {
+        return UniformValue(distance);
+      }),
+      UNIFORM("time", GLSLType::Float, [this](const RenderProps &props) {
+        return UniformValue((props.state.clock.getTime() - timeBegin) / getPeriod() * 2 * PI);
+      }),
+      UNIFORM("directionOffset", GLSLType::Float, [this](const RenderProps &props) {
+        auto result = rotate * (props.state.clock.getTime() - timeBegin) / getPeriod() * 2 * PI;
+        if(randomDirectionOffset) {
+          if(std::isnan(randomDirectionOffsetValue)) {
+            std::uniform_real_distribution<float> dist;
+            const_cast<HueDisplaceEffect*>(this)->randomDirectionOffsetValue = dist(props.random) * 2 * PI;
+          }
+          result += randomDirectionOffsetValue;
+        }
+        return UniformValue(result);
+      }),
+      UNIFORM("scaleByVal", GLSLType::Float, [this](const RenderProps &props) {
+        //TODO: remove this->
+        return UniformValue(this->scaleByValue);
+      }),
     }).c_str());
   }
 }
