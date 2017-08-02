@@ -35,26 +35,26 @@ std::unique_ptr<IEffect::IConfig> HueDisplaceEffect::getRandomConfig() const {
 void HueDisplaceEffect::registerEffect(const EffectInstance &instance, Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
   const Config *config = static_cast<const Config*>(instance.config.get());
   if(config->distance != 0.f) {
-    const auto distance = uniforms.addUniform("distance", GLSLType::Float, [](const EffectInstance &instance) {
+    const auto distance = uniforms.addUniform("distance", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props) {
       const Config *config = static_cast<const Config*>(instance.config.get());
       return UniformValue(config->distance);
     });
-    const auto time = uniforms.addUniform("time", GLSLType::Float, [](const EffectInstance &instance) {
-      //const Config *config = static_cast<const Config*>(instance.config.get());
-      return UniformValue((/*props.clock.getTime() -*/ instance.timeBegin) / instance.getPeriod() * 2 * PI);
+    const auto time = uniforms.addUniform("time", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props) {
+      return UniformValue((props.state.clock.getTime() - instance.timeBegin) / instance.getPeriod() * 2 * PI);
     });
-    const auto directionOffset = uniforms.addUniform("directionOffset", GLSLType::Float, [](const EffectInstance &instance) {
+    const auto directionOffset = uniforms.addUniform("directionOffset", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props) {
       const Config *config = static_cast<const Config*>(instance.config.get());
-      auto result = config->rotate * (/*props.clock.getTime() -*/ instance.timeBegin) / instance.getPeriod() * 2 * PI;
+      auto result = config->rotate * (props.state.clock.getTime() - instance.timeBegin) / instance.getPeriod() * 2 * PI;
       if(config->randomDirectionOffset) {
         if(std::isnan(config->randomDirectionOffsetValue)) {
-          const_cast<Config*>(config)->randomDirectionOffsetValue = /* random() **/ 2 * PI;
+          std::uniform_real_distribution<float> dist;
+          const_cast<Config*>(config)->randomDirectionOffsetValue = dist(props.random) * 2 * PI;
         }
         result += config->randomDirectionOffsetValue;
       }
       return UniformValue(result);
     });
-    const auto scaleByVal = uniforms.addUniform("scaleByVal", GLSLType::Float, [](const EffectInstance &instance) {
+    const auto scaleByVal = uniforms.addUniform("scaleByVal", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props) {
       const Config *config = static_cast<const Config*>(instance.config.get());
       return UniformValue(config->scaleByValue);
     });

@@ -25,6 +25,9 @@ add_executable(webcam-particles
   source/sound/SampleBuffer.cpp
   source/Application.cpp
   source/Application.hpp
+  source/ParticleRenderer.cpp
+  source/ParticleRenderer.hpp
+  source/RendererState.hpp
   source/main.cpp
   source/main.hpp
   source/Resources.cpp

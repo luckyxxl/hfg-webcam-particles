@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../ShaderBuilder.hpp"
+#include "../RendererState.hpp"
 
 class IEffect {
   public:

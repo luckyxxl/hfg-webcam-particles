@@ -27,22 +27,18 @@ std::unique_ptr<IEffect::IConfig> ConvergeCircleEffect::getRandomConfig() const 
 }
 
 void ConvergeCircleEffect::registerEffect(const EffectInstance &instance, Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
-  //const Config *config = static_cast<const Config*>(instance.config.get());
 
-  const auto time = uniforms.addUniform("time", GLSLType::Float, [](const EffectInstance &instance){
-    //const Config *config = static_cast<const Config*>(instance.config.get());
-    return UniformValue(std::fmod(/*props.clock.getTime() -*/ instance.timeBegin, instance.getPeriod()));
+  const auto time = uniforms.addUniform("time", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props){
+    return UniformValue(std::fmod(props.state.clock.getTime() - instance.timeBegin, instance.getPeriod()));
   });
-  const auto speed = uniforms.addUniform("speed", GLSLType::Float, [](const EffectInstance &instance){
-    //const Config *config = static_cast<const Config*>(instance.config.get());
+  const auto speed = uniforms.addUniform("speed", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props){
     return UniformValue(2 * 2 / (instance.getPeriod() / 2 * instance.getPeriod() / 2));
   });
-  const auto rotationSpeed = uniforms.addUniform("rotationSpeed", GLSLType::Float, [](const EffectInstance &instance){
+  const auto rotationSpeed = uniforms.addUniform("rotationSpeed", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props){
     const Config *config = static_cast<const Config*>(instance.config.get());
     return UniformValue(config->rotationSpeed);
   });
-  const auto maxTravelTime = uniforms.addUniform("maxTravelTime", GLSLType::Float, [](const EffectInstance &instance){
-    //const Config *config = static_cast<const Config*>(instance.config.get());
+  const auto maxTravelTime = uniforms.addUniform("maxTravelTime", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props){
     return UniformValue(instance.getPeriod() / 2);
   });
 
