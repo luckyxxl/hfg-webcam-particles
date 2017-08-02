@@ -6,22 +6,14 @@
 #include <sstream>
 
 /**
- * Base class for different template implementations.
- */
-struct Template {
-  using str_view_t = std::experimental::string_view;
-  using subst_t = std::map<str_view_t, std::string>;
-  virtual std::string compile(const subst_t &map) = 0;
-};
-
-/**
  * A template implementation which does almost all work during compile
  * time. Requires to know the template during compilation, of course.
  */
 template<unsigned shard_count>
-class ConstexprTemplate : public Template {
+class ConstexprTemplate {
   friend class TemplateLiteralParser;
   using str_view_t = std::experimental::string_view;
+  using subst_t = std::map<str_view_t, std::string>;
   using shards_t = std::array<str_view_t, shard_count>;
   using identifiers_t = std::array<str_view_t, shard_count - 1>;
 
@@ -34,7 +26,7 @@ public:
   constexpr ConstexprTemplate(ConstexprTemplate &&) = default;
   constexpr ConstexprTemplate(const ConstexprTemplate &) = default;
 
-  std::string compile(const subst_t &map) override {
+  std::string compile(const subst_t &map) {
     std::stringstream builder;
     auto idIt = identifiers.begin();
     auto idEnd = identifiers.end();
@@ -172,4 +164,3 @@ private:
   constexpr auto T = P.parse<shard_count>();                      \
   return T;                                                       \
 }()
-// std::make_unique<ConstexprTemplate<shard_count>>(std::move(T))
