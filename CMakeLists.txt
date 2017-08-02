@@ -4,7 +4,7 @@ project(hfg-webcam-particles LANGUAGES CXX)
 
 find_package(OpenCV REQUIRED)
 
-list(APPEND CMAKE_CXX_FLAGS "-std=c++14 -Wall -pthread")
+list(APPEND CMAKE_CXX_FLAGS "-std=c++17 -Wall -pthread")
 
 add_executable(webcam-particles
   source/effects/ConvergeCircleEffect.cpp
