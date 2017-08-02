@@ -12,15 +12,21 @@ bool ParticleBuffer::create(size_t particleCount) {
 
   glGenBuffers(1, &vertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, particleCount * sizeof(Particle), nullptr, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, particleCount * sizeof(Particle), nullptr,
+               GL_DYNAMIC_DRAW);
 
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Particle), reinterpret_cast<void*>(offsetof(Particle, position)));
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Particle),
+                        reinterpret_cast<void *>(offsetof(Particle, position)));
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), reinterpret_cast<void*>(offsetof(Particle, rgb)));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Particle),
+                        reinterpret_cast<void *>(offsetof(Particle, rgb)));
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), reinterpret_cast<void*>(offsetof(Particle, hsv)));
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Particle),
+                        reinterpret_cast<void *>(offsetof(Particle, hsv)));
   glEnableVertexAttribArray(2);
-  glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), reinterpret_cast<void*>(offsetof(Particle, localEffectStrength)));
+  glVertexAttribPointer(
+      3, 1, GL_FLOAT, GL_FALSE, sizeof(Particle),
+      reinterpret_cast<void *>(offsetof(Particle, localEffectStrength)));
   glEnableVertexAttribArray(3);
 
   return true;
@@ -32,9 +38,11 @@ void ParticleBuffer::destroy() {
   particleCount = 0u;
 }
 
-void ParticleBuffer::setParticleData(const Particle *particleData, size_t particleDataSize) {
+void ParticleBuffer::setParticleData(const Particle *particleData,
+                                     size_t particleDataSize) {
   glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, particleDataSize * sizeof(Particle), particleData);
+  glBufferSubData(GL_ARRAY_BUFFER, 0, particleDataSize * sizeof(Particle),
+                  particleData);
 }
 
 void ParticleBuffer::draw() const {
@@ -42,4 +50,4 @@ void ParticleBuffer::draw() const {
   glDrawArrays(GL_POINTS, 0, particleCount);
 }
 
-}
+} // namespace graphics

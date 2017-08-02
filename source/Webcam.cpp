@@ -4,15 +4,13 @@
 
 bool Webcam::open() {
   capture.open(0);
-  if(!capture.isOpened()) {
+  if (!capture.isOpened()) {
     return false;
   }
   return true;
 }
 
-void Webcam::close() {
-  capture.release();
-}
+void Webcam::close() { capture.release(); }
 
 bool Webcam::getFrameSize(uint32_t &width, uint32_t &height) {
   width = capture.get(CV_CAP_PROP_FRAME_WIDTH);
@@ -21,12 +19,12 @@ bool Webcam::getFrameSize(uint32_t &width, uint32_t &height) {
 }
 
 bool Webcam::getFrame(float *frame) {
-  if(!capture.isOpened()) {
+  if (!capture.isOpened()) {
     return false;
   }
 
   cv::Mat image;
-  if(!capture.read(image)) {
+  if (!capture.read(image)) {
     return false;
   }
 
@@ -34,7 +32,8 @@ bool Webcam::getFrame(float *frame) {
   {
     uint32_t w, h;
     getFrameSize(w, h);
-    assert(static_cast<int>(w) == image.cols && static_cast<int>(h) == image.rows);
+    assert(static_cast<int>(w) == image.cols &&
+           static_cast<int>(h) == image.rows);
   }
 #endif
 

@@ -11,7 +11,7 @@ public:
   bool toggleFullscreen();
 
   std::tuple<uint32_t, uint32_t> getSize() const;
-  
+
 private:
   SDL_Window *window = nullptr;
   SDL_GLContext gl_context = nullptr;
@@ -23,4 +23,4 @@ private:
 
   void updateFPS();
 };
-}
+} // namespace graphics

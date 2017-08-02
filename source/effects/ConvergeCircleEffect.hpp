@@ -3,7 +3,7 @@
 #include "EffectRegistry.hpp"
 
 class ConvergeCircleEffect : public IEffect {
-  public:
+public:
   static constexpr auto Name = "ConvergeCircleEffect";
 
   const char *getName() const override;
@@ -15,8 +15,9 @@ class ConvergeCircleEffect : public IEffect {
 
   void randomizeConfig() override;
 
-  void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const override;
+  void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader,
+                      ShaderBuilder &fragmentShader) const override;
 
-  protected:
+protected:
   float rotationSpeed = 0.f;
 };

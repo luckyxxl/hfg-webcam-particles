@@ -1,13 +1,12 @@
-template<class T>
-class ThreadSyncTripleBuffer {
-  public:
+template <class T> class ThreadSyncTripleBuffer {
+public:
   static constexpr auto size = 3;
   using dataId_t = uint32_t;
 
   ThreadSyncTripleBuffer()
-    : writeId(0), previousCopyDataId(writeId),
-      writeBuffer(0), readBuffer(1), copyBuffer(2) {
-    for(auto i=0; i<size; ++i) {
+      : writeId(0), previousCopyDataId(writeId), writeBuffer(0), readBuffer(1),
+        copyBuffer(2) {
+    for (auto i = 0; i < size; ++i) {
       buffers[i].dataId = writeId;
     }
   }
@@ -19,17 +18,21 @@ class ThreadSyncTripleBuffer {
 
   void finishWrite() {
     uint32_t newWrite = readBuffer;
-    while(!readBuffer.compare_exchange_weak(newWrite, writeBuffer));
+    while (!readBuffer.compare_exchange_weak(newWrite, writeBuffer))
+      ;
     writeBuffer = newWrite;
   }
 
   T *startCopyNew() {
-    // No race condition here, only check whether this was changed (can only be by finishWrite). It's no error if even more recent data is inserted in between.
-    if(buffers[readBuffer].dataId != previousCopyDataId) {
+    // No race condition here, only check whether this was changed (can only be
+    // by finishWrite). It's no error if even more recent data is inserted in
+    // between.
+    if (buffers[readBuffer].dataId != previousCopyDataId) {
       previousCopyDataId = buffers[copyBuffer].dataId;
 
       uint32_t newCopy = readBuffer;
-      while(!readBuffer.compare_exchange_weak(newCopy, copyBuffer));
+      while (!readBuffer.compare_exchange_weak(newCopy, copyBuffer))
+        ;
       copyBuffer = newCopy;
 
       return &buffers[copyBuffer].data;
@@ -37,8 +40,7 @@ class ThreadSyncTripleBuffer {
     return nullptr;
   }
 
-  void finishCopy() {
-  }
+  void finishCopy() {}
 
   // not threadsafe!
   T &getBuffer(int i) {
@@ -46,7 +48,7 @@ class ThreadSyncTripleBuffer {
     return buffers[i].data;
   }
 
-  private:
+private:
   dataId_t writeId;
 
   dataId_t previousCopyDataId;

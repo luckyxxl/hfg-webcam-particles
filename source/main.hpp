@@ -17,8 +17,8 @@
 #define GL_GLEXT_PROTOTYPES
 #include <SDL_opengl.h>
 
-#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include "json.hpp"
 using json = nlohmann::json;

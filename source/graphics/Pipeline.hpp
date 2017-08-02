@@ -3,7 +3,7 @@
 namespace graphics {
 
 class Pipeline {
-  public:
+public:
   bool create(const char *vertexShaderSource, const char *fragmentShaderSource);
   void destroy();
 
@@ -13,10 +13,10 @@ class Pipeline {
     return glGetUniformLocation(program, uniformName);
   }
 
-  private:
+private:
   GLuint vertexShader = 0;
   GLuint fragmentShader = 0;
   GLuint program = 0;
 };
 
-}
+} // namespace graphics

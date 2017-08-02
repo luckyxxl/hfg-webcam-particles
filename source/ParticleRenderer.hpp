@@ -1,10 +1,10 @@
 #pragma once
 
-#include "graphics/Pipeline.hpp"
 #include "Timeline.hpp"
+#include "graphics/Pipeline.hpp"
 
 class ParticleRenderer {
-  public:
+public:
   ParticleRenderer(std::default_random_engine &random);
 
   void reset();
@@ -13,7 +13,7 @@ class ParticleRenderer {
   void update(float dt);
   void render();
 
-  private:
+private:
   std::unique_ptr<Timeline> timeline;
 
   graphics::Pipeline graphicsPipeline;

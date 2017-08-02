@@ -3,9 +3,8 @@
 #include "ParticleRenderer.hpp"
 #include "Timeline.hpp"
 
-ParticleRenderer::ParticleRenderer(std::default_random_engine &random) : props(state, random) {
-  
-}
+ParticleRenderer::ParticleRenderer(std::default_random_engine &random)
+    : props(state, random) {}
 
 void ParticleRenderer::reset() {
   graphicsPipeline.destroy();
@@ -20,29 +19,35 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
   std::vector<UniformDescription> uniforms;
   ShaderBuilder vertexShader, fragmentShader;
 
-  uniforms.emplace_back("invImageAspectRatio", GLSLType::Float, [](const RenderProps &props) {
-    //TODO
-    return UniformValue(1.f);
-  });
-  uniforms.emplace_back("invScreenAspectRatio", GLSLType::Float, [](const RenderProps &props) {
-    //TODO
-    return UniformValue(1.f);
-  });
-  uniforms.emplace_back("viewProjectionMatrix", GLSLType::Mat4, [](const RenderProps &props) {
-    //TODO
-    return UniformValue(1.f);
-  });
-  uniforms.emplace_back("invViewProjectionMatrix", GLSLType::Mat4, [](const RenderProps &props) {
-    //TODO
-    return UniformValue(1.f);
-  });
-  uniforms.emplace_back("particleSize", GLSLType::Float, [](const RenderProps &props) {
-    //TODO
-    return UniformValue(1.f);
-  });
-  uniforms.emplace_back("globalTime", GLSLType::Float, [](const RenderProps &props) {
-    return UniformValue(props.state.clock.getTime());
-  });
+  uniforms.emplace_back("invImageAspectRatio", GLSLType::Float,
+                        [](const RenderProps &props) {
+                          // TODO
+                          return UniformValue(1.f);
+                        });
+  uniforms.emplace_back("invScreenAspectRatio", GLSLType::Float,
+                        [](const RenderProps &props) {
+                          // TODO
+                          return UniformValue(1.f);
+                        });
+  uniforms.emplace_back("viewProjectionMatrix", GLSLType::Mat4,
+                        [](const RenderProps &props) {
+                          // TODO
+                          return UniformValue(1.f);
+                        });
+  uniforms.emplace_back("invViewProjectionMatrix", GLSLType::Mat4,
+                        [](const RenderProps &props) {
+                          // TODO
+                          return UniformValue(1.f);
+                        });
+  uniforms.emplace_back("particleSize", GLSLType::Float,
+                        [](const RenderProps &props) {
+                          // TODO
+                          return UniformValue(1.f);
+                        });
+  uniforms.emplace_back("globalTime", GLSLType::Float,
+                        [](const RenderProps &props) {
+                          return UniformValue(props.state.clock.getTime());
+                        });
 
   vertexShader.appendIn("texcoord", GLSLType::Vec2);
   vertexShader.appendIn("rgb", GLSLType::Vec3);
@@ -77,7 +82,10 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
   unsigned instanceId = 0;
   timeline->forEachInstance([&](const IEffect &i) {
     Uniforms instanceUniforms(uniforms, instanceId++);
-    vertexShader.appendMainBody(("if(" + std::to_string(i.getTimeBegin()) + "<= globalTime && globalTime <=" + std::to_string(i.getTimeEnd()) + ") {").c_str());
+    vertexShader.appendMainBody(("if(" + std::to_string(i.getTimeBegin()) +
+                                 "<= globalTime && globalTime <=" +
+                                 std::to_string(i.getTimeEnd()) + ") {")
+                                    .c_str());
 #if 1
     vertexShader.appendMainBody("\n#line 0\n");
     fragmentShader.appendMainBody("\n#line 0\n");
@@ -92,12 +100,12 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
     gl_Position = viewProjectionMatrix * vec4(position, 1.);
   )glsl");
 
-  //TODO: different overlap modes
+  // TODO: different overlap modes
   fragmentShader.appendMainBody(R"glsl(
     frag_color = vec4(color * v, 1);
   )glsl");
 
-  for(const auto &u : uniforms) {
+  for (const auto &u : uniforms) {
     vertexShader.appendUniform(u);
     fragmentShader.appendUniform(u);
   }
@@ -107,9 +115,10 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
 
   std::cout << vertexShaderSource << "\n" << fragmentShaderSource << "\n";
 
-  graphicsPipeline.create(vertexShaderSource.c_str(), fragmentShaderSource.c_str());
+  graphicsPipeline.create(vertexShaderSource.c_str(),
+                          fragmentShaderSource.c_str());
 
-  for(const auto &u : uniforms) {
+  for (const auto &u : uniforms) {
     UniformElement newElement;
     newElement.location = graphicsPipeline.getUniformLocation(u.name.c_str());
     newElement.value = u.value;
@@ -117,29 +126,27 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
   }
 }
 
-void ParticleRenderer::update(float dt) {
-  
-}
+void ParticleRenderer::update(float dt) {}
 
 void ParticleRenderer::render() {
   graphicsPipeline.bind();
 
-  for(const auto &uniform : uniforms) {
+  for (const auto &uniform : uniforms) {
     const auto value = uniform.value(props);
-    switch(value.type) {
-      case GLSLType::Float:
+    switch (value.type) {
+    case GLSLType::Float:
       glUniform1fv(uniform.location, 1, value.data.f);
       break;
-      case GLSLType::Vec2:
+    case GLSLType::Vec2:
       glUniform2fv(uniform.location, 1, value.data.f);
       break;
-      case GLSLType::Vec3:
+    case GLSLType::Vec3:
       glUniform3fv(uniform.location, 1, value.data.f);
       break;
-      case GLSLType::Vec4:
+    case GLSLType::Vec4:
       glUniform4fv(uniform.location, 1, value.data.f);
       break;
-      case GLSLType::Mat4:
+    case GLSLType::Mat4:
       glUniformMatrix4fv(uniform.location, 1, GL_FALSE, value.data.f);
       break;
     }

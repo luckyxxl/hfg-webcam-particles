@@ -1,20 +1,20 @@
 #pragma once
 
-#include "Webcam.hpp"
-#include "ThreadSyncTripleBuffer.hpp"
-#include "graphics/Pipeline.hpp"
-#include "graphics/ParticleBuffer.hpp"
-#include "sound/SampleBuffer.hpp"
-#include "effects/EffectRegistry.hpp"
-#include "Timeline.hpp"
 #include "ParticleRenderer.hpp"
+#include "ThreadSyncTripleBuffer.hpp"
+#include "Timeline.hpp"
+#include "Webcam.hpp"
+#include "effects/EffectRegistry.hpp"
+#include "graphics/ParticleBuffer.hpp"
+#include "graphics/Pipeline.hpp"
+#include "sound/SampleBuffer.hpp"
 
 class Resources;
 namespace sound {
-  class Renderer;
+class Renderer;
 }
 namespace graphics {
-  class Window;
+class Window;
 }
 
 class Application {
@@ -33,8 +33,8 @@ private:
   graphics::Window *window;
   sound::Renderer *soundRenderer;
 
-  //sound::SampleBuffer testSample;
-  //sound::SampleBuffer loopTestSample;
+  // sound::SampleBuffer testSample;
+  // sound::SampleBuffer loopTestSample;
 
   sound::SampleBuffer backgroundLoop;
   std::vector<sound::SampleBuffer> whooshSamples;

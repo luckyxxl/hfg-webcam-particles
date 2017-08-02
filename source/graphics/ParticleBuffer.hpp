@@ -10,7 +10,7 @@ struct Particle {
 };
 
 class ParticleBuffer {
-  public:
+public:
   bool create(size_t particleCount);
   void destroy();
 
@@ -20,11 +20,11 @@ class ParticleBuffer {
 
   void draw() const;
 
-  private:
+private:
   size_t particleCount = 0u;
 
   GLuint vertexBuffer = 0;
   GLuint vertexArray = 0;
 };
 
-}
+} // namespace graphics

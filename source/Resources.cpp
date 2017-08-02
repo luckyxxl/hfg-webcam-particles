@@ -9,13 +9,12 @@ bool Resources::create(const char *argv0) {
   return true;
 }
 
-void Resources::destroy() {
-}
+void Resources::destroy() {}
 
 SDL_RWops *Resources::openFile(const char *filename) {
   std::string systemFileName(rootPath + filename);
   auto result = SDL_RWFromFile(systemFileName.c_str(), "rb");
-  if(!result) {
+  if (!result) {
     std::cout << "could not open file " << systemFileName << "\n";
   }
   return result;
@@ -26,7 +25,7 @@ std::string Resources::readWholeTextFile(const char *filename) {
 
   std::ifstream file(rootPath + filename);
   std::string line;
-  while(file.good()) {
+  while (file.good()) {
     std::getline(file, line);
     result += line + "\n";
   }
@@ -41,7 +40,7 @@ std::vector<uint8_t> Resources::readWholeBinaryFile(const char *filename) {
   file.seekg(0, std::ios::beg);
 
   std::vector<uint8_t> result(size);
-  file.read(reinterpret_cast<char*>(result.data()), result.size());
+  file.read(reinterpret_cast<char *>(result.data()), result.size());
 
   return result;
 }

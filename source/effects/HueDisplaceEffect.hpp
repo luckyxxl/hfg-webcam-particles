@@ -3,7 +3,7 @@
 #include "EffectRegistry.hpp"
 
 class HueDisplaceEffect : public IEffect {
-  public:
+public:
   static constexpr auto Name = "HueDisplaceEffect";
 
   const char *getName() const override;
@@ -15,9 +15,10 @@ class HueDisplaceEffect : public IEffect {
 
   void randomizeConfig() override;
 
-  void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const override;
+  void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader,
+                      ShaderBuilder &fragmentShader) const override;
 
-  protected:
+protected:
   float distance;
   float scaleByValue;
   bool randomDirectionOffset;

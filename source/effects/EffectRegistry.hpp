@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../ShaderBuilder.hpp"
 #include "../RendererState.hpp"
+#include "../ShaderBuilder.hpp"
 
 class IEffect {
-  public:
+public:
   virtual const char *getName() const = 0;
   virtual const char *getDescriptiveName() const = 0;
   virtual const char *getDescription() const = 0;
@@ -14,7 +14,8 @@ class IEffect {
 
   virtual void randomizeConfig() = 0;
 
-  virtual void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const = 0;
+  virtual void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader,
+                              ShaderBuilder &fragmentShader) const = 0;
 
   void loadInstanceConfig(const json &json);
   void saveInstanceConfig(json &json) const;
@@ -22,20 +23,17 @@ class IEffect {
   float getTimeBegin() const { return timeBegin; }
   float getTimeEnd() const { return timeEnd; }
 
-  protected:
+protected:
   float timeBegin = 0.f;
   float timeEnd = 1.f;
   unsigned repetitions = 1u;
 
-  float getPeriod() const {
-    return (timeEnd - timeBegin) / repetitions;
-  }
+  float getPeriod() const { return (timeEnd - timeBegin) / repetitions; }
 };
 
 class EffectRegistry {
-  public:
-  template<class Effect>
-  void registerEffect() {
+public:
+  template <class Effect> void registerEffect() {
     effects.emplace(Effect::Name, std::make_unique<Effect>);
   }
 
@@ -43,6 +41,6 @@ class EffectRegistry {
     return effects.at(effectName)();
   }
 
-  private:
+private:
   std::map<std::string, std::function<std::unique_ptr<IEffect>()>> effects;
 };

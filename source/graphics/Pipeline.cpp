@@ -11,7 +11,7 @@ static GLuint createShader(GLenum type, const char *source) {
 
   GLint infoLogLength;
   glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
-  if(infoLogLength > 0) {
+  if (infoLogLength > 0) {
     std::vector<char> log(infoLogLength);
     glGetShaderInfoLog(shader, log.size(), nullptr, log.data());
     std::cout << "shader info log: \n" << log.data() << "\n";
@@ -19,8 +19,9 @@ static GLuint createShader(GLenum type, const char *source) {
 
   GLint compileStatus;
   glGetShaderiv(shader, GL_COMPILE_STATUS, &compileStatus);
-  if(compileStatus == GL_FALSE) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not compile shader", "Could not compile shader", nullptr);
+  if (compileStatus == GL_FALSE) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not compile shader",
+                             "Could not compile shader", nullptr);
     glDeleteShader(shader);
     return 0;
   }
@@ -42,7 +43,7 @@ static GLuint createProgram(GLuint vertexShader, GLuint fragmentShader) {
 
   GLint infoLogLength;
   glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
-  if(infoLogLength > 0) {
+  if (infoLogLength > 0) {
     std::vector<char> log(infoLogLength);
     glGetProgramInfoLog(program, log.size(), nullptr, log.data());
     std::cout << "program info log: \n" << log.data() << "\n";
@@ -50,8 +51,9 @@ static GLuint createProgram(GLuint vertexShader, GLuint fragmentShader) {
 
   GLint linkStatus;
   glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
-  if(linkStatus == GL_FALSE) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not link program", "Could not link program", nullptr);
+  if (linkStatus == GL_FALSE) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not link program",
+                             "Could not link program", nullptr);
     glDeleteProgram(program);
     return 0;
   }
@@ -59,15 +61,19 @@ static GLuint createProgram(GLuint vertexShader, GLuint fragmentShader) {
   return program;
 }
 
-bool Pipeline::create(const char *vertexShaderSource, const char *fragmentShaderSource) {
+bool Pipeline::create(const char *vertexShaderSource,
+                      const char *fragmentShaderSource) {
   vertexShader = createShader(GL_VERTEX_SHADER, vertexShaderSource);
   fragmentShader = createShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
-  if(!vertexShader || !fragmentShader) return false;
+  if (!vertexShader || !fragmentShader)
+    return false;
 
   program = createProgram(vertexShader, fragmentShader);
-  if(!program) return false;
+  if (!program)
+    return false;
 
-  // This is the same for all pipelines for now... If required, set those in bind().
+  // This is the same for all pipelines for now... If required, set those in
+  // bind().
   glEnable(GL_PROGRAM_POINT_SIZE);
   glEnable(GL_BLEND);
   glBlendFunc(GL_ONE, GL_ONE);
@@ -81,8 +87,6 @@ void Pipeline::destroy() {
   glDeleteShader(fragmentShader);
 }
 
-void Pipeline::bind() const {
-  glUseProgram(program);
-}
+void Pipeline::bind() const { glUseProgram(program); }
 
-}
+} // namespace graphics

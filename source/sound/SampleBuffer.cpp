@@ -1,7 +1,7 @@
 #include "main.hpp"
 
-#include "SampleBuffer.hpp"
 #include "Resources.hpp"
+#include "SampleBuffer.hpp"
 
 namespace sound {
 
@@ -27,65 +27,69 @@ bool SampleBuffer::loadFromFile(Resources *resources, const char *filename) {
     uint32_t subchunk2Size;
   };
 
-  auto header = reinterpret_cast<const Header*>(data.data());
+  auto header = reinterpret_cast<const Header *>(data.data());
 
-  if(header->chunkID != 0x46464952
-    || header->format != 0x45564157
-    || header->subchunk1ID != 0x20746d66
-    || header->subchunk2ID != 0x61746164) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open sample", "Unsupported file", NULL);
+  if (header->chunkID != 0x46464952 || header->format != 0x45564157 ||
+      header->subchunk1ID != 0x20746d66 || header->subchunk2ID != 0x61746164) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open sample",
+                             "Unsupported file", NULL);
     return false;
   }
 
-  if(header->audioFormat != 1) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open sample", "Unsupported audio format", NULL);
+  if (header->audioFormat != 1) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open sample",
+                             "Unsupported audio format", NULL);
     return false;
   }
 
-  if(header->numChannels != 1 && header->numChannels != 2) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open sample", "Unsupported channel count", NULL);
+  if (header->numChannels != 1 && header->numChannels != 2) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open sample",
+                             "Unsupported channel count", NULL);
     return false;
   }
 
-  if(header->sampleRate != 48000) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open sample", "Unsupported sample rate", NULL);
+  if (header->sampleRate != 48000) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open sample",
+                             "Unsupported sample rate", NULL);
     return false;
   }
 
-  if(header->bitsPerSample != 16 && header->bitsPerSample != 24) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open sample", "Unsupported bit depth", NULL);
+  if (header->bitsPerSample != 16 && header->bitsPerSample != 24) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open sample",
+                             "Unsupported bit depth", NULL);
     return false;
   }
 
   channels = header->numChannels;
   buffer.resize(header->subchunk2Size / (header->bitsPerSample / 8));
 
-  switch(header->bitsPerSample) {
-    case 16:
-    {
-      auto samples = reinterpret_cast<const int16_t*>(data.data() + sizeof(Header));
-      for(auto i=0u; i<buffer.size(); ++i) {
-        buffer[i] = samples[i] / float(1<<(16-1));
-      }
+  switch (header->bitsPerSample) {
+  case 16: {
+    auto samples =
+        reinterpret_cast<const int16_t *>(data.data() + sizeof(Header));
+    for (auto i = 0u; i < buffer.size(); ++i) {
+      buffer[i] = samples[i] / float(1 << (16 - 1));
     }
-    break;
+  } break;
 
-    case 24:
-    {
-      struct sample24_t { uint8_t b[3]; };
-      static_assert(sizeof(sample24_t) == 3);
-      auto samples = reinterpret_cast<const sample24_t*>(data.data() + sizeof(Header));
-      for(auto i=0u; i<buffer.size(); ++i) {
-        const auto s = samples[i];
-        auto v = (s.b[2] & 0x7F) << 16 | s.b[1] << 8 | s.b[0];
-        if(s.b[2] & 0x80) v -= 1<<(24-1);
-        buffer[i] = v / float(1<<(24-1));
-      }
+  case 24: {
+    struct sample24_t {
+      uint8_t b[3];
+    };
+    static_assert(sizeof(sample24_t) == 3);
+    auto samples =
+        reinterpret_cast<const sample24_t *>(data.data() + sizeof(Header));
+    for (auto i = 0u; i < buffer.size(); ++i) {
+      const auto s = samples[i];
+      auto v = (s.b[2] & 0x7F) << 16 | s.b[1] << 8 | s.b[0];
+      if (s.b[2] & 0x80)
+        v -= 1 << (24 - 1);
+      buffer[i] = v / float(1 << (24 - 1));
     }
-    break;
+  } break;
   }
 
   return true;
 }
 
-}
+} // namespace sound

@@ -4,14 +4,13 @@
 
 constexpr const char *ConvergeCircleEffect::Name;
 
-const char *ConvergeCircleEffect::getName() const {
-  return Name;
-}
+const char *ConvergeCircleEffect::getName() const { return Name; }
 const char *ConvergeCircleEffect::getDescriptiveName() const {
   return "Converge to circle";
 }
 const char *ConvergeCircleEffect::getDescription() const {
-  return "Particles are attracted towards their position on an HSV color wheel centered around the center of the screen";
+  return "Particles are attracted towards their position on an HSV color wheel "
+         "centered around the center of the screen";
 }
 
 void ConvergeCircleEffect::loadConfig(const json &json) {
@@ -21,12 +20,13 @@ void ConvergeCircleEffect::saveConfig(json &json) const {
   json.emplace("rotationSpeed", rotationSpeed);
 }
 
-void ConvergeCircleEffect::randomizeConfig() {
-  
-}
+void ConvergeCircleEffect::randomizeConfig() {}
 
-void ConvergeCircleEffect::registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
-  vertexShader.appendMainBody(TEMPLATE(R"glsl(
+void ConvergeCircleEffect::registerEffect(Uniforms &uniforms,
+                                          ShaderBuilder &vertexShader,
+                                          ShaderBuilder &fragmentShader) const {
+  vertexShader.appendMainBody(
+      TEMPLATE(R"glsl(
   {
     vec2 screenTarget = getDirectionVector(hsv[0] + ${time} * ${rotationSpeed}) * vec2(.8) * vec2(invScreenAspectRatio, 1.);
     vec2 target = (invViewProjectionMatrix * vec4(screenTarget, 0, 1)).xy;
@@ -52,18 +52,27 @@ void ConvergeCircleEffect::registerEffect(Uniforms &uniforms, ShaderBuilder &ver
 
     position.xy += result;
   }
-  )glsl").compile({
-    UNIFORM("time", GLSLType::Float, [this](const RenderProps &props){
-      return UniformValue(std::fmod(props.state.clock.getTime() - timeBegin, getPeriod()));
-    }),
-    UNIFORM("speed", GLSLType::Float, [this](const RenderProps &props){
-      return UniformValue(2 * 2 / (getPeriod() / 2 * getPeriod() / 2));
-    }),
-    UNIFORM("rotationSpeed", GLSLType::Float, [this](const RenderProps &props){
-      return UniformValue(this->rotationSpeed);
-    }),
-    UNIFORM("maxTravelTime", GLSLType::Float, [this](const RenderProps &props){
-      return UniformValue(getPeriod() / 2);
-    }),
-  }).c_str());
+  )glsl")
+          .compile({
+              UNIFORM("time", GLSLType::Float,
+                      [this](const RenderProps &props) {
+                        return UniformValue(
+                            std::fmod(props.state.clock.getTime() - timeBegin,
+                                      getPeriod()));
+                      }),
+              UNIFORM("speed", GLSLType::Float,
+                      [this](const RenderProps &props) {
+                        return UniformValue(
+                            2 * 2 / (getPeriod() / 2 * getPeriod() / 2));
+                      }),
+              UNIFORM("rotationSpeed", GLSLType::Float,
+                      [this](const RenderProps &props) {
+                        return UniformValue(this->rotationSpeed);
+                      }),
+              UNIFORM("maxTravelTime", GLSLType::Float,
+                      [this](const RenderProps &props) {
+                        return UniformValue(getPeriod() / 2);
+                      }),
+          })
+          .c_str());
 }
