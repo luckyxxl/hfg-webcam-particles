@@ -2,8 +2,10 @@
 
 #include "ConvergeCircleEffect.hpp"
 
+constexpr const char *ConvergeCircleEffect::Name;
+
 const char *ConvergeCircleEffect::getName() const {
-  return "ConvergeCircleEffect";
+  return Name;
 }
 const char *ConvergeCircleEffect::getDescriptiveName() const {
   return "Converge to circle";
@@ -12,34 +14,31 @@ const char *ConvergeCircleEffect::getDescription() const {
   return "Particles are attracted towards their position on an HSV color wheel centered around the center of the screen";
 }
 
-void ConvergeCircleEffect::Config::load(const json &json) {
+void ConvergeCircleEffect::loadConfig(const json &json) {
   rotationSpeed = json.value("rotationSpeed", 0.f);
 }
-void ConvergeCircleEffect::Config::save(json &json) const {
+void ConvergeCircleEffect::saveConfig(json &json) const {
   json.emplace("rotationSpeed", rotationSpeed);
 }
 
-std::unique_ptr<IEffect::IConfig> ConvergeCircleEffect::getDefaultConfig() const {
-  return std::make_unique<Config>();
-}
-std::unique_ptr<IEffect::IConfig> ConvergeCircleEffect::getRandomConfig() const {
-  return std::make_unique<Config>();
+void ConvergeCircleEffect::randomizeConfig() {
+  
 }
 
-void ConvergeCircleEffect::registerEffect(const EffectInstance &instance, Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
+void ConvergeCircleEffect::registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
 
-  const auto time = uniforms.addUniform("time", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props){
-    return UniformValue(std::fmod(props.state.clock.getTime() - instance.timeBegin, instance.getPeriod()));
+  const auto time = uniforms.addUniform("time", GLSLType::Float, [this](const RenderProps &props){
+    return UniformValue(std::fmod(props.state.clock.getTime() - timeBegin, getPeriod()));
   });
-  const auto speed = uniforms.addUniform("speed", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props){
-    return UniformValue(2 * 2 / (instance.getPeriod() / 2 * instance.getPeriod() / 2));
+  const auto speed = uniforms.addUniform("speed", GLSLType::Float, [this](const RenderProps &props){
+    return UniformValue(2 * 2 / (getPeriod() / 2 * getPeriod() / 2));
   });
-  const auto rotationSpeed = uniforms.addUniform("rotationSpeed", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props){
-    const Config *config = static_cast<const Config*>(instance.config.get());
-    return UniformValue(config->rotationSpeed);
+  const auto rotationSpeed = uniforms.addUniform("rotationSpeed", GLSLType::Float, [this](const RenderProps &props){
+    //TODO: remove this->
+    return UniformValue(this->rotationSpeed);
   });
-  const auto maxTravelTime = uniforms.addUniform("maxTravelTime", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props){
-    return UniformValue(instance.getPeriod() / 2);
+  const auto maxTravelTime = uniforms.addUniform("maxTravelTime", GLSLType::Float, [this](const RenderProps &props){
+    return UniformValue(getPeriod() / 2);
   });
 
   vertexShader.appendMainBody(TEMPLATE(R"glsl(

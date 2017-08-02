@@ -4,24 +4,24 @@
 
 class HueDisplaceEffect : public IEffect {
   public:
+  static constexpr auto Name = "HueDisplaceEffect";
+
   const char *getName() const override;
   const char *getDescriptiveName() const override;
   const char *getDescription() const override;
 
-  struct Config : IConfig {
-    float distance;
-    float scaleByValue;
-    bool randomDirectionOffset;
-    float rotate;
+  void loadConfig(const json &json) override;
+  void saveConfig(json &json) const override;
 
-    void load(const json &json) override;
-    void save(json &json) const override;
+  void randomizeConfig() override;
 
-    float randomDirectionOffsetValue = NAN; // updated during rendering
-  };
+  void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const override;
 
-  std::unique_ptr<IConfig> getDefaultConfig() const override;
-  std::unique_ptr<IConfig> getRandomConfig() const override;
+  protected:
+  float distance;
+  float scaleByValue;
+  bool randomDirectionOffset;
+  float rotate;
 
-  void registerEffect(const EffectInstance &instance, Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const override;
+  float randomDirectionOffsetValue = NAN; // updated during rendering
 };

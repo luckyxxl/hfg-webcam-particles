@@ -9,21 +9,17 @@ class IEffect {
   virtual const char *getDescriptiveName() const = 0;
   virtual const char *getDescription() const = 0;
 
-  struct IConfig {
-    virtual void load(const json &json) = 0;
-    virtual void save(json &json) const = 0;
-  };
+  virtual void loadConfig(const json &json) = 0;
+  virtual void saveConfig(json &json) const = 0;
 
-  virtual std::unique_ptr<IConfig> getDefaultConfig() const = 0;
-  virtual std::unique_ptr<IConfig> getRandomConfig() const = 0;
+  virtual void randomizeConfig() = 0;
 
-  virtual void registerEffect(const EffectInstance &instance, Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const = 0;
-};
+  virtual void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const = 0;
 
-struct EffectInstance {
-  const IEffect *effect;
-  std::unique_ptr<IEffect::IConfig> config;
+  void loadInstanceConfig(const json &json);
+  void saveInstanceConfig(json &json) const;
 
+  protected:
   float timeBegin = 0.f;
   float timeEnd = 1.f;
   unsigned repetitions = 1u;
@@ -31,20 +27,19 @@ struct EffectInstance {
   float getPeriod() const {
     return (timeEnd - timeBegin) / repetitions;
   }
-
-  void load(const json &json);
-  void save(json &json) const;
 };
 
 class EffectRegistry {
   public:
   template<class Effect>
   void registerEffect() {
-    effects.emplace_back(std::make_unique<Effect>());
+    effects.emplace(Effect::Name, std::make_unique<Effect>);
   }
 
-  std::unique_ptr<EffectInstance> createInstance(const char *effectName) const;
+  std::unique_ptr<IEffect> createInstance(const char *effectName) const {
+    return effects.at(effectName)();
+  }
 
   private:
-  std::vector<std::unique_ptr<IEffect>> effects;
+  std::map<std::string, std::function<std::unique_ptr<IEffect>()>> effects;
 };

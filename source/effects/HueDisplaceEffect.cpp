@@ -2,8 +2,10 @@
 
 #include "HueDisplaceEffect.hpp"
 
+constexpr const char *HueDisplaceEffect::Name;
+
 const char *HueDisplaceEffect::getName() const {
-  return "HueDisplaceEffect";
+  return Name;
 }
 const char *HueDisplaceEffect::getDescriptiveName() const {
   return "Displace by hue";
@@ -12,51 +14,46 @@ const char *HueDisplaceEffect::getDescription() const {
   return "Particles move into different directions depending on their hue";
 }
 
-void HueDisplaceEffect::Config::load(const json &json) {
+void HueDisplaceEffect::loadConfig(const json &json) {
   distance = json.value("distance", 0.f);
   scaleByValue = json.value("scaleByValue", 0.f);
   randomDirectionOffset = json.value("randomDirectionOffset", false);
   rotate = json.value("rotate", 0.f);
 }
-void HueDisplaceEffect::Config::save(json &json) const {
+void HueDisplaceEffect::saveConfig(json &json) const {
   json.emplace("distance", distance);
   json.emplace("scaleByValue", scaleByValue);
   json.emplace("randomDirectionOffset", randomDirectionOffset);
   json.emplace("rotate", rotate);
 }
 
-std::unique_ptr<IEffect::IConfig> HueDisplaceEffect::getDefaultConfig() const {
-  return std::make_unique<Config>();
-}
-std::unique_ptr<IEffect::IConfig> HueDisplaceEffect::getRandomConfig() const {
-  return std::make_unique<Config>();
+void HueDisplaceEffect::randomizeConfig() {
+  
 }
 
-void HueDisplaceEffect::registerEffect(const EffectInstance &instance, Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
-  const Config *config = static_cast<const Config*>(instance.config.get());
-  if(config->distance != 0.f) {
-    const auto distance = uniforms.addUniform("distance", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props) {
-      const Config *config = static_cast<const Config*>(instance.config.get());
-      return UniformValue(config->distance);
+void HueDisplaceEffect::registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
+  if(distance != 0.f) {
+    const auto distance = uniforms.addUniform("distance", GLSLType::Float, [this](const RenderProps &props) {
+      //TODO: remove this->
+      return UniformValue(this->distance);
     });
-    const auto time = uniforms.addUniform("time", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props) {
-      return UniformValue((props.state.clock.getTime() - instance.timeBegin) / instance.getPeriod() * 2 * PI);
+    const auto time = uniforms.addUniform("time", GLSLType::Float, [this](const RenderProps &props) {
+      return UniformValue((props.state.clock.getTime() - timeBegin) / getPeriod() * 2 * PI);
     });
-    const auto directionOffset = uniforms.addUniform("directionOffset", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props) {
-      const Config *config = static_cast<const Config*>(instance.config.get());
-      auto result = config->rotate * (props.state.clock.getTime() - instance.timeBegin) / instance.getPeriod() * 2 * PI;
-      if(config->randomDirectionOffset) {
-        if(std::isnan(config->randomDirectionOffsetValue)) {
+    const auto directionOffset = uniforms.addUniform("directionOffset", GLSLType::Float, [this](const RenderProps &props) {
+      auto result = rotate * (props.state.clock.getTime() - timeBegin) / getPeriod() * 2 * PI;
+      if(randomDirectionOffset) {
+        if(std::isnan(randomDirectionOffsetValue)) {
           std::uniform_real_distribution<float> dist;
-          const_cast<Config*>(config)->randomDirectionOffsetValue = dist(props.random) * 2 * PI;
+          const_cast<HueDisplaceEffect*>(this)->randomDirectionOffsetValue = dist(props.random) * 2 * PI;
         }
-        result += config->randomDirectionOffsetValue;
+        result += randomDirectionOffsetValue;
       }
       return UniformValue(result);
     });
-    const auto scaleByVal = uniforms.addUniform("scaleByVal", GLSLType::Float, [](const EffectInstance &instance, const RenderProps &props) {
-      const Config *config = static_cast<const Config*>(instance.config.get());
-      return UniformValue(config->scaleByValue);
+    const auto scaleByVal = uniforms.addUniform("scaleByVal", GLSLType::Float, [this](const RenderProps &props) {
+      //TODO: remove this->
+      return UniformValue(this->scaleByValue);
     });
 
     vertexShader.appendMainBody(TEMPLATE(R"glsl(

@@ -2,7 +2,6 @@
 
 #include "Template.hpp"
 
-struct EffectInstance;
 struct RenderProps;
 
 enum class GLSLType {
@@ -23,7 +22,7 @@ struct UniformValue {
   UniformValue(float x, float y, float z) : type(GLSLType::Vec3) { data.f[0] = x; data.f[1] = y; data.f[2] = z; }
 };
 
-using UniformValueFunction = std::function<UniformValue(const EffectInstance&, const RenderProps&)>;
+using UniformValueFunction = std::function<UniformValue(const RenderProps&)>;
 
 //TODO: rename
 class Uniforms {

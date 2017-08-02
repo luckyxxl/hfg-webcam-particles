@@ -64,9 +64,9 @@ bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
     ShaderBuilder vertexShader, fragmentShader;
 
     unsigned instanceId = 0;
-    testTimeline.forEachInstance([&](const EffectInstance &i) {
+    testTimeline.forEachInstance([&](const IEffect &i) {
       Uniforms uniforms(instanceId);
-      i.effect->registerEffect(i, uniforms, vertexShader, fragmentShader);
+      i.registerEffect(uniforms, vertexShader, fragmentShader);
       vertexShader.appendUniforms(uniforms);
       fragmentShader.appendUniforms(uniforms);
       ++instanceId;

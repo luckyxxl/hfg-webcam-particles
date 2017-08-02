@@ -9,9 +9,14 @@ class Timeline {
   void load(const json &json);
   void save(json &json) const;
 
-  using Track = std::vector<std::unique_ptr<EffectInstance>>;
+  using Track = std::vector<std::unique_ptr<IEffect>>;
 
-  void forEachInstance(std::function<void(const EffectInstance&)> f) const;
+  template<class f_t>
+  void forEachInstance(const f_t &f) const {
+    for(auto &track : tracks) for(auto &item : track) {
+      f(*item);
+    }
+  }
 
   private:
   EffectRegistry *effectRegistry;

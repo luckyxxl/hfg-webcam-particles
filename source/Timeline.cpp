@@ -12,7 +12,7 @@ void Timeline::load(const json &json) {
     for(auto &jsonItem : jsonTrack) {
       auto id = jsonItem.at("id").get<std::string>();
       auto instance = effectRegistry->createInstance(id.c_str());
-      instance->load(jsonItem);
+      instance->loadInstanceConfig(jsonItem);
 
       track.push_back(std::move(instance));
     }
@@ -27,18 +27,12 @@ void Timeline::save(json &json) const {
 
     for(auto &item : track) {
       auto jsonItem = json::object();
-      jsonItem["id"] = item->effect->getName();
-      item->save(jsonItem);
+      jsonItem["id"] = item->getName();
+      item->saveInstanceConfig(jsonItem);
 
       jsonTrack.push_back(jsonItem);
     }
 
     json.push_back(jsonTrack);
-  }
-}
-
-void Timeline::forEachInstance(std::function<void(const EffectInstance&)> f) const {
-  for(auto &track : tracks) for(auto &item : track) {
-    f(*item);
   }
 }

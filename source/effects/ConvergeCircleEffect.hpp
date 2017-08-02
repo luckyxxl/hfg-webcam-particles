@@ -4,19 +4,19 @@
 
 class ConvergeCircleEffect : public IEffect {
   public:
+  static constexpr auto Name = "ConvergeCircleEffect";
+
   const char *getName() const override;
   const char *getDescriptiveName() const override;
   const char *getDescription() const override;
 
-  struct Config : IConfig {
-    float rotationSpeed;
+  void loadConfig(const json &json) override;
+  void saveConfig(json &json) const override;
 
-    void load(const json &json) override;
-    void save(json &json) const override;
-  };
+  void randomizeConfig() override;
 
-  std::unique_ptr<IConfig> getDefaultConfig() const override;
-  std::unique_ptr<IConfig> getRandomConfig() const override;
+  void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const override;
 
-  void registerEffect(const EffectInstance &instance, Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const override;
+  protected:
+  float rotationSpeed = 0.f;
 };
