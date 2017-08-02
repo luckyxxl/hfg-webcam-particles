@@ -6,7 +6,7 @@ find_package(OpenCV REQUIRED)
 
 list(APPEND CMAKE_CXX_FLAGS "-std=c++17 -Wall -pthread")
 
-add_executable(webcam-particles
+set(SOURCE_FILES
   source/effects/ConvergeCircleEffect.cpp
   source/effects/ConvergeCircleEffect.hpp
   source/effects/EffectRegistry.cpp
@@ -42,8 +42,15 @@ add_executable(webcam-particles
   source/Webcam.hpp
 )
 
+add_executable(webcam-particles ${SOURCE_FILES})
+
 target_include_directories(webcam-particles PRIVATE source /usr/include/SDL2)
 target_link_libraries(webcam-particles ${OpenCV_LIBS} SDL2 GL m)
 
 add_custom_command(TARGET webcam-particles POST_BUILD COMMAND cmake -E create_symlink "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:webcam-particles>/resource")
 
+add_custom_target(update-format
+  clang-format -i -style=LLVM ${SOURCE_FILES}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Format all source files. Requires clang-format to be installed"
+)
