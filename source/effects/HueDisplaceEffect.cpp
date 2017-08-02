@@ -32,20 +32,18 @@ std::unique_ptr<IEffect::IConfig> HueDisplaceEffect::getRandomConfig() const {
   return std::make_unique<Config>();
 }
 
-void HueDisplaceEffect::registerEffect(const EffectInstance &instance, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
+void HueDisplaceEffect::registerEffect(const EffectInstance &instance, Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
   const Config *config = static_cast<const Config*>(instance.config.get());
   if(config->distance != 0.f) {
-    ShaderBuilder::UniformMap uniforms(42);
-
-    uniforms.addUniform("distance", GLSLType::Float, [](const EffectInstance &instance) {
+    const auto distance = uniforms.addUniform("distance", GLSLType::Float, [](const EffectInstance &instance) {
       const Config *config = static_cast<const Config*>(instance.config.get());
       return UniformValue(config->distance);
     });
-    uniforms.addUniform("time", GLSLType::Float, [](const EffectInstance &instance) {
+    const auto time = uniforms.addUniform("time", GLSLType::Float, [](const EffectInstance &instance) {
       //const Config *config = static_cast<const Config*>(instance.config.get());
       return UniformValue((/*props.clock.getTime() -*/ instance.timeBegin) / instance.getPeriod() * 2 * PI);
     });
-    uniforms.addUniform("directionOffset", GLSLType::Float, [](const EffectInstance &instance) {
+    const auto directionOffset = uniforms.addUniform("directionOffset", GLSLType::Float, [](const EffectInstance &instance) {
       const Config *config = static_cast<const Config*>(instance.config.get());
       auto result = config->rotate * (/*props.clock.getTime() -*/ instance.timeBegin) / instance.getPeriod() * 2 * PI;
       if(config->randomDirectionOffset) {
@@ -56,17 +54,22 @@ void HueDisplaceEffect::registerEffect(const EffectInstance &instance, ShaderBui
       }
       return UniformValue(result);
     });
-    uniforms.addUniform("scaleByVal", GLSLType::Float, [](const EffectInstance &instance) {
+    const auto scaleByVal = uniforms.addUniform("scaleByVal", GLSLType::Float, [](const EffectInstance &instance) {
       const Config *config = static_cast<const Config*>(instance.config.get());
       return UniformValue(config->scaleByValue);
     });
 
-    vertexShader.appendMainBody(uniforms, R"glsl(
+    vertexShader.appendMainBody(TEMPLATE(R"glsl(
     {
       float angle = hsv[0] + ${directionOffset};
       float offset = (-cos(${time}) + 1.) / 2.;
       position.xy += offset * getDirectionVector(angle) * ${distance} * (1. - ${scaleByVal} * (1. - hsv[2]));
     }
-    )glsl");
+    )glsl").compile({
+      {"distance", distance},
+      {"time", time},
+      {"directionOffset", directionOffset},
+      {"scaleByVal", scaleByVal},
+    }).c_str());
   }
 }

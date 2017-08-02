@@ -16,7 +16,7 @@ class IEffect {
   virtual std::unique_ptr<IConfig> getDefaultConfig() const = 0;
   virtual std::unique_ptr<IConfig> getRandomConfig() const = 0;
 
-  virtual void registerEffect(const EffectInstance &instance, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const = 0;
+  virtual void registerEffect(const EffectInstance &instance, Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const = 0;
 };
 
 struct EffectInstance {

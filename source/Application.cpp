@@ -63,8 +63,13 @@ bool Application::create(Resources *resources, sound::Renderer *soundRenderer) {
 
     ShaderBuilder vertexShader, fragmentShader;
 
+    unsigned instanceId = 0;
     testTimeline.forEachInstance([&](const EffectInstance &i) {
-      i.effect->registerEffect(i, vertexShader, fragmentShader);
+      Uniforms uniforms(instanceId);
+      i.effect->registerEffect(i, uniforms, vertexShader, fragmentShader);
+      vertexShader.appendUniforms(uniforms);
+      fragmentShader.appendUniforms(uniforms);
+      ++instanceId;
     });
 
     std::cout << vertexShader.assemble() << "\n" /*<< fragmentShader.assemble()*/;

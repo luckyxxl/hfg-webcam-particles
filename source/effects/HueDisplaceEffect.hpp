@@ -23,5 +23,5 @@ class HueDisplaceEffect : public IEffect {
   std::unique_ptr<IConfig> getDefaultConfig() const override;
   std::unique_ptr<IConfig> getRandomConfig() const override;
 
-  void registerEffect(const EffectInstance &instance, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const override;
+  void registerEffect(const EffectInstance &instance, Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const override;
 };

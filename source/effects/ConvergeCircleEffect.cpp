@@ -26,29 +26,27 @@ std::unique_ptr<IEffect::IConfig> ConvergeCircleEffect::getRandomConfig() const 
   return std::make_unique<Config>();
 }
 
-void ConvergeCircleEffect::registerEffect(const EffectInstance &instance, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
+void ConvergeCircleEffect::registerEffect(const EffectInstance &instance, Uniforms &uniforms, ShaderBuilder &vertexShader, ShaderBuilder &fragmentShader) const {
   //const Config *config = static_cast<const Config*>(instance.config.get());
 
-  ShaderBuilder::UniformMap uniforms(42);
-
-  uniforms.addUniform("time", GLSLType::Float, [](const EffectInstance &instance){
+  const auto time = uniforms.addUniform("time", GLSLType::Float, [](const EffectInstance &instance){
     //const Config *config = static_cast<const Config*>(instance.config.get());
     return UniformValue(std::fmod(/*props.clock.getTime() -*/ instance.timeBegin, instance.getPeriod()));
   });
-  uniforms.addUniform("speed", GLSLType::Float, [](const EffectInstance &instance){
+  const auto speed = uniforms.addUniform("speed", GLSLType::Float, [](const EffectInstance &instance){
     //const Config *config = static_cast<const Config*>(instance.config.get());
     return UniformValue(2 * 2 / (instance.getPeriod() / 2 * instance.getPeriod() / 2));
   });
-  uniforms.addUniform("rotationSpeed", GLSLType::Float, [](const EffectInstance &instance){
+  const auto rotationSpeed = uniforms.addUniform("rotationSpeed", GLSLType::Float, [](const EffectInstance &instance){
     const Config *config = static_cast<const Config*>(instance.config.get());
     return UniformValue(config->rotationSpeed);
   });
-  uniforms.addUniform("maxTravelTime", GLSLType::Float, [](const EffectInstance &instance){
+  const auto maxTravelTime = uniforms.addUniform("maxTravelTime", GLSLType::Float, [](const EffectInstance &instance){
     //const Config *config = static_cast<const Config*>(instance.config.get());
     return UniformValue(instance.getPeriod() / 2);
   });
 
-  vertexShader.appendMainBody(uniforms, R"glsl(
+  vertexShader.appendMainBody(TEMPLATE(R"glsl(
   {
     vec2 screenTarget = getDirectionVector(hsv[0] + ${time} * ${rotationSpeed}) * vec2(.8) * vec2(invScreenAspectRatio, 1.);
     vec2 target = (invViewProjectionMatrix * vec4(screenTarget, 0, 1)).xy;
@@ -74,5 +72,10 @@ void ConvergeCircleEffect::registerEffect(const EffectInstance &instance, Shader
 
     position.xy += result;
   }
-  )glsl");
+  )glsl").compile({
+    {"time", time},
+    {"speed", speed},
+    {"rotationSpeed", rotationSpeed},
+    {"maxTravelTime", maxTravelTime},
+  }).c_str());
 }

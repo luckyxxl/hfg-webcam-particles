@@ -31,6 +31,7 @@ add_executable(webcam-particles
   source/Resources.hpp
   source/ShaderBuilder.cpp
   source/ShaderBuilder.hpp
+  source/Template.hpp
   source/ThreadSyncTripleBuffer.hpp
   source/Timeline.cpp
   source/Timeline.hpp

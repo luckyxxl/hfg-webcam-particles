@@ -12,40 +12,26 @@ static const char *glslTypeString(GLSLType type) {
   return "ERROR";
 }
 
-ShaderBuilder::UniformMap::UniformMap(unsigned instanceId) : instanceId(instanceId) {
-}
-
-void ShaderBuilder::UniformMap::addUniform(const char *name, GLSLType type, UniformValueFunction value) {
+const char *Uniforms::addUniform(const char *name, GLSLType type, UniformValueFunction value) {
   Element newElement;
-  newElement.originalName = name;
-  newElement.mappedName = std::string(name) + "_" + std::to_string(instanceId);
+  newElement.name = std::string(name) + (id != undefinedId ? "_" + std::to_string(id) : "");
   newElement.type = type;
   newElement.value = value;
-  elements.push_back(newElement);
+  uniforms.push_back(newElement);
+  return uniforms.back().name.c_str();
 }
 
-void ShaderBuilder::appendMainBody(const UniformMap &uniformMap, const char *source) {
-  std::string result = source;
-  for(auto &u : uniformMap.elements) {
-    const auto toReplace = "${" + std::string(u.originalName) + "}";
-    const auto replaceWith = u.mappedName;
-
-    std::string::size_type p = 0;
-    while((p = result.find(toReplace, p)) != std::string::npos) {
-      result.replace(p, toReplace.length(), replaceWith);
-      p += replaceWith.length();
-    }
+void ShaderBuilder::appendUniforms(const Uniforms &_uniforms) {
+  for(auto &u : _uniforms.getUniforms()) {
+    UniformElement newElement;
+    newElement.name = u.name;
+    newElement.type = u.type;
+    uniforms.push_back(newElement);
   }
+}
 
-  mainBody += result;
-
-  for(auto &u : uniformMap.elements) {
-    UniformElement uniform;
-    uniform.name = u.mappedName;
-    uniform.type = u.type;
-    uniform.value = u.value;
-    uniforms.push_back(uniform);
-  }
+void ShaderBuilder::appendMainBody(const char *source) {
+  mainBody += source;
 }
 
 std::string ShaderBuilder::assemble() const {

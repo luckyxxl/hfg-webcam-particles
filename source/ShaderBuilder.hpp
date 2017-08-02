@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Template.hpp"
+
 struct EffectInstance;
 
 enum class GLSLType {
@@ -22,29 +24,31 @@ struct UniformValue {
 
 using UniformValueFunction = std::function<UniformValue(const EffectInstance&)>;
 
-class ShaderBuilder {
+//TODO: rename
+class Uniforms {
   public:
-  class UniformMap {
-    public:
-    UniformMap(unsigned instanceId);
+  static constexpr auto undefinedId = std::numeric_limits<unsigned>::max();
+  Uniforms(unsigned id = undefinedId) : id(id) {}
 
-    void addUniform(const char *name, GLSLType type, UniformValueFunction value);
+  const char *addUniform(const char *name, GLSLType type, UniformValueFunction value);
 
-    private:
-    unsigned instanceId;
-
-    struct Element {
-      const char *originalName;
-      std::string mappedName;
-      GLSLType type;
-      UniformValueFunction value;
-    };
-    std::vector<Element> elements;
-
-    friend class ShaderBuilder;
+  struct Element {
+    std::string name;
+    GLSLType type;
+    UniformValueFunction value;
   };
 
-  void appendMainBody(const UniformMap &uniformMap, const char *source);
+  const std::vector<Element> &getUniforms() const { return uniforms; }
+
+  private:
+  unsigned id;
+  std::vector<Element> uniforms;
+};
+
+class ShaderBuilder {
+  public:
+  void appendUniforms(const Uniforms &uniforms);
+  void appendMainBody(const char *source);
 
   std::string assemble() const;
 
@@ -52,7 +56,6 @@ class ShaderBuilder {
   struct UniformElement {
     std::string name;
     GLSLType type;
-    UniformValueFunction value;
   };
   std::vector<UniformElement> uniforms;
 
