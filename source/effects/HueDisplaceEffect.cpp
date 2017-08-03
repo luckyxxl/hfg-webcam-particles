@@ -69,8 +69,7 @@ void HueDisplaceEffect::registerEffect(Uniforms &uniforms,
                         }),
                 UNIFORM("scaleByVal", GLSLType::Float,
                         [this](const RenderProps &props) {
-                          // TODO: remove this->
-                          return UniformValue(this->scaleByValue);
+                          return UniformValue(scaleByValue);
                         }),
             })
             .c_str());
