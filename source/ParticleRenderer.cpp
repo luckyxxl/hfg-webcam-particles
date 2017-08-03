@@ -31,24 +31,28 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
                           const auto aspect = (float)props.screen_width / props.screen_height;
                           const auto underscan = 1 - ((float)props.screen_height / props.screen_width) /
                                                          ((float)props.webcam_height / props.webcam_width);
+                          // clang-format off
                           return UniformValue(glm::mat4(
                               2.f / aspect, 0.f, 0.f, 0.f,
                               0.f, 2.f, 0.f, 0.f,
                               0.f, 0.f, 0.f, 0.f,
                               underscan - 1.f, -1.f, 0.f, 1.f
                           ));
+                          // clang-format on
                         });
   uniforms.emplace_back("invViewProjectionMatrix", GLSLType::Mat4,
                         [](const RenderProps &props) {
                           const auto aspect = (float)props.screen_width / props.screen_height;
                           const auto underscan = 1 - ((float)props.screen_height / props.screen_width) /
                                                          ((float)props.webcam_height / props.webcam_width);
+                          // clang-format off
                           return UniformValue(glm::mat4(
                             .5f * aspect, 0.f, 0.f, 0.f,
                             0.f, .5f, 0.f, 0.f,
                             0.f, 0.f, 0.f, 0.f,
                             (-.5f * (underscan - 1.f)) * aspect, .5f, 0.f, 1.f
                           ));
+                          // clang-format on
                         });
   uniforms.emplace_back("particleSize", GLSLType::Float,
                         [](const RenderProps &props) {
