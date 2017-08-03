@@ -8,8 +8,6 @@
 #include "graphics/Window.hpp"
 #include "sound/Renderer.hpp"
 
-Application::Application() : testParticleRenderer(random) {}
-
 bool Application::create(Resources *resources, graphics::Window *window,
                          sound::Renderer *soundRenderer) {
   this->window = window;
@@ -252,6 +250,8 @@ void Application::update(float dt) {
     webcam_buffer.finishCopy();
   }
 
+  testParticleRenderer.update(dt);
+
   if (globalEffectTimeoutActive) {
     globalEffectTimeout -= dt;
     if (globalEffectTimeout <= 0.f && !globalEffectActive) {
@@ -315,6 +315,13 @@ void Application::render() {
   glUniform1f(globalTime_location, SDL_GetTicks() / 1000.f);
   glUniform1f(globalEffectTime_location, globalEffectTime);
   particleBuffer.draw();
+
+/*
+  {
+    RendererParameters parameters(particleBuffer, random, screen_width, screen_height, webcam_width, webcam_height);
+    testParticleRenderer.render(parameters);
+  }
+*/
 
   {
     GLenum error = glGetError();

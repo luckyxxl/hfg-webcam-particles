@@ -19,8 +19,6 @@ class Window;
 
 class Application {
 public:
-  Application();
-
   bool create(Resources *, graphics::Window *, sound::Renderer *);
   void destroy();
 

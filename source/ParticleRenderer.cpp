@@ -3,9 +3,6 @@
 #include "ParticleRenderer.hpp"
 #include "Timeline.hpp"
 
-ParticleRenderer::ParticleRenderer(std::default_random_engine &random)
-    : props(state, random) {}
-
 void ParticleRenderer::reset() {
   graphicsPipeline.destroy();
   uniforms.clear();
@@ -16,33 +13,47 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
 
   timeline = std::move(_timeline);
 
+  state.clock.setPeriod(timeline->getPeriod());
+
   std::vector<UniformDescription> uniforms;
   ShaderBuilder vertexShader, fragmentShader;
 
   uniforms.emplace_back("invImageAspectRatio", GLSLType::Float,
                         [](const RenderProps &props) {
-                          // TODO
-                          return UniformValue(1.f);
+                          return UniformValue((float)props.webcam_height / props.webcam_width);
                         });
   uniforms.emplace_back("invScreenAspectRatio", GLSLType::Float,
                         [](const RenderProps &props) {
-                          // TODO
-                          return UniformValue(1.f);
+                          return UniformValue((float)props.screen_height / props.screen_width);
                         });
   uniforms.emplace_back("viewProjectionMatrix", GLSLType::Mat4,
                         [](const RenderProps &props) {
-                          // TODO
-                          return UniformValue(1.f);
+                          const auto aspect = (float)props.screen_width / props.screen_height;
+                          const auto underscan = 1 - ((float)props.screen_height / props.screen_width) /
+                                                         ((float)props.webcam_height / props.webcam_width);
+                          return UniformValue(glm::mat4(
+                              2.f / aspect, 0.f, 0.f, 0.f,
+                              0.f, 2.f, 0.f, 0.f,
+                              0.f, 0.f, 0.f, 0.f,
+                              underscan - 1.f, -1.f, 0.f, 1.f
+                          ));
                         });
   uniforms.emplace_back("invViewProjectionMatrix", GLSLType::Mat4,
                         [](const RenderProps &props) {
-                          // TODO
-                          return UniformValue(1.f);
+                          const auto aspect = (float)props.screen_width / props.screen_height;
+                          const auto underscan = 1 - ((float)props.screen_height / props.screen_width) /
+                                                         ((float)props.webcam_height / props.webcam_width);
+                          return UniformValue(glm::mat4(
+                            .5f * aspect, 0.f, 0.f, 0.f,
+                            0.f, .5f, 0.f, 0.f,
+                            0.f, 0.f, 0.f, 0.f,
+                            (-.5f * (underscan - 1.f)) * aspect, .5f, 0.f, 1.f
+                          ));
                         });
   uniforms.emplace_back("particleSize", GLSLType::Float,
                         [](const RenderProps &props) {
-                          // TODO
-                          return UniformValue(1.f);
+                          //TODO: particleScaling config
+                          return UniformValue(((float)props.screen_height / props.webcam_height) * 2 /* * particleScaling*/);
                         });
   uniforms.emplace_back("globalTime", GLSLType::Float,
                         [](const RenderProps &props) {
@@ -126,9 +137,13 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
   }
 }
 
-void ParticleRenderer::update(float dt) {}
+void ParticleRenderer::update(float dt) {
+  state.clock.frame(dt);
+}
 
-void ParticleRenderer::render() {
+void ParticleRenderer::render(const RendererParameters &parameters) {
+  RenderProps props(parameters, state);
+
   graphicsPipeline.bind();
 
   for (const auto &uniform : uniforms) {
@@ -151,4 +166,6 @@ void ParticleRenderer::render() {
       break;
     }
   }
+
+  parameters.particle_buffer.draw();
 }

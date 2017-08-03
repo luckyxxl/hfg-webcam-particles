@@ -11,6 +11,14 @@ public:
 
   using Track = std::vector<std::unique_ptr<IEffect>>;
 
+  float getPeriod() const {
+    auto period = 0.f;
+    forEachInstance([&](const IEffect &e) {
+      period = std::max(period, e.getTimeEnd());
+    });
+    return period;
+  }
+
   template <class f_t> void forEachInstance(const f_t &f) const {
     for (auto &track : tracks)
       for (auto &item : track) {

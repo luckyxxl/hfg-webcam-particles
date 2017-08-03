@@ -1,5 +1,23 @@
 #pragma once
 
+#include "graphics/ParticleBuffer.hpp"
+
+struct RendererParameters {
+  const graphics::ParticleBuffer &particle_buffer;
+
+  std::default_random_engine &random;
+
+  const uint32_t &screen_width, &screen_height;
+  const uint32_t &webcam_width, &webcam_height;
+
+  RendererParameters(const graphics::ParticleBuffer &particle_buffer, std::default_random_engine &random,
+              const uint32_t &screen_width, const uint32_t &screen_height,
+              const uint32_t &webcam_width, const uint32_t &webcam_height)
+      : particle_buffer(particle_buffer), random(random), screen_width(screen_width),
+        screen_height(screen_height), webcam_width(webcam_width),
+        webcam_height(webcam_height) {}
+};
+
 class Clock {
 public:
   void frame(float dt) {
@@ -10,13 +28,15 @@ public:
     if (time == -1.f) {
       time = 0.f;
     } else {
-      delta = dt;
+      delta = dt * 1000; // s -> ms
       time += delta;
       while (time >= period) {
         time -= period;
       }
     }
   }
+
+  void setPeriod(float p) { period = p; }
 
   float getTime() const { return time; }
 
@@ -44,10 +64,8 @@ struct RendererState {
   Clock clock;
 };
 
-struct RenderProps {
+struct RenderProps : RendererParameters {
   const RendererState &state;
-  std::default_random_engine &random;
 
-  RenderProps(const RendererState &state, std::default_random_engine &random)
-      : state(state), random(random) {}
+  RenderProps(const RendererParameters &parameters, const RendererState &state) : RendererParameters(parameters), state(state) {}
 };
