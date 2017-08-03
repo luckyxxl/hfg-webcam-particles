@@ -15,19 +15,19 @@ enum class GLSLType {
 struct UniformValue {
   GLSLType type;
   union Data {
-    float f[16]; // can store mat4
+    float f;
+    glm::vec2 v2;
+    glm::vec3 v3;
+    glm::vec4 v4;
+    glm::mat4 m4;
+
+    Data() : m4(0.f) {}
   } data;
 
-  UniformValue(float x) : type(GLSLType::Float) { data.f[0] = x; }
-  UniformValue(float x, float y) : type(GLSLType::Vec2) {
-    data.f[0] = x;
-    data.f[1] = y;
-  }
-  UniformValue(float x, float y, float z) : type(GLSLType::Vec3) {
-    data.f[0] = x;
-    data.f[1] = y;
-    data.f[2] = z;
-  }
+  UniformValue(float x) : type(GLSLType::Float) { data.f = x; }
+  UniformValue(glm::vec2 x) : type(GLSLType::Vec2) { data.v2 = x; }
+  UniformValue(glm::vec3 x) : type(GLSLType::Vec3) { data.v3 = x; }
+  UniformValue(glm::mat4 x) : type(GLSLType::Mat4) { data.m4 = x; }
 };
 
 using UniformValueFunction = std::function<UniformValue(const RenderProps &)>;

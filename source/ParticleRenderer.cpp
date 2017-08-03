@@ -135,19 +135,19 @@ void ParticleRenderer::render() {
     const auto value = uniform.value(props);
     switch (value.type) {
     case GLSLType::Float:
-      glUniform1fv(uniform.location, 1, value.data.f);
+      glUniform1fv(uniform.location, 1, &value.data.f);
       break;
     case GLSLType::Vec2:
-      glUniform2fv(uniform.location, 1, value.data.f);
+      glUniform2fv(uniform.location, 1, &value.data.v2[0]);
       break;
     case GLSLType::Vec3:
-      glUniform3fv(uniform.location, 1, value.data.f);
+      glUniform3fv(uniform.location, 1, &value.data.v3[0]);
       break;
     case GLSLType::Vec4:
-      glUniform4fv(uniform.location, 1, value.data.f);
+      glUniform4fv(uniform.location, 1, &value.data.v4[0]);
       break;
     case GLSLType::Mat4:
-      glUniformMatrix4fv(uniform.location, 1, GL_FALSE, value.data.f);
+      glUniformMatrix4fv(uniform.location, 1, GL_FALSE, &value.data.m4[0][0]);
       break;
     }
   }
