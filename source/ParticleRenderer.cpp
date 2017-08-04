@@ -84,7 +84,7 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
 
   vertexShader.appendMainBody(R"glsl(
     vec3 initialPosition = vec3(texcoord, 0);
-    initialPosition.y *= invImageAspectRatio;
+    initialPosition.x /= invImageAspectRatio;
     float pointSize = max(particleSize, 0.);
 
     vec3 position = initialPosition;
