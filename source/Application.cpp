@@ -13,11 +13,8 @@ bool Application::create(Resources *resources, graphics::Window *window,
   this->window = window;
   this->soundRenderer = soundRenderer;
 
-  // testSample.loadFromFile(resources, "sound_debug/test.wav");
-
-  // loopTestSample.loadFromFile(resources, "sound_debug/warning_beep.wav");
-  // soundRenderer->play(&loopTestSample,
-  // sound::Renderer::PlayParameters().setLooping(true));
+  effectRegistry.registerEffect<HueDisplaceEffect>();
+  effectRegistry.registerEffect<ConvergeCircleEffect>();
 
   backgroundLoop.loadFromFile(resources, "sound/DroneLoopStereo01.wav");
   soundRenderer->play(&backgroundLoop,
@@ -45,44 +42,31 @@ bool Application::create(Resources *resources, graphics::Window *window,
   webcam_thread = std::thread([this] { this->webcamThreadFunc(); });
 
   {
-    const auto vertexShaderSource = resources->readWholeTextFile("test.glslv");
-    const auto fragmentShaderSource =
-        resources->readWholeTextFile("test.glslf");
-    pipeline.create(vertexShaderSource.c_str(), fragmentShaderSource.c_str());
+    auto timeline = std::make_unique<Timeline>(&effectRegistry);
+
+    auto hueDisplace = timeline->emplaceEffectInstance<HueDisplaceEffect>();
+    hueDisplace->timeBegin = 0.f;
+    hueDisplace->timeEnd = 2000.f;
+    hueDisplace->distance = .005f;
+
+    standbyParticleRenderer.setTimeline(std::move(timeline));
   }
 
-  invImageAspectRatio_location =
-      pipeline.getUniformLocation("invImageAspectRatio");
-  invScreenAspectRatio_location =
-      pipeline.getUniformLocation("invScreenAspectRatio");
-  viewProjectionMatrix_location =
-      pipeline.getUniformLocation("viewProjectionMatrix");
-  invViewProjectionMatrix_location =
-      pipeline.getUniformLocation("invViewProjectionMatrix");
-  globalTime_location = pipeline.getUniformLocation("globalTime");
-  globalEffectTime_location = pipeline.getUniformLocation("globalEffectTime");
+  {
+    auto timeline = std::make_unique<Timeline>(&effectRegistry);
+
+    auto converge = timeline->emplaceEffectInstance<ConvergeCircleEffect>();
+    converge->timeBegin = 0.f;
+    converge->timeEnd = 3000.f;
+
+    reactionParticleRenderer.setTimeline(std::move(timeline));
+
+    reactionParticleRenderer.getClock().setPaused(true);
+    reactionParticleRenderer.getClock().setLooping(false);
+  }
 
   current_frame_data.resize(webcam_width * webcam_height);
   particleBuffer.create(webcam_width * webcam_height);
-
-  effectRegistry.registerEffect<HueDisplaceEffect>();
-  effectRegistry.registerEffect<ConvergeCircleEffect>();
-
-  {
-    auto testTimeline = std::make_unique<Timeline>(&effectRegistry);
-
-    auto testJson = resources->readWholeTextFile("debug/particles.json");
-    testTimeline->load(json::parse(testJson)["effects"]);
-
-    {
-      json testSave;
-      testTimeline->save(testSave);
-
-      std::cout << testSave.dump(2) << "\n";
-    }
-
-    testParticleRenderer.setTimeline(std::move(testTimeline));
-  }
 
   return true;
 }
@@ -92,7 +76,8 @@ void Application::destroy() {
 
   particleBuffer.destroy();
 
-  pipeline.destroy();
+  reactionParticleRenderer.reset();
+  standbyParticleRenderer.reset();
 
   if (webcam_thread.joinable())
     webcam_thread.join();
@@ -227,101 +212,61 @@ void Application::update(float dt) {
                                    current_frame_data.size());
 
     if (totalDifference / (webcam_width * webcam_height) > .05f) {
-      if (!globalEffectTimeoutActive) {
+      if (reactionState == ReactionState::Inactive) {
         std::cout << "trigger\n";
-        globalEffectTimeoutActive = true;
 
-        // soundRenderer->play(&testSample);
-        // soundRenderer->play(&testSample,
-        // sound::Renderer::PlayParameters().setStartDelay(2.5));
+        standbyParticleRenderer.getClock().setLooping(false);
 
-        {
-          std::uniform_int_distribution<> dis(0, whooshSamples.size() - 1);
-          soundRenderer->play(
-              &whooshSamples[dis(random)],
-              sound::Renderer::PlayParameters().setStartDelay(1.));
-          soundRenderer->play(
-              &whooshSamples[dis(random)],
-              sound::Renderer::PlayParameters().setStartDelay(2.5));
-        }
+        reactionState = ReactionState::FinishStandbyTimeline;
       }
     }
 
     webcam_buffer.finishCopy();
   }
 
-  testParticleRenderer.update(dt);
+  if (reactionState == ReactionState::FinishStandbyTimeline
+      && standbyParticleRenderer.getClock().getPaused()) {
 
-  if (globalEffectTimeoutActive) {
-    globalEffectTimeout -= dt;
-    if (globalEffectTimeout <= 0.f && !globalEffectActive) {
-      globalEffectActive = true;
+    std::cout << "start reaction\n";
+    reactionParticleRenderer.getClock().setPaused(false);
+
+    {
+      std::uniform_int_distribution<> dis(0, whooshSamples.size() - 1);
+      soundRenderer->play(
+          &whooshSamples[dis(random)],
+          sound::Renderer::PlayParameters().setStartDelay(0.));
+      soundRenderer->play(
+          &whooshSamples[dis(random)],
+          sound::Renderer::PlayParameters().setStartDelay(1.5));
     }
+
+    reactionState = ReactionState::RenderReactionTimeline;
   }
 
-  if (globalEffectActive) {
-    globalEffectTime += dt;
-    if (globalEffectTime > 3.f) {
-      globalEffectActive = false;
-      globalEffectTime = 0.f;
-      globalEffectTimeoutActive = false;
-      globalEffectTimeout = 1.f;
-    }
+  if (reactionState == ReactionState::RenderReactionTimeline
+      && reactionParticleRenderer.getClock().getPaused()) {
+
+    std::cout << "end reaction\n";
+    standbyParticleRenderer.getClock().setLooping(true);
+    standbyParticleRenderer.getClock().setPaused(false);
+
+    reactionState = ReactionState::Inactive;
   }
+
+  standbyParticleRenderer.update(dt);
+  reactionParticleRenderer.update(dt);
 }
 
 void Application::render() {
   glClear(GL_COLOR_BUFFER_BIT);
 
-  pipeline.bind();
+  RendererParameters parameters(particleBuffer, random, screen_width, screen_height, webcam_width, webcam_height);
 
-  glUniform1f(invImageAspectRatio_location,
-              (float)webcam_height / webcam_width);
-  glUniform1f(invScreenAspectRatio_location,
-              (float)screen_height / screen_width);
-  {
-    const float aspect = (float)screen_width / screen_height;
-    const float underscan = 1 - ((float)screen_height / screen_width) /
-                                    ((float)webcam_height / webcam_width);
-    const GLfloat mat[4 * 4] = {
-        // column-major
-        2.f / aspect,    0.f,  0.f, 0.f, 0.f, 2.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
-        underscan - 1.f, -1.f, 0.f, 1.f};
-    glUniformMatrix4fv(viewProjectionMatrix_location, 1, GL_FALSE, mat);
+  if (reactionState == ReactionState::RenderReactionTimeline) {
+    reactionParticleRenderer.render(parameters);
+  } else {
+    standbyParticleRenderer.render(parameters);
   }
-  {
-    const float aspect = (float)screen_width / screen_height;
-    const float underscan = 1 - ((float)screen_height / screen_width) /
-                                    ((float)webcam_height / webcam_width);
-    const GLfloat mat[4 * 4] = {// column-major
-                                .5f * aspect,
-                                0.f,
-                                0.f,
-                                0.f,
-                                0.f,
-                                .5f,
-                                0.f,
-                                0.f,
-                                0.f,
-                                0.f,
-                                0.f,
-                                0.f,
-                                (-.5f * (underscan - 1.f)) * aspect,
-                                .5f,
-                                0.f,
-                                1.f};
-    glUniformMatrix4fv(invViewProjectionMatrix_location, 1, GL_FALSE, mat);
-  }
-  glUniform1f(globalTime_location, SDL_GetTicks() / 1000.f);
-  glUniform1f(globalEffectTime_location, globalEffectTime);
-  particleBuffer.draw();
-
-/*
-  {
-    RendererParameters parameters(particleBuffer, random, screen_width, screen_height, webcam_width, webcam_height);
-    testParticleRenderer.render(parameters);
-  }
-*/
 
   {
     GLenum error = glGetError();

@@ -128,8 +128,6 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
   const auto vertexShaderSource = vertexShader.assemble();
   const auto fragmentShaderSource = fragmentShader.assemble();
 
-  std::cout << vertexShaderSource << "\n" << fragmentShaderSource << "\n";
-
   graphicsPipeline.create(vertexShaderSource.c_str(),
                           fragmentShaderSource.c_str());
 

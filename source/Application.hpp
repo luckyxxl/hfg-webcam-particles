@@ -31,8 +31,7 @@ private:
   graphics::Window *window;
   sound::Renderer *soundRenderer;
 
-  // sound::SampleBuffer testSample;
-  // sound::SampleBuffer loopTestSample;
+  EffectRegistry effectRegistry;
 
   sound::SampleBuffer backgroundLoop;
   std::vector<sound::SampleBuffer> whooshSamples;
@@ -50,24 +49,18 @@ private:
   void webcamThreadFunc();
   std::thread webcam_thread;
 
-  ParticleRenderer testParticleRenderer;
+  ParticleRenderer standbyParticleRenderer;
+  ParticleRenderer reactionParticleRenderer;
 
-  graphics::Pipeline pipeline;
-  GLint invImageAspectRatio_location, invScreenAspectRatio_location;
-  GLint viewProjectionMatrix_location, invViewProjectionMatrix_location;
-  GLint globalTime_location, globalEffectTime_location;
+  enum class ReactionState {
+    Inactive,
+    FinishStandbyTimeline,
+    RenderReactionTimeline,
+  } reactionState = ReactionState::Inactive;
 
   // remove this and use glMapBuffer?  thought mapping is probably slower...
   std::vector<graphics::Particle> current_frame_data;
   graphics::ParticleBuffer particleBuffer;
 
   std::vector<float> background_frame;
-
-  EffectRegistry effectRegistry;
-
-  bool globalEffectTimeoutActive = false;
-  float globalEffectTimeout = 1.f;
-
-  bool globalEffectActive = false;
-  float globalEffectTime = 0.f;
 };

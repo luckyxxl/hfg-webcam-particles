@@ -25,13 +25,14 @@ public:
       delta = 0.f;
       return;
     }
-    if (time == -1.f) {
-      time = 0.f;
-    } else {
-      delta = dt * 1000; // s -> ms
-      time += delta;
-      while (time >= period) {
+    delta = dt * 1000; // s -> ms
+    time += delta;
+    while(time >= period) {
+      if(looping) {
         time -= period;
+      } else {
+        time = 0.f;
+        paused = true;
       }
     }
   }
@@ -53,11 +54,15 @@ public:
 
   bool getPaused() const { return paused; }
 
+  void setLooping(bool loop) { looping = loop; }
+  bool getLooping() const { return looping; }
+
 private:
-  float time = -1.f;
+  float time = 0.f;
   float delta = 0.f;
   float period = 1000.f;
   bool paused = false;
+  bool looping = true;
 };
 
 struct RendererState {

@@ -11,6 +11,8 @@ public:
   void update(float dt);
   void render(const RendererParameters &parameters);
 
+  Clock &getClock() { return state.clock; }
+
 private:
   std::unique_ptr<Timeline> timeline;
 
