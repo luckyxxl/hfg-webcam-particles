@@ -25,7 +25,7 @@ public:
       delta = 0.f;
       return;
     }
-    delta = dt * 1000; // s -> ms
+    delta = dt;
     time += delta;
     while(time >= period) {
       if(looping) {

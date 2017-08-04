@@ -74,7 +74,7 @@ Voice *Renderer::play(const SampleBuffer *sampleBuffer,
       continue;
 
     voice.sampleBuffer.store(sampleBuffer, std::memory_order_relaxed);
-    voice.cursor.store(-parameters.startDelay * audioSpec.freq,
+    voice.cursor.store(-parameters.startDelay * audioSpec.freq / 1000.,
                        std::memory_order_relaxed);
     voice.looping.store(parameters.looping, std::memory_order_relaxed);
 

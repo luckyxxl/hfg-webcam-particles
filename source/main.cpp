@@ -46,7 +46,7 @@ int main(int argc, const char *argv[]) {
     if (!application->handleEvents())
       break;
 
-    application->update(1.f / 60.f);
+    application->update(1.f / 60.f * 1000.f);
     application->render();
 
     soundRenderer->update();

@@ -238,7 +238,7 @@ void Application::update(float dt) {
           sound::Renderer::PlayParameters().setStartDelay(0.));
       soundRenderer->play(
           &whooshSamples[dis(random)],
-          sound::Renderer::PlayParameters().setStartDelay(1.5));
+          sound::Renderer::PlayParameters().setStartDelay(1500.));
     }
 
     reactionState = ReactionState::RenderReactionTimeline;
