@@ -18,11 +18,12 @@ public:
   void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader,
                       ShaderBuilder &fragmentShader) const override;
 
-protected:
-  float distance;
-  float scaleByValue;
-  bool randomDirectionOffset;
-  float rotate;
+public:
+  float distance = 0.f;
+  float scaleByValue = 0.f;
+  bool randomDirectionOffset = false;
+  float rotate = 0.f;
 
+private:
   float randomDirectionOffsetValue = NAN; // updated during rendering
 };

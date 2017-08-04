@@ -11,6 +11,22 @@ public:
 
   using Track = std::vector<std::unique_ptr<IEffect>>;
 
+  void addEffectInstance(std::unique_ptr<IEffect> effect, unsigned trackIndex = 0) {
+    if(tracks.size() <= trackIndex) {
+      tracks.resize(trackIndex + 1);
+    }
+
+    tracks[trackIndex].push_back(std::move(effect));
+  }
+
+  template<class Effect>
+  Effect *emplaceEffectInstance(unsigned trackIndex = 0) {
+    auto effect = std::make_unique<Effect>();
+    auto result = effect.get();
+    addEffectInstance(std::move(effect), trackIndex);
+    return result;
+  }
+
   float getPeriod() const {
     auto period = 0.f;
     forEachInstance([&](const IEffect &e) {

@@ -23,7 +23,7 @@ public:
   float getTimeBegin() const { return timeBegin; }
   float getTimeEnd() const { return timeEnd; }
 
-protected:
+public:
   float timeBegin = 0.f;
   float timeEnd = 1.f;
   unsigned repetitions = 1u;

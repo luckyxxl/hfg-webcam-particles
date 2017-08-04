@@ -18,6 +18,6 @@ public:
   void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader,
                       ShaderBuilder &fragmentShader) const override;
 
-protected:
+public:
   float rotationSpeed = 0.f;
 };
