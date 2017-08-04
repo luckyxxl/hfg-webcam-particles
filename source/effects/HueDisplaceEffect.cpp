@@ -15,12 +15,14 @@ const char *HueDisplaceEffect::getDescription() const {
 void HueDisplaceEffect::loadConfig(const json &json) {
   distance = json.value("distance", 0.f);
   scaleByValue = json.value("scaleByValue", 0.f);
+  scaleByForegroundMask = json.value("scaleByForegroundMask", 0.f);
   randomDirectionOffset = json.value("randomDirectionOffset", false);
   rotate = json.value("rotate", 0.f);
 }
 void HueDisplaceEffect::saveConfig(json &json) const {
   json.emplace("distance", distance);
   json.emplace("scaleByValue", scaleByValue);
+  json.emplace("scaleByForegroundMask", scaleByForegroundMask);
   json.emplace("randomDirectionOffset", randomDirectionOffset);
   json.emplace("rotate", rotate);
 }
@@ -36,7 +38,7 @@ void HueDisplaceEffect::registerEffect(Uniforms &uniforms,
     {
       float angle = hsv[0] + ${directionOffset};
       float offset = (-cos(${time}) + 1.) / 2.;
-      position.xy += offset * getDirectionVector(angle) * ${distance} * (1. - ${scaleByVal} * (1. - hsv[2]));
+      position.xy += offset * getDirectionVector(angle) * ${distance} * (1. - ${scaleByVal} * (1. - hsv[2])) * (1. - ${scaleByFg} * (1. - foregroundMask));
     }
     )glsl")
             .compile({
@@ -70,6 +72,10 @@ void HueDisplaceEffect::registerEffect(Uniforms &uniforms,
                 UNIFORM("scaleByVal", GLSLType::Float,
                         [this](const RenderProps &props) {
                           return UniformValue(scaleByValue);
+                        }),
+                UNIFORM("scaleByFg", GLSLType::Float,
+                        [this](const RenderProps &props) {
+                          return UniformValue(scaleByForegroundMask);
                         }),
             })
             .c_str());

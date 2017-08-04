@@ -6,7 +6,7 @@ struct Particle {
   float position[2];
   float rgb[3];
   float hsv[3];
-  float localEffectStrength;
+  float foregroundMask;
 };
 
 class ParticleBuffer {

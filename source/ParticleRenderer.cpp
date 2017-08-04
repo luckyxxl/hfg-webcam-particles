@@ -64,9 +64,11 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
                           return UniformValue(props.state.clock.getTime());
                         });
 
+  // keep in sync with graphics::Pipeline
   vertexShader.appendIn("texcoord", GLSLType::Vec2);
   vertexShader.appendIn("rgb", GLSLType::Vec3);
   vertexShader.appendIn("hsv", GLSLType::Vec3);
+  vertexShader.appendIn("foregroundMask", GLSLType::Float);
 
   vertexShader.appendOut("color", GLSLType::Vec3);
 

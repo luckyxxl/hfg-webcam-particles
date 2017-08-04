@@ -26,7 +26,7 @@ bool ParticleBuffer::create(size_t particleCount) {
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(
       3, 1, GL_FLOAT, GL_FALSE, sizeof(Particle),
-      reinterpret_cast<void *>(offsetof(Particle, localEffectStrength)));
+      reinterpret_cast<void *>(offsetof(Particle, foregroundMask)));
   glEnableVertexAttribArray(3);
 
   return true;

@@ -34,10 +34,11 @@ static GLuint createProgram(GLuint vertexShader, GLuint fragmentShader) {
   glAttachShader(program, vertexShader);
   glAttachShader(program, fragmentShader);
 
-  glBindAttribLocation(program, 0, "v_position");
-  glBindAttribLocation(program, 1, "v_rgb");
-  glBindAttribLocation(program, 2, "v_hsv");
-  glBindAttribLocation(program, 3, "v_localEffectStrength");
+  // keep in sync with ParticleRenderer
+  glBindAttribLocation(program, 0, "position");
+  glBindAttribLocation(program, 1, "rgb");
+  glBindAttribLocation(program, 2, "hsv");
+  glBindAttribLocation(program, 3, "foregroundMask");
 
   glLinkProgram(program);
 

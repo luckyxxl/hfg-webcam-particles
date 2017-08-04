@@ -47,7 +47,8 @@ bool Application::create(Resources *resources, graphics::Window *window,
     auto hueDisplace = timeline->emplaceEffectInstance<HueDisplaceEffect>();
     hueDisplace->timeBegin = 0.f;
     hueDisplace->timeEnd = 2000.f;
-    hueDisplace->distance = .005f;
+    hueDisplace->distance = .01f;
+    hueDisplace->scaleByForegroundMask = 1.f;
 
     standbyParticleRenderer.setTimeline(std::move(timeline));
   }
@@ -204,7 +205,7 @@ void Application::update(float dt) {
       totalDifference += backgroundDifference;
 
       // TODO: animate this
-      particle.localEffectStrength =
+      particle.foregroundMask =
           std::min(std::max(backgroundDifference - .2f, 0.f) * 100.f, 1.f);
     }
 

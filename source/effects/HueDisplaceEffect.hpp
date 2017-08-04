@@ -21,6 +21,7 @@ public:
 public:
   float distance = 0.f;
   float scaleByValue = 0.f;
+  float scaleByForegroundMask = 0.f;
   bool randomDirectionOffset = false;
   float rotate = 0.f;
 
