@@ -35,7 +35,7 @@ void WaveEffect::registerEffect(Uniforms &uniforms,
     float x = 2 * ${time} - initialPosition.x;
 
     float ease = 1.;
-    if ((${rep} == 0 && x <= 0.5) || (${rep} == ${instance.repetitions} - 1 && x >= 0.5)) {
+    if ((${rep} == 0 && x <= 0.5) || (${rep} == ${repetitions} - 1 && x >= 0.5)) {
       // The ease function is a cos spanning two negative peaks with a positive peak
       // in between. This is is then translated (+1, /2) to go from 0 to 1
       // Finally, because this will lower the actual peak height of `curve`
@@ -79,7 +79,10 @@ void WaveEffect::registerEffect(Uniforms &uniforms,
                       [this](const RenderProps &props) {
                         return UniformValue(amplitude);
                       }),
-              { "instance.repetitions", std::to_string(repetitions) },
+              UNIFORM("repetitions", GLSLType::Float,
+                      [this](const RenderProps &props) {
+                        return UniformValue(repetitions);
+                      }),
           })
           .c_str());
 }

@@ -99,9 +99,20 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
   unsigned instanceId = 0;
   timeline->forEachInstance([&](const IEffect &i) {
     Uniforms instanceUniforms(uniforms, instanceId++);
-    vertexShader.appendMainBody(("if(" + std::to_string(i.getTimeBegin()) +
-                                 " <= globalTime && globalTime <= " +
-                                 std::to_string(i.getTimeEnd()) + ") {")
+    const auto timeBegin = instanceUniforms.addUniform("timeBegin",
+      GLSLType::Float, [&i](const RenderProps &props) {
+        return UniformValue(i.timeBegin);
+      });
+    const auto timeEnd = instanceUniforms.addUniform("timeEnd",
+      GLSLType::Float, [&i](const RenderProps &props) {
+        return UniformValue(i.timeEnd);
+      });
+    vertexShader.appendMainBody(TEMPLATE("if(${timeBegin} <= globalTime && "
+                                         "globalTime <= ${timeEnd}) { ")
+                                         .compile({
+                                           {"timeBegin", timeBegin},
+                                           {"timeEnd", timeEnd},
+                                         })
                                     .c_str());
 #if 1
     vertexShader.appendMainBody("\n#line 0\n");
