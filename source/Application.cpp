@@ -97,6 +97,8 @@ void Application::destroy() {
     webcam_thread.join();
 
   webcam.close();
+
+  soundRenderer->killAllVoices();
 }
 
 void Application::reshape(uint32_t width, uint32_t height) {

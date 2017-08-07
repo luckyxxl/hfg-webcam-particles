@@ -47,6 +47,14 @@ void Renderer::destroy() {
     SDL_CloseAudioDevice(audioDevice);
 }
 
+void Renderer::killAllVoices() {
+  SDL_LockAudioDevice(audioDevice);
+  for(auto &voice : voices) {
+    voice.state.store(Voice::State::Empty);
+  }
+  SDL_UnlockAudioDevice(audioDevice);
+}
+
 void Renderer::update() {
   for (auto &voice : voices) {
     if (voice.state.load() == Voice::State::Empty)

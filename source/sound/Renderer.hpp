@@ -34,6 +34,10 @@ public:
   bool create();
   void destroy();
 
+  // Blocks until all voices are killed so that all SampleBuffers can be safely
+  // deleted.
+  void killAllVoices();
+
   void update();
 
   struct PlayParameters {
