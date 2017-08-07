@@ -51,7 +51,7 @@ void WaveEffect::registerEffect(Uniforms &uniforms,
       reached = 1.;
     }
     float notOver = (x <= 1.) ? 1. : 0.;
-    if (${rep} != ${instance.repetitions} - 1) {
+    if (${rep} != ${repetitions} - 1) {
       notOver = 1.;
     }
 
