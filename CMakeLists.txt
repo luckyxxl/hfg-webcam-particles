@@ -48,16 +48,27 @@ set(SOURCE_FILES
   source/Webcam.cpp
   source/Webcam.hpp
 )
+set(EXECUTABLE_NAME "webcam-particles")
 
-add_executable(webcam-particles ${SOURCE_FILES})
+add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 
-target_include_directories(webcam-particles PRIVATE source 3rdparty ${SDL2_INCLUDE_DIR})
-target_link_libraries(webcam-particles ${OpenCV_LIBS} ${SDL2_LIBRARY} ${OPENGL_gl_LIBRARY} m)
+target_include_directories(${EXECUTABLE_NAME} PRIVATE source 3rdparty ${SDL2_INCLUDE_DIR})
+target_link_libraries(${EXECUTABLE_NAME} ${OpenCV_LIBS} ${SDL2_LIBRARY} ${OPENGL_gl_LIBRARY} m)
 
-add_custom_command(TARGET webcam-particles POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:webcam-particles>/resource")
+add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:webcam-particles>/resource")
 
 add_custom_target(update-format
   clang-format -i -style=LLVM ${SOURCE_FILES}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Format all source files. Requires clang-format to be installed"
 )
+
+# Install target
+install(TARGETS ${EXECUTABLE_NAME} DESTINATION bin)
+
+# CPack packaging
+include(InstallRequiredSystemLibraries)
+set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+include(CPack)
