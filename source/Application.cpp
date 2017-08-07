@@ -59,10 +59,12 @@ bool Application::create(Resources *resources, graphics::Window *window,
 
   {
     auto timeline = std::make_unique<Timeline>(&effectRegistry);
+    timeline->setFixedPeriod(6000.f);
 
-    auto converge = timeline->emplaceEffectInstance<ConvergeCircleEffect>();
-    converge->timeBegin = 0.f;
-    converge->timeEnd = 3000.f;
+    timeline->emplaceEffectInstance<ConvergeCircleEffect>();
+    timeline->emplaceEffectInstance<ConvergePointEffect>();
+    timeline->emplaceEffectInstance<HueDisplaceEffect>();
+    timeline->emplaceEffectInstance<WaveEffect>();
 
     reactionParticleRenderer.setTimeline(std::move(timeline));
 
@@ -187,6 +189,21 @@ static void rgb2Hsv(float *hsv, const float *rgb) {
   hsv[2] = cMax;
 }
 
+static void randomizeTimeline(Timeline *timeline,
+                              std::default_random_engine &random) {
+  assert(timeline->hasFixedPeriod());
+  const auto period = timeline->getPeriod();
+  const auto minLength = 2000.f;
+
+  timeline->forEachInstance([&](IEffect &i) {
+    i.timeBegin = std::uniform_real_distribution<float>(0.f, period - minLength)
+                    (random);
+    i.timeEnd = i.timeBegin + std::uniform_real_distribution<float>(minLength,
+                                period - i.timeBegin)(random);
+    i.randomizeConfig();
+  });
+}
+
 void Application::update(float dt) {
   auto frame = webcam_buffer.startCopyNew();
   if (frame) {
@@ -244,6 +261,8 @@ void Application::update(float dt) {
       && standbyParticleRenderer.getClock().getPaused()) {
 
     std::cout << "start reaction\n";
+
+    randomizeTimeline(reactionParticleRenderer.getTimeline(), random);
     reactionParticleRenderer.getClock().setPaused(false);
 
     {

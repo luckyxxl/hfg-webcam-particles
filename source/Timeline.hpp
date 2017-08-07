@@ -28,12 +28,20 @@ public:
   }
 
   float getPeriod() const {
-    auto period = 0.f;
-    forEachInstance([&](const IEffect &e) {
-      period = std::max(period, e.getTimeEnd());
-    });
-    return period;
+    if(hasFixedPeriod()) {
+      return fixedPeriod;
+    } else {
+      auto period = 0.f;
+      forEachInstance([&](const IEffect &e) {
+        period = std::max(period, e.getTimeEnd());
+      });
+      return period;
+    }
   }
+
+  void setFixedPeriod(float period) { fixedPeriod = period; }
+  void unsetFixedPeriod() { fixedPeriod = NAN; }
+  bool hasFixedPeriod() const { return !std::isnan(fixedPeriod); }
 
   template <class f_t> void forEachInstance(const f_t &f) const {
     for (auto &track : tracks)
@@ -46,4 +54,5 @@ private:
   EffectRegistry *effectRegistry;
 
   std::vector<Track> tracks;
+  float fixedPeriod = NAN;
 };

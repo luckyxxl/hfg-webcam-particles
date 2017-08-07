@@ -11,6 +11,8 @@ public:
   void update(float dt);
   void render(const RendererParameters &parameters);
 
+  Timeline *getTimeline() { return timeline.get(); }
+
   Clock &getClock() { return state.clock; }
 
 private:
