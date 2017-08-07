@@ -200,7 +200,7 @@ static void randomizeTimeline(Timeline *timeline,
                     (random);
     i.timeEnd = i.timeBegin + std::uniform_real_distribution<float>(minLength,
                                 period - i.timeBegin)(random);
-    i.randomizeConfig();
+    i.randomizeConfig(random);
   });
 }
 

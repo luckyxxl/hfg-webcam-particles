@@ -22,7 +22,10 @@ void WaveEffect::saveConfig(json &json) const {
   json.emplace("amplitude", amplitude);
 }
 
-void WaveEffect::randomizeConfig() {}
+void WaveEffect::randomizeConfig(std::default_random_engine &random) {
+  multiplier = std::uniform_real_distribution<float>()(random);
+  amplitude = std::uniform_real_distribution<float>()(random);
+}
 
 void WaveEffect::registerEffect(Uniforms &uniforms,
                                           ShaderBuilder &vertexShader,

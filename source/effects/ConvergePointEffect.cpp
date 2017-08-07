@@ -17,7 +17,8 @@ void ConvergePointEffect::loadConfig(const json &json) {
 void ConvergePointEffect::saveConfig(json &json) const {
 }
 
-void ConvergePointEffect::randomizeConfig() {}
+void ConvergePointEffect::randomizeConfig(std::default_random_engine &random) {
+}
 
 void ConvergePointEffect::registerEffect(Uniforms &uniforms,
                                           ShaderBuilder &vertexShader,

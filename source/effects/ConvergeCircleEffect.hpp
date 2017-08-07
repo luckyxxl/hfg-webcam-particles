@@ -13,7 +13,7 @@ public:
   void loadConfig(const json &json) override;
   void saveConfig(json &json) const override;
 
-  void randomizeConfig() override;
+  void randomizeConfig(std::default_random_engine &random) override;
 
   void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader,
                       ShaderBuilder &fragmentShader) const override;

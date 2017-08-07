@@ -12,7 +12,7 @@ public:
   virtual void loadConfig(const json &json) = 0;
   virtual void saveConfig(json &json) const = 0;
 
-  virtual void randomizeConfig() = 0;
+  virtual void randomizeConfig(std::default_random_engine &random) = 0;
 
   virtual void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader,
                               ShaderBuilder &fragmentShader) const = 0;

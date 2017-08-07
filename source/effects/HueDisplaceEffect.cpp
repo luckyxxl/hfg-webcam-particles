@@ -27,7 +27,13 @@ void HueDisplaceEffect::saveConfig(json &json) const {
   json.emplace("rotate", rotate);
 }
 
-void HueDisplaceEffect::randomizeConfig() {}
+void HueDisplaceEffect::randomizeConfig(std::default_random_engine &random) {
+  distance = std::uniform_real_distribution<float>()(random);
+  scaleByValue = std::uniform_real_distribution<float>()(random);
+  scaleByForegroundMask = 0.f;
+  randomDirectionOffset = std::bernoulli_distribution()(random);
+  rotate = std::uniform_real_distribution<float>()(random);
+}
 
 void HueDisplaceEffect::registerEffect(Uniforms &uniforms,
                                        ShaderBuilder &vertexShader,

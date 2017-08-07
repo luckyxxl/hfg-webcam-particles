@@ -20,7 +20,9 @@ void ConvergeCircleEffect::saveConfig(json &json) const {
   json.emplace("rotationSpeed", rotationSpeed);
 }
 
-void ConvergeCircleEffect::randomizeConfig() {}
+void ConvergeCircleEffect::randomizeConfig(std::default_random_engine &random) {
+  rotationSpeed = std::uniform_real_distribution<float>()(random);
+}
 
 void ConvergeCircleEffect::registerEffect(Uniforms &uniforms,
                                           ShaderBuilder &vertexShader,
@@ -67,7 +69,7 @@ void ConvergeCircleEffect::registerEffect(Uniforms &uniforms,
                       }),
               UNIFORM("rotationSpeed", GLSLType::Float,
                       [this](const RenderProps &props) {
-                        return UniformValue(this->rotationSpeed);
+                        return UniformValue(this->rotationSpeed / 1000.f);
                       }),
               UNIFORM("maxTravelTime", GLSLType::Float,
                       [this](const RenderProps &props) {
