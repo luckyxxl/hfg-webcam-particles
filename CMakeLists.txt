@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.0)
 
 project(hfg-webcam-particles LANGUAGES CXX)
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 find_package(OpenCV REQUIRED)
+find_package(SDL2 REQUIRED)
 
-list(APPEND CMAKE_CXX_FLAGS "-std=c++17 -Wall -pthread")
+list(APPEND CMAKE_CXX_FLAGS "-std=c++1z -Wall -pthread")
 
 set(SOURCE_FILES
   source/effects/ConvergeCircleEffect.cpp
@@ -48,8 +50,8 @@ set(SOURCE_FILES
 
 add_executable(webcam-particles ${SOURCE_FILES})
 
-target_include_directories(webcam-particles PRIVATE source 3rdparty /usr/include/SDL2)
-target_link_libraries(webcam-particles ${OpenCV_LIBS} SDL2 GL m)
+target_include_directories(webcam-particles PRIVATE source 3rdparty ${SDL2_INCLUDE_DIR})
+target_link_libraries(webcam-particles ${OpenCV_LIBS} ${SDL2_LIBRARY} GL m)
 
 add_custom_command(TARGET webcam-particles POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:webcam-particles>/resource")
 
