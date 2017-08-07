@@ -9,10 +9,14 @@ list(APPEND CMAKE_CXX_FLAGS "-std=c++17 -Wall -pthread")
 set(SOURCE_FILES
   source/effects/ConvergeCircleEffect.cpp
   source/effects/ConvergeCircleEffect.hpp
+  source/effects/ConvergePointEffect.cpp
+  source/effects/ConvergePointEffect.hpp
   source/effects/EffectRegistry.cpp
   source/effects/EffectRegistry.hpp
   source/effects/HueDisplaceEffect.cpp
   source/effects/HueDisplaceEffect.hpp
+  source/effects/WaveEffect.cpp
+  source/effects/WaveEffect.hpp
   source/graphics/ParticleBuffer.cpp
   source/graphics/ParticleBuffer.hpp
   source/graphics/Pipeline.cpp

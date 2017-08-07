@@ -100,7 +100,7 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
   timeline->forEachInstance([&](const IEffect &i) {
     Uniforms instanceUniforms(uniforms, instanceId++);
     vertexShader.appendMainBody(("if(" + std::to_string(i.getTimeBegin()) +
-                                 "<= globalTime && globalTime <=" +
+                                 " <= globalTime && globalTime <= " +
                                  std::to_string(i.getTimeEnd()) + ") {")
                                     .c_str());
 #if 1

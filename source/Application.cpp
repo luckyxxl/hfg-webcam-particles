@@ -4,7 +4,9 @@
 
 #include "Resources.hpp"
 #include "effects/ConvergeCircleEffect.hpp"
+#include "effects/ConvergePointEffect.hpp"
 #include "effects/HueDisplaceEffect.hpp"
+#include "effects/WaveEffect.hpp"
 #include "graphics/Window.hpp"
 #include "sound/Renderer.hpp"
 
@@ -13,8 +15,10 @@ bool Application::create(Resources *resources, graphics::Window *window,
   this->window = window;
   this->soundRenderer = soundRenderer;
 
-  effectRegistry.registerEffect<HueDisplaceEffect>();
   effectRegistry.registerEffect<ConvergeCircleEffect>();
+  effectRegistry.registerEffect<ConvergePointEffect>();
+  effectRegistry.registerEffect<HueDisplaceEffect>();
+  effectRegistry.registerEffect<WaveEffect>();
 
   backgroundLoop.loadFromFile(resources, "sound/DroneLoopStereo01.wav");
   soundRenderer->play(&backgroundLoop,
@@ -64,6 +68,15 @@ bool Application::create(Resources *resources, graphics::Window *window,
 
     reactionParticleRenderer.getClock().setPaused(true);
     reactionParticleRenderer.getClock().setLooping(false);
+  }
+
+  {
+    auto testTimeline = std::make_unique<Timeline>(&effectRegistry);
+
+    auto testJson = resources->readWholeTextFile("debug/particles.json");
+    testTimeline->load(json::parse(testJson)["effects"]);
+
+    testParticleRenderer.setTimeline(std::move(testTimeline));
   }
 
   current_frame_data.resize(webcam_width * webcam_height);
@@ -256,6 +269,8 @@ void Application::update(float dt) {
 
   standbyParticleRenderer.update(dt);
   reactionParticleRenderer.update(dt);
+
+  testParticleRenderer.update(dt);
 }
 
 void Application::render() {
@@ -263,11 +278,15 @@ void Application::render() {
 
   RendererParameters parameters(particleBuffer, random, screen_width, screen_height, webcam_width, webcam_height);
 
+#if 1
   if (reactionState == ReactionState::RenderReactionTimeline) {
     reactionParticleRenderer.render(parameters);
   } else {
     standbyParticleRenderer.render(parameters);
   }
+#else
+  testParticleRenderer.render(parameters);
+#endif
 
   {
     GLenum error = glGetError();
