@@ -108,7 +108,7 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
         return UniformValue(i.timeEnd);
       });
     vertexShader.appendMainBody(TEMPLATE("if(${timeBegin} <= globalTime && "
-                                         "globalTime <= ${timeEnd}) { ")
+                                         "globalTime <= ${timeEnd}) {")
                                          .compile({
                                            {"timeBegin", timeBegin},
                                            {"timeEnd", timeEnd},
