@@ -84,7 +84,7 @@ add_custom_target(update-format
 # Install target
 install(TARGETS ${EXECUTABLE_NAME}
         RUNTIME DESTINATION bin)
-install(DIRECTORY "${PROJECT_SOURCE_DIR}/resource" DESTINATION resource)
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/resource" DESTINATION .)
 if (APPLE)
   foreach(LIB ${OpenCV_LIBS} ${SDL2_LIBRARY})
     if (TARGET ${LIB})
