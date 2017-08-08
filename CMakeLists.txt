@@ -75,7 +75,7 @@ target_link_libraries(${EXECUTABLE_NAME} ${OpenCV_LIBS} ${SDL2_LIBRARY} ${OPENGL
 
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:webcam-particles>/resource")
 
-set_target_properties(${EXECUTABLE_NAME}
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
   MACOSX_BUNDLE_INFO_STRING "Narcistic Machine"
   MACOSX_BUNDLE_ICON_FILE "${PROJECT_SOURCE_DIR}/resource/app.icns"
   MACOSX_BUNDLE_GUI_IDENTIFIER "de.hfg-karlsruhe.bielicky.narcistic_machine"
