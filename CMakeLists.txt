@@ -82,13 +82,13 @@ add_custom_target(update-format
 )
 
 # Install target
+include(InstallRequiredSystemLibraries)
 install(TARGETS ${EXECUTABLE_NAME}
         RUNTIME DESTINATION bin)
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/resource" DESTINATION resource)
-set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS ${OpenCV_LIBS} ${SDL2_LIBRARY})
+install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin COMPONENT Libraries)
 
 # CPack packaging
-include(InstallRequiredSystemLibraries)
 set(CPACK_PACKAGE_FILE_NAME "narcistic_machine")
 set(CPACK_PACKAGE_ICON "${PROJECT_SOURCE_DIR}/resource/install.icns")
 set(CPACK_BUNDLE_NAME "Narcistic Machine")
