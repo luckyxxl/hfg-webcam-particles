@@ -57,17 +57,6 @@ target_link_libraries(${EXECUTABLE_NAME} ${OpenCV_LIBS} ${SDL2_LIBRARY} ${OPENGL
 
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:webcam-particles>/resource")
 
-set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-  MACOSX_BUNDLE_INFO_STRING "Narcistic Machine"
-  MACOSX_BUNDLE_ICON_FILE "${PROJECT_SOURCE_DIR}/resource/app.icns"
-  MACOSX_BUNDLE_GUI_IDENTIFIER "de.hfg-karlsruhe.bielicky.narcistic_machine"
-  MACOSX_BUNDLE_LONG_VERSION_STRING "1.0.0"
-  MACOSX_BUNDLE_BUNDLE_NAME "Narcistic Machine"
-  MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0"
-  MACOSX_BUNDLE_BUNDLE_VERSION "1.0"
-  MACOSX_BUNDLE_COPYRIGHT "2017 Lukas+Lukas"
-)
-
 add_custom_target(update-format
   clang-format -i -style=LLVM ${SOURCE_FILES}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -75,7 +64,10 @@ add_custom_target(update-format
 )
 
 # Install target
-install(TARGETS ${EXECUTABLE_NAME} DESTINATION bin)
+install(TARGETS ${EXECUTABLE_NAME}
+        RUNTIME DESTINATION bin)
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/resource" DESTINATION resource)
+set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS ${OpenCV_LIBS} ${SDL2_LIBRARY})
 
 # CPack packaging
 include(InstallRequiredSystemLibraries)
@@ -83,6 +75,7 @@ set(CPACK_PACKAGE_FILE_NAME "narcistic_machine")
 set(CPACK_PACKAGE_ICON "${PROJECT_SOURCE_DIR}/resource/install.icns")
 set(CPACK_BUNDLE_NAME "Narcistic Machine")
 set(CPACK_BUNDLE_ICON "${PROJECT_SOURCE_DIR}/resource/app.icns")
+set(CPACK_BUNDLE_PLIST "${PROJECT_SOURCE_DIR}/resource/Info.plist")
 set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
