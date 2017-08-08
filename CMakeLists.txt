@@ -50,7 +50,7 @@ set(SOURCE_FILES
 )
 set(EXECUTABLE_NAME "webcam-particles")
 
-add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCE_FILES})
+add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE source 3rdparty ${SDL2_INCLUDE_DIR})
 target_link_libraries(${EXECUTABLE_NAME} ${OpenCV_LIBS} ${SDL2_LIBRARY} ${OPENGL_gl_LIBRARY} m)
