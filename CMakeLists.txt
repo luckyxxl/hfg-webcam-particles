@@ -64,11 +64,17 @@ add_custom_target(update-format
 )
 
 # Install target
-include(InstallRequiredSystemLibraries)
 install(TARGETS ${EXECUTABLE_NAME}
         RUNTIME DESTINATION bin)
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/resource" DESTINATION resource)
-install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin COMPONENT Libraries)
+if (APPLE)
+  foreach(LIB ${OpenCV_LIBS} ${SDL2_LIBRARY})
+    list(APPEND CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS "$<TARGET_FILE:${LIB}>")
+  endforeach()
+  message(STATUS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})
+  include(InstallRequiredSystemLibraries)
+  install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin COMPONENT Libraries)
+endif()
 
 # CPack packaging
 set(CPACK_PACKAGE_FILE_NAME "narcistic_machine")
