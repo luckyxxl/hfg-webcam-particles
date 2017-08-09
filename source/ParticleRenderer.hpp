@@ -40,6 +40,9 @@ private:
   graphics::Pipeline graphicsPipeline;
   graphics::Pipeline accGraphicsPipeline;
 
+  GLuint accGraphicsPipeline_particleTexture_location;
+  GLuint accGraphicsPipeline_historyTexture_location;
+
   struct UniformElement {
     GLint location;
     UniformValueFunction value;
@@ -50,5 +53,4 @@ private:
   RendererState state;
 
   void loadUniforms(const std::vector<UniformElement> &uniforms, const RenderProps &props);
-  void loadTextureUniform(const graphics::Pipeline &pipeline, const char *name, graphics::Texture &texture, uint32_t unit);
 };

@@ -283,6 +283,10 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
       frag_color = vec4(accumulationResult, 1);
     }
   )glsl", false);
+  accGraphicsPipeline_particleTexture_location =
+      accGraphicsPipeline.getUniformLocation("particleTexture");
+  accGraphicsPipeline_historyTexture_location =
+      accGraphicsPipeline.getUniformLocation("historyTexture");
 
   for (const auto &u : uniforms) {
     UniformElement newElement;
@@ -317,8 +321,10 @@ void ParticleRenderer::render(GlobalState &globalState, const RendererParameters
 
     globalState.resultFramebuffer.bind();
     accGraphicsPipeline.bind();
-    loadTextureUniform(accGraphicsPipeline, "particleTexture", globalState.particleFramebuffer.getTexture(), 0);
-    loadTextureUniform(accGraphicsPipeline, "historyTexture", globalState.accumulationFramebuffer.getTexture(), 1);
+    globalState.particleFramebuffer.getTexture().bind(0);
+    glUniform1i(accGraphicsPipeline_particleTexture_location, 0);
+    globalState.accumulationFramebuffer.getTexture().bind(1);
+    glUniform1i(accGraphicsPipeline_historyTexture_location, 1);
     loadUniforms(accUniforms, props);
     globalState.screenRectBuffer.draw();
 
@@ -360,10 +366,4 @@ void ParticleRenderer::loadUniforms(const std::vector<UniformElement> &uniforms,
       break;
     }
   }
-}
-
-void ParticleRenderer::loadTextureUniform(const graphics::Pipeline &pipeline, const char *name, graphics::Texture &texture, uint32_t unit) {
-  texture.bind(unit);
-  auto l = pipeline.getUniformLocation(name);
-  glUniform1i(l, unit);
 }
