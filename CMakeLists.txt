@@ -20,10 +20,16 @@ set(SOURCE_FILES
   source/effects/HueDisplaceEffect.hpp
   source/effects/WaveEffect.cpp
   source/effects/WaveEffect.hpp
+  source/graphics/Framebuffer.cpp
+  source/graphics/Framebuffer.hpp
   source/graphics/ParticleBuffer.cpp
   source/graphics/ParticleBuffer.hpp
   source/graphics/Pipeline.cpp
   source/graphics/Pipeline.hpp
+  source/graphics/ScreenRectBuffer.cpp
+  source/graphics/ScreenRectBuffer.hpp
+  source/graphics/Texture.cpp
+  source/graphics/Texture.hpp
   source/graphics/Window.cpp
   source/graphics/Window.hpp
   source/sound/Renderer.hpp

@@ -15,8 +15,9 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
 
   state.clock.setPeriod(timeline->getPeriod());
 
-  std::vector<UniformDescription> uniforms;
+  std::vector<UniformDescription> uniforms, accUniforms;
   ShaderBuilder vertexShader, fragmentShader;
+  ShaderBuilder accShader;
 
   uniforms.emplace_back("invImageAspectRatio", GLSLType::Float,
                         [](const RenderProps &props) {
@@ -64,6 +65,19 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
                           return UniformValue(props.state.clock.getTime());
                         });
 
+  accUniforms.emplace_back("particleTexture", GLSLType::Sampler2D,
+                           [](const RenderProps &props) {
+                             return UniformValue::Sampler2D();
+                           });
+  accUniforms.emplace_back("historyTexture", GLSLType::Sampler2D,
+                           [](const RenderProps &props) {
+                             return UniformValue::Sampler2D();
+                           });
+  accUniforms.emplace_back("globalTime", GLSLType::Float,
+                           [](const RenderProps &props) {
+                             return UniformValue(props.state.clock.getTime());
+                           });
+
   // keep in sync with graphics::Pipeline
   vertexShader.appendIn("texcoord", GLSLType::Vec2);
   vertexShader.appendIn("rgb", GLSLType::Vec3);
@@ -84,6 +98,10 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
 
   fragmentShader.appendOut("frag_color", GLSLType::Vec4);
 
+  accShader.appendIn("texcoord", GLSLType::Vec2);
+
+  accShader.appendOut("frag_color", GLSLType::Vec4);
+
   vertexShader.appendMainBody(R"glsl(
     vec3 initialPosition = vec3(texcoord, 0);
     initialPosition.x /= invImageAspectRatio;
@@ -96,9 +114,18 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
     float v = pow(max(1. - 2. * length(gl_PointCoord - vec2(.5)), 0.), 1.5);
   )glsl");
 
+  accShader.appendMainBody(R"glsl(
+    vec3 historyColor = texture(historyTexture, texcoord).rgb;
+    vec3 particleColor = texture(particleTexture, texcoord).rgb;
+    vec3 accumulationResult = vec3(0.0);
+    int activeAgents = 0;
+  )glsl");
+
   unsigned instanceId = 0;
   timeline->forEachInstance([&](const IEffect &i) {
-    Uniforms instanceUniforms(uniforms, instanceId++);
+    Uniforms instanceUniforms(uniforms, instanceId);
+    Uniforms accInstanceUniforms(accUniforms, instanceId);
+
     const auto timeBegin = instanceUniforms.addUniform("timeBegin",
       GLSLType::Float, [&i](const RenderProps &props) {
         return UniformValue(i.timeBegin);
@@ -107,6 +134,26 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
       GLSLType::Float, [&i](const RenderProps &props) {
         return UniformValue(i.timeEnd);
       });
+
+    const auto accTimeBegin = accInstanceUniforms.addUniform("timeBegin",
+      GLSLType::Float, [&i](const RenderProps &props) {
+        return UniformValue(i.timeBegin);
+      });
+    const auto accTimeEnd = accInstanceUniforms.addUniform("timeEnd",
+      GLSLType::Float, [&i](const RenderProps &props) {
+        return UniformValue(i.timeEnd);
+      });
+    const auto accFadeWeight = accInstanceUniforms.addUniform("fadeWeight",
+      GLSLType::Float, [&i](const RenderProps &props) {
+        const auto t = props.state.clock.getTime();
+        const auto fadeIn = 1000.f;
+        const auto fadeOut = 1000.f;
+        return UniformValue(
+            t < (i.timeBegin + fadeIn) ? (t - i.timeBegin) / fadeIn :
+            t > (i.timeEnd - fadeOut) ? 1 - (t - (i.timeEnd - fadeOut)) / fadeOut :
+            1);
+      });
+
     vertexShader.appendMainBody(TEMPLATE("if(${timeBegin} <= globalTime && "
                                          "globalTime <= ${timeEnd}) {")
                                          .compile({
@@ -114,12 +161,27 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
                                            {"timeEnd", timeEnd},
                                          })
                                     .c_str());
-#if 1
+    accShader.appendMainBody(TEMPLATE(R"glsl(
+        if(${timeBegin} <= globalTime && globalTime <= ${timeEnd}) {
+          activeAgents++;
+          vec3 accumulationEffectResult;
+        )glsl").compile({
+                         {"timeBegin", accTimeBegin},
+                         {"timeEnd", accTimeEnd},
+                        }).c_str());
+
     vertexShader.appendMainBody("\n#line 0\n");
     fragmentShader.appendMainBody("\n#line 0\n");
-#endif
+    accShader.appendMainBody("\n#line 0\n");
+
     i.registerEffect(instanceUniforms, vertexShader, fragmentShader);
+
     vertexShader.appendMainBody("}");
+    accShader.appendMainBody(TEMPLATE(
+      "accumulationResult += mix(particleColor, accumulationEffectResult, ${fadeWeight});\n}")
+      .compile({{"fadeWeight", accFadeWeight}}).c_str());
+
+    instanceId++;
   });
 
   vertexShader.appendMainBody(R"glsl(
@@ -133,22 +195,80 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
     frag_color = vec4(color * v, 1);
   )glsl");
 
+  accShader.appendMainBody(R"glsl(
+    if (activeAgents > 0) {
+      accumulationResult /= float(activeAgents);
+    } else {
+      accumulationResult = particleColor;
+    }
+
+    frag_color = vec4(accumulationResult, 1);
+  )glsl");
+
   for (const auto &u : uniforms) {
     vertexShader.appendUniform(u);
     fragmentShader.appendUniform(u);
   }
 
+  for (const auto &u : accUniforms) {
+    accShader.appendUniform(u);
+  }
+
   const auto vertexShaderSource = vertexShader.assemble();
   const auto fragmentShaderSource = fragmentShader.assemble();
+  const auto accShaderSource = accShader.assemble();
 
   graphicsPipeline.create(vertexShaderSource.c_str(),
-                          fragmentShaderSource.c_str());
+                          fragmentShaderSource.c_str(), true);
+
+  accGraphicsPipeline.create(R"glsl(
+    #version 330 core
+    layout(location=0) in vec2 position;
+    void main() {
+      gl_Position = vec4(position, 0, 1);
+    }
+  )glsl", /*accShaderSource.c_str()*/ R"glsl(
+    #version 330 core
+    uniform sampler2D particleTexture;
+    uniform sampler2D historyTexture;
+    out vec4 frag_color;
+    void main() {
+      vec3 particleColor = texelFetch(particleTexture, ivec2(gl_FragCoord.xy), 0).rgb;
+      vec3 historyColor = texelFetch(historyTexture, ivec2(gl_FragCoord.xy), 0).rgb;
+      vec3 accumulationResult = vec3(0);
+      accumulationResult = mix(particleColor, historyColor, .7);
+      frag_color = vec4(accumulationResult, 1);
+    }
+  )glsl", false);
+
+  resultGraphicsPipeline.create(R"glsl(
+    #version 330 core
+    layout(location=0) in vec2 position;
+    void main() {
+      gl_Position = vec4(position, 0, 1);
+    }
+  )glsl", R"glsl(
+    #version 330 core
+    uniform sampler2D resultTexture;
+    out vec4 frag_color;
+    void main() {
+      vec3 color = texelFetch(resultTexture, ivec2(gl_FragCoord.xy), 0).rgb;
+      frag_color = vec4(color, 1);
+    }
+  )glsl", false);
 
   for (const auto &u : uniforms) {
     UniformElement newElement;
     newElement.location = graphicsPipeline.getUniformLocation(u.name.c_str());
     newElement.value = u.value;
     this->uniforms.push_back(newElement);
+  }
+
+  for (const auto &u : accUniforms) {
+    UniformElement newElement;
+    newElement.location = accGraphicsPipeline.getUniformLocation(u.name.c_str());
+    newElement.value = u.value;
+    this->accUniforms.push_back(newElement);
   }
 }
 
@@ -159,8 +279,37 @@ void ParticleRenderer::update(float dt) {
 void ParticleRenderer::render(const RendererParameters &parameters) {
   RenderProps props(parameters, state);
 
-  graphicsPipeline.bind();
+  if(/*accum active*/true) {
+    parameters.particle_fb.bind();
+    glClear(GL_COLOR_BUFFER_BIT);
+    graphicsPipeline.bind();
+    loadUniforms(uniforms, props);
+    parameters.particle_buffer.draw();
 
+    std::swap(parameters.accumulation_fb, parameters.result_fb);
+
+    parameters.result_fb.bind();
+    accGraphicsPipeline.bind();
+    loadTextureUniform(accGraphicsPipeline, "particleTexture", parameters.particle_fb.getTexture(), 0);
+    loadTextureUniform(accGraphicsPipeline, "historyTexture", parameters.accumulation_fb.getTexture(), 1);
+    loadUniforms(accUniforms, props);
+    parameters.screen_rect_buffer.draw();
+
+    graphics::Framebuffer::unbind();
+    resultGraphicsPipeline.bind();
+    loadTextureUniform(resultGraphicsPipeline, "resultTexture", parameters.result_fb.getTexture(), 0);
+    parameters.screen_rect_buffer.draw();
+
+    graphics::Texture::unbind(0);
+    graphics::Texture::unbind(1);
+  } else {
+    graphicsPipeline.bind();
+    loadUniforms(uniforms, props);
+    parameters.particle_buffer.draw();
+  }
+}
+
+void ParticleRenderer::loadUniforms(const std::vector<UniformElement> &uniforms, const RenderProps &props) {
   for (const auto &uniform : uniforms) {
     const auto value = uniform.value(props);
     switch (value.type) {
@@ -179,8 +328,14 @@ void ParticleRenderer::render(const RendererParameters &parameters) {
     case GLSLType::Mat4:
       glUniformMatrix4fv(uniform.location, 1, GL_FALSE, &value.data.m4[0][0]);
       break;
+    case GLSLType::Sampler2D:
+      break;
     }
   }
+}
 
-  parameters.particle_buffer.draw();
+void ParticleRenderer::loadTextureUniform(const graphics::Pipeline &pipeline, const char *name, graphics::Texture &texture, uint32_t unit) {
+  texture.bind(unit);
+  auto l = pipeline.getUniformLocation(name);
+  glUniform1i(l, unit);
 }

@@ -7,6 +7,7 @@
 #include "effects/EffectRegistry.hpp"
 #include "graphics/ParticleBuffer.hpp"
 #include "graphics/Pipeline.hpp"
+#include "graphics/Framebuffer.hpp"
 #include "sound/SampleBuffer.hpp"
 
 class Resources;
@@ -63,6 +64,12 @@ private:
   // remove this and use glMapBuffer?  thought mapping is probably slower...
   std::vector<graphics::Particle> current_frame_data;
   graphics::ParticleBuffer particleBuffer;
+
+  graphics::ScreenRectBuffer screenRectBuffer;
+
+  graphics::Framebuffer particleFramebuffer;
+  graphics::Framebuffer accumulationFramebuffer;
+  graphics::Framebuffer resultFramebuffer;
 
   std::vector<float> background_frame;
 };

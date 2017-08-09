@@ -10,6 +10,7 @@ enum class GLSLType {
   Vec3,
   Vec4,
   Mat4,
+  Sampler2D,
 };
 
 struct UniformValue {
@@ -28,6 +29,12 @@ struct UniformValue {
   UniformValue(glm::vec2 x) : type(GLSLType::Vec2) { data.v2 = x; }
   UniformValue(glm::vec3 x) : type(GLSLType::Vec3) { data.v3 = x; }
   UniformValue(glm::mat4 x) : type(GLSLType::Mat4) { data.m4 = x; }
+
+  static UniformValue Sampler2D() {
+    UniformValue result(0.f);
+    result.type = GLSLType::Sampler2D;
+    return result;
+  }
 };
 
 using UniformValueFunction = std::function<UniformValue(const RenderProps &)>;
@@ -50,7 +57,7 @@ public:
   Uniforms(std::vector<UniformDescription> &uniforms, unsigned id = undefinedId)
       : uniforms(uniforms), id(id) {}
 
-  const char *addUniform(const char *name, GLSLType type,
+  std::string addUniform(const char *name, GLSLType type,
                          UniformValueFunction value);
 
 private:

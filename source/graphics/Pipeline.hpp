@@ -4,7 +4,7 @@ namespace graphics {
 
 class Pipeline {
 public:
-  bool create(const char *vertexShaderSource, const char *fragmentShaderSource);
+  bool create(const char *vertexShaderSource, const char *fragmentShaderSource, bool enableBlending);
   void destroy();
 
   void bind() const;
@@ -17,6 +17,8 @@ private:
   GLuint vertexShader = 0;
   GLuint fragmentShader = 0;
   GLuint program = 0;
+
+  bool enableBlending = false;
 };
 
 } // namespace graphics

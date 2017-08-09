@@ -84,11 +84,23 @@ bool Application::create(Resources *resources, graphics::Window *window,
   current_frame_data.resize(webcam_width * webcam_height);
   particleBuffer.create(webcam_width * webcam_height);
 
+  screenRectBuffer.create();
+
+  particleFramebuffer.create(1, 1);
+  accumulationFramebuffer.create(1, 1);
+  resultFramebuffer.create(1, 1);
+
   return true;
 }
 
 void Application::destroy() {
   kill_threads = true;
+
+  resultFramebuffer.destroy();
+  accumulationFramebuffer.destroy();
+  particleFramebuffer.destroy();
+
+  screenRectBuffer.destroy();
 
   particleBuffer.destroy();
 
@@ -108,6 +120,10 @@ void Application::reshape(uint32_t width, uint32_t height) {
   screen_height = height;
 
   glViewport(0, 0, width, height);
+
+  particleFramebuffer.resize(width, height);
+  accumulationFramebuffer.resize(width, height);
+  resultFramebuffer.resize(width, height);
 }
 
 bool Application::handleEvents() {
@@ -295,9 +311,14 @@ void Application::update(float dt) {
 }
 
 void Application::render() {
+  graphics::Framebuffer::unbind();
+
   glClear(GL_COLOR_BUFFER_BIT);
 
-  RendererParameters parameters(particleBuffer, random, screen_width, screen_height, webcam_width, webcam_height);
+  RendererParameters parameters(screenRectBuffer, particleBuffer, random, particleFramebuffer,
+                                accumulationFramebuffer, resultFramebuffer,
+                                screen_width, screen_height,
+                                webcam_width, webcam_height);
 
 #if 1
   if (reactionState == ReactionState::RenderReactionTimeline) {
