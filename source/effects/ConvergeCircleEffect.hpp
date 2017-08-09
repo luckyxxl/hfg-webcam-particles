@@ -15,8 +15,7 @@ public:
 
   void randomizeConfig(std::default_random_engine &random) override;
 
-  void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader,
-                      ShaderBuilder &fragmentShader) const override;
+  void registerEffect(EffectRegistrationData &data) const override;
 
 public:
   float rotationSpeed = 0.f;

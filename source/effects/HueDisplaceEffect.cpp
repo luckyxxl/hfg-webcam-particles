@@ -35,10 +35,8 @@ void HueDisplaceEffect::randomizeConfig(std::default_random_engine &random) {
   rotate = std::uniform_real_distribution<float>()(random);
 }
 
-void HueDisplaceEffect::registerEffect(Uniforms &uniforms,
-                                       ShaderBuilder &vertexShader,
-                                       ShaderBuilder &fragmentShader) const {
-  vertexShader.appendMainBody(
+void HueDisplaceEffect::registerEffect(EffectRegistrationData &data) const {
+  data.vertexShader.appendMainBody(
       TEMPLATE(R"glsl(
   {
     float angle = hsv[0] + ${directionOffset};
@@ -47,17 +45,17 @@ void HueDisplaceEffect::registerEffect(Uniforms &uniforms,
   }
   )glsl")
           .compile({
-              UNIFORM("distance", GLSLType::Float,
+              UNIFORM(data.uniforms, "distance", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(distance);
                       }),
-              UNIFORM("time", GLSLType::Float,
+              UNIFORM(data.uniforms, "time", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(
                             (props.state.clock.getTime() - timeBegin) /
                             getPeriod() * 2 * PI);
                       }),
-              UNIFORM("directionOffset", GLSLType::Float,
+              UNIFORM(data.uniforms, "directionOffset", GLSLType::Float,
                       [this](const RenderProps &props) {
                         auto result =
                             rotate *
@@ -74,11 +72,11 @@ void HueDisplaceEffect::registerEffect(Uniforms &uniforms,
                         }
                         return UniformValue(result);
                       }),
-              UNIFORM("scaleByVal", GLSLType::Float,
+              UNIFORM(data.uniforms, "scaleByVal", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(scaleByValue);
                       }),
-              UNIFORM("scaleByFg", GLSLType::Float,
+              UNIFORM(data.uniforms, "scaleByFg", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(scaleByForegroundMask);
                       }),

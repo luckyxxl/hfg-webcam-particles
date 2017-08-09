@@ -37,6 +37,8 @@ public:
 private:
   std::unique_ptr<Timeline> timeline;
 
+  bool accumulationActive;
+
   graphics::Pipeline graphicsPipeline;
   graphics::Pipeline accGraphicsPipeline;
 

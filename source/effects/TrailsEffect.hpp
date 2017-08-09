@@ -1,10 +1,10 @@
 #pragma once
 
-#include "EffectRegistry.hpp"
+#include "AccumulationEffect.hpp"
 
-class WaveEffect : public IEffect {
+class TrailsEffect : public IAccumulationEffect {
 public:
-  static constexpr auto Name = "WaveEffect";
+  static constexpr auto Name = "TrailsEffect";
 
   const char *getName() const override;
   const char *getDescriptiveName() const override;
@@ -18,6 +18,5 @@ public:
   void registerEffect(EffectRegistrationData &data) const override;
 
 public:
-  float multiplier = 1.f;
-  float amplitude = .05f;
+  float strength = .7f;
 };

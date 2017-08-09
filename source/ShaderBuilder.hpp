@@ -67,7 +67,7 @@ private:
 
 // simplification for specifying uniforms directly in the
 // TEMPLATE(...).compile() list
-#define UNIFORM(name, type, lambda)                                            \
+#define UNIFORM(uniforms, name, type, lambda) \
   { name, uniforms.addUniform(name, type, lambda) }
 
 class ShaderBuilder {

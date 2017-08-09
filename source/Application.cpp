@@ -6,6 +6,9 @@
 #include "effects/ConvergeCircleEffect.hpp"
 #include "effects/ConvergePointEffect.hpp"
 #include "effects/HueDisplaceEffect.hpp"
+#include "effects/SmearEffect.hpp"
+#include "effects/SmoothTrailsEffect.hpp"
+#include "effects/TrailsEffect.hpp"
 #include "effects/WaveEffect.hpp"
 #include "graphics/Window.hpp"
 #include "sound/Renderer.hpp"
@@ -18,6 +21,9 @@ bool Application::create(Resources *resources, graphics::Window *window,
   effectRegistry.registerEffect<ConvergeCircleEffect>();
   effectRegistry.registerEffect<ConvergePointEffect>();
   effectRegistry.registerEffect<HueDisplaceEffect>();
+  effectRegistry.registerEffect<SmearEffect>();
+  effectRegistry.registerEffect<SmoothTrailsEffect>();
+  effectRegistry.registerEffect<TrailsEffect>();
   effectRegistry.registerEffect<WaveEffect>();
 
   backgroundLoop.loadFromFile(resources, "sound/DroneLoopStereo01.wav");
@@ -67,6 +73,13 @@ bool Application::create(Resources *resources, graphics::Window *window,
     timeline->emplaceEffectInstance<ConvergePointEffect>();
     timeline->emplaceEffectInstance<HueDisplaceEffect>();
     timeline->emplaceEffectInstance<WaveEffect>();
+
+    auto accum = timeline->emplaceEffectInstance<TrailsEffect>();
+    accum->timeBegin = 0.f;
+    accum->timeEnd = timeline->getPeriod();
+    accum->fadeIn = 1000.f;
+    accum->fadeOut = 1000.f;
+    accum->strength = .7f;
 
     reactionParticleRenderer.setTimeline(std::move(timeline));
 
@@ -202,6 +215,8 @@ static void randomizeTimeline(Timeline *timeline,
   const auto minLength = 2000.f;
 
   timeline->forEachInstance([&](IEffect &i) {
+    if(i.isAccumulationEffect()) return;
+
     i.timeBegin = std::uniform_real_distribution<float>(0.f, period - minLength)
                     (random);
     i.timeEnd = i.timeBegin + std::uniform_real_distribution<float>(minLength,

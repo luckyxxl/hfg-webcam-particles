@@ -2,6 +2,7 @@
 
 #include "ParticleRenderer.hpp"
 #include "Timeline.hpp"
+#include "effects/AccumulationEffect.hpp"
 
 void ParticleRenderer::GlobalState::create() {
   screenRectBuffer.create();
@@ -47,8 +48,11 @@ void ParticleRenderer::GlobalState::reshape(uint32_t width, uint32_t height) {
 
 
 void ParticleRenderer::reset() {
+  accumulationActive = false;
   graphicsPipeline.destroy();
+  accGraphicsPipeline.destroy();
   uniforms.clear();
+  accUniforms.clear();
 }
 
 void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
@@ -158,9 +162,9 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
   )glsl");
 
   accShader.appendMainBody(R"glsl(
-    vec3 historyColor = texture(historyTexture, texcoord).rgb;
-    vec3 particleColor = texture(particleTexture, texcoord).rgb;
-    vec3 accumulationResult = vec3(0.0);
+    vec3 particleColor = texelFetch(particleTexture, ivec2(gl_FragCoord.xy), 0).rgb;
+    vec3 historyColor = texelFetch(historyTexture, ivec2(gl_FragCoord.xy), 0).rgb;
+    vec3 accumulationResult = vec3(0.);
     int activeAgents = 0;
   )glsl");
 
@@ -168,6 +172,10 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
   timeline->forEachInstance([&](const IEffect &i) {
     Uniforms instanceUniforms(uniforms, instanceId);
     Uniforms accInstanceUniforms(accUniforms, instanceId);
+
+    EffectRegistrationData registrationData(instanceUniforms, vertexShader,
+                                            fragmentShader, accInstanceUniforms,
+                                            accShader);
 
     const auto timeBegin = instanceUniforms.addUniform("timeBegin",
       GLSLType::Float, [&i](const RenderProps &props) {
@@ -178,25 +186,6 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
         return UniformValue(i.timeEnd);
       });
 
-    const auto accTimeBegin = accInstanceUniforms.addUniform("timeBegin",
-      GLSLType::Float, [&i](const RenderProps &props) {
-        return UniformValue(i.timeBegin);
-      });
-    const auto accTimeEnd = accInstanceUniforms.addUniform("timeEnd",
-      GLSLType::Float, [&i](const RenderProps &props) {
-        return UniformValue(i.timeEnd);
-      });
-    const auto accFadeWeight = accInstanceUniforms.addUniform("fadeWeight",
-      GLSLType::Float, [&i](const RenderProps &props) {
-        const auto t = props.state.clock.getTime();
-        const auto fadeIn = 1000.f;
-        const auto fadeOut = 1000.f;
-        return UniformValue(
-            t < (i.timeBegin + fadeIn) ? (t - i.timeBegin) / fadeIn :
-            t > (i.timeEnd - fadeOut) ? 1 - (t - (i.timeEnd - fadeOut)) / fadeOut :
-            1);
-      });
-
     vertexShader.appendMainBody(TEMPLATE("if(${timeBegin} <= globalTime && "
                                          "globalTime <= ${timeEnd}) {")
                                          .compile({
@@ -204,7 +193,20 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
                                            {"timeEnd", timeEnd},
                                          })
                                     .c_str());
-    accShader.appendMainBody(TEMPLATE(R"glsl(
+
+    if(i.isAccumulationEffect()) {
+      accumulationActive = true;
+
+      const auto accTimeBegin = accInstanceUniforms.addUniform("timeBegin",
+        GLSLType::Float, [&i](const RenderProps &props) {
+          return UniformValue(i.timeBegin);
+        });
+      const auto accTimeEnd = accInstanceUniforms.addUniform("timeEnd",
+        GLSLType::Float, [&i](const RenderProps &props) {
+          return UniformValue(i.timeEnd);
+        });
+
+      accShader.appendMainBody(TEMPLATE(R"glsl(
         if(${timeBegin} <= globalTime && globalTime <= ${timeEnd}) {
           activeAgents++;
           vec3 accumulationEffectResult;
@@ -212,17 +214,37 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
                          {"timeBegin", accTimeBegin},
                          {"timeEnd", accTimeEnd},
                         }).c_str());
+    }
 
     vertexShader.appendMainBody("\n#line 0\n");
     fragmentShader.appendMainBody("\n#line 0\n");
     accShader.appendMainBody("\n#line 0\n");
 
-    i.registerEffect(instanceUniforms, vertexShader, fragmentShader);
+    i.registerEffect(registrationData);
 
     vertexShader.appendMainBody("}");
-    accShader.appendMainBody(TEMPLATE(
-      "accumulationResult += mix(particleColor, accumulationEffectResult, ${fadeWeight});\n}")
-      .compile({{"fadeWeight", accFadeWeight}}).c_str());
+
+    if(i.isAccumulationEffect()) {
+      const auto accFadeWeight = accInstanceUniforms.addUniform("fadeWeight",
+        GLSLType::Float, [&i](const RenderProps &props) {
+          const auto t = props.state.clock.getTime();
+          const auto timeBegin = i.timeBegin;
+          const auto timeEnd = i.timeEnd;
+          const auto fadeIn = static_cast<const IAccumulationEffect&>(i).fadeIn;
+          const auto fadeOut = static_cast<const IAccumulationEffect&>(i).fadeOut;
+          return UniformValue(
+              t < (timeBegin + fadeIn) ? (t - timeBegin) / fadeIn :
+              t > (timeEnd - fadeOut) ? 1 - (t - (timeEnd - fadeOut)) / fadeOut :
+              1);
+        });
+
+      accShader.appendMainBody(TEMPLATE(R"glsl(
+          accumulationResult += mix(particleColor, accumulationEffectResult, ${fadeWeight});
+        }
+        )glsl").compile({
+                         {"fadeWeight", accFadeWeight}
+                        }).c_str());
+    }
 
     instanceId++;
   });
@@ -270,19 +292,7 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
     void main() {
       gl_Position = vec4(position, 0, 1);
     }
-  )glsl", /*accShaderSource.c_str()*/ R"glsl(
-    #version 330 core
-    uniform sampler2D particleTexture;
-    uniform sampler2D historyTexture;
-    out vec4 frag_color;
-    void main() {
-      vec3 particleColor = texelFetch(particleTexture, ivec2(gl_FragCoord.xy), 0).rgb;
-      vec3 historyColor = texelFetch(historyTexture, ivec2(gl_FragCoord.xy), 0).rgb;
-      vec3 accumulationResult = vec3(0);
-      accumulationResult = mix(particleColor, historyColor, .7);
-      frag_color = vec4(accumulationResult, 1);
-    }
-  )glsl", false);
+  )glsl", accShaderSource.c_str(), false);
   accGraphicsPipeline_particleTexture_location =
       accGraphicsPipeline.getUniformLocation("particleTexture");
   accGraphicsPipeline_historyTexture_location =
@@ -310,7 +320,7 @@ void ParticleRenderer::update(float dt) {
 void ParticleRenderer::render(GlobalState &globalState, const RendererParameters &parameters) {
   RenderProps props(parameters, state);
 
-  if(/*accum active*/true) {
+  if(accumulationActive) {
     globalState.particleFramebuffer.bind();
     glClear(GL_COLOR_BUFFER_BIT);
     graphicsPipeline.bind();

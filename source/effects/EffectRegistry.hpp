@@ -3,6 +3,24 @@
 #include "../RendererState.hpp"
 #include "../ShaderBuilder.hpp"
 
+struct EffectRegistrationData {
+  Uniforms &uniforms;
+  ShaderBuilder &vertexShader;
+  ShaderBuilder &fragmentShader;
+
+  Uniforms &accumulationUniforms;
+  ShaderBuilder &accumulationShader;
+
+  EffectRegistrationData(Uniforms &uniforms, ShaderBuilder &vertexShader,
+                         ShaderBuilder &fragmentShader,
+                         Uniforms &accumulationUniforms,
+                         ShaderBuilder &accumulationShader)
+                         : uniforms(uniforms), vertexShader(vertexShader),
+                           fragmentShader(fragmentShader),
+                           accumulationUniforms(accumulationUniforms),
+                           accumulationShader(accumulationShader) {}
+};
+
 class IEffect {
 public:
   virtual const char *getName() const = 0;
@@ -14,8 +32,9 @@ public:
 
   virtual void randomizeConfig(std::default_random_engine &random) = 0;
 
-  virtual void registerEffect(Uniforms &uniforms, ShaderBuilder &vertexShader,
-                              ShaderBuilder &fragmentShader) const = 0;
+  virtual void registerEffect(EffectRegistrationData &data) const = 0;
+
+  virtual bool isAccumulationEffect() const { return false; }
 
   void loadInstanceConfig(const json &json);
   void saveInstanceConfig(json &json) const;

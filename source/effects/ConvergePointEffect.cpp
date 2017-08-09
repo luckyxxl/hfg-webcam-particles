@@ -20,10 +20,8 @@ void ConvergePointEffect::saveConfig(json &json) const {
 void ConvergePointEffect::randomizeConfig(std::default_random_engine &random) {
 }
 
-void ConvergePointEffect::registerEffect(Uniforms &uniforms,
-                                          ShaderBuilder &vertexShader,
-                                          ShaderBuilder &fragmentShader) const {
-  vertexShader.appendMainBody(
+void ConvergePointEffect::registerEffect(EffectRegistrationData &data) const {
+  data.vertexShader.appendMainBody(
       TEMPLATE(R"glsl(
   {
     vec2 screenTarget = vec2(0., 0.);
@@ -52,18 +50,18 @@ void ConvergePointEffect::registerEffect(Uniforms &uniforms,
   }
   )glsl")
           .compile({
-              UNIFORM("time", GLSLType::Float,
+              UNIFORM(data.uniforms, "time", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(
                             std::fmod(props.state.clock.getTime() - timeBegin,
                                       getPeriod()));
                       }),
-              UNIFORM("speed", GLSLType::Float,
+              UNIFORM(data.uniforms, "speed", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(
                             2 * 2 / (getPeriod() / 2 * getPeriod() / 2));
                       }),
-              UNIFORM("maxTravelTime", GLSLType::Float,
+              UNIFORM(data.uniforms, "maxTravelTime", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(getPeriod() / 2);
                       }),
