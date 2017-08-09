@@ -27,10 +27,8 @@ void WaveEffect::randomizeConfig(std::default_random_engine &random) {
   amplitude = std::uniform_real_distribution<float>()(random);
 }
 
-void WaveEffect::registerEffect(Uniforms &uniforms,
-                                          ShaderBuilder &vertexShader,
-                                          ShaderBuilder &fragmentShader) const {
-  vertexShader.appendMainBody(
+void WaveEffect::registerEffect(EffectRegistrationData &data) const {
+  data.vertexShader.appendMainBody(
       TEMPLATE(R"glsl(
   {
     // goes from 0 (leftmost, begin) to 2 (leftmost, end)
@@ -62,27 +60,27 @@ void WaveEffect::registerEffect(Uniforms &uniforms,
   }
   )glsl")
           .compile({
-              UNIFORM("time", GLSLType::Float,
+              UNIFORM(data.uniforms, "time", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(
                             glm::fract((props.state.clock.getTime() -
                                    timeBegin) / getPeriod()));
                       }),
-              UNIFORM("rep", GLSLType::Float,
+              UNIFORM(data.uniforms, "rep", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(
                             std::floor((props.state.clock.getTime() -
                                   timeBegin) / getPeriod()));
                       }),
-              UNIFORM("multiplier", GLSLType::Float,
+              UNIFORM(data.uniforms, "multiplier", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(multiplier);
                       }),
-              UNIFORM("amplitude", GLSLType::Float,
+              UNIFORM(data.uniforms, "amplitude", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(amplitude);
                       }),
-              UNIFORM("repetitions", GLSLType::Float,
+              UNIFORM(data.uniforms, "repetitions", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(repetitions);
                       }),

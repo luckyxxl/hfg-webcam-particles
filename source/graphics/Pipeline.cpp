@@ -63,7 +63,8 @@ static GLuint createProgram(GLuint vertexShader, GLuint fragmentShader) {
 }
 
 bool Pipeline::create(const char *vertexShaderSource,
-                      const char *fragmentShaderSource) {
+                      const char *fragmentShaderSource,
+                      bool enableBlending) {
   vertexShader = createShader(GL_VERTEX_SHADER, vertexShaderSource);
   fragmentShader = createShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
   if (!vertexShader || !fragmentShader)
@@ -73,10 +74,11 @@ bool Pipeline::create(const char *vertexShaderSource,
   if (!program)
     return false;
 
+  this->enableBlending = enableBlending;
+
   // This is the same for all pipelines for now... If required, set those in
   // bind().
   glEnable(GL_PROGRAM_POINT_SIZE);
-  glEnable(GL_BLEND);
   glBlendFunc(GL_ONE, GL_ONE);
 
   return true;
@@ -88,6 +90,10 @@ void Pipeline::destroy() {
   glDeleteShader(fragmentShader);
 }
 
-void Pipeline::bind() const { glUseProgram(program); }
+void Pipeline::bind() const {
+  if(enableBlending) glEnable(GL_BLEND);
+  else glDisable(GL_BLEND);
+  glUseProgram(program);
+}
 
 } // namespace graphics

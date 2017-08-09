@@ -24,10 +24,8 @@ void ConvergeCircleEffect::randomizeConfig(std::default_random_engine &random) {
   rotationSpeed = std::uniform_real_distribution<float>()(random);
 }
 
-void ConvergeCircleEffect::registerEffect(Uniforms &uniforms,
-                                          ShaderBuilder &vertexShader,
-                                          ShaderBuilder &fragmentShader) const {
-  vertexShader.appendMainBody(
+void ConvergeCircleEffect::registerEffect(EffectRegistrationData &data) const {
+  data.vertexShader.appendMainBody(
       TEMPLATE(R"glsl(
   {
     vec2 screenTarget = getDirectionVector(hsv[0] + ${time} * ${rotationSpeed}) * vec2(.8) * vec2(invScreenAspectRatio, 1.);
@@ -56,22 +54,22 @@ void ConvergeCircleEffect::registerEffect(Uniforms &uniforms,
   }
   )glsl")
           .compile({
-              UNIFORM("time", GLSLType::Float,
+              UNIFORM(data.uniforms, "time", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(
                             std::fmod(props.state.clock.getTime() - timeBegin,
                                       getPeriod()));
                       }),
-              UNIFORM("speed", GLSLType::Float,
+              UNIFORM(data.uniforms, "speed", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(
                             2 * 2 / (getPeriod() / 2 * getPeriod() / 2));
                       }),
-              UNIFORM("rotationSpeed", GLSLType::Float,
+              UNIFORM(data.uniforms, "rotationSpeed", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(this->rotationSpeed / 1000.f);
                       }),
-              UNIFORM("maxTravelTime", GLSLType::Float,
+              UNIFORM(data.uniforms, "maxTravelTime", GLSLType::Float,
                       [this](const RenderProps &props) {
                         return UniformValue(getPeriod() / 2);
                       }),

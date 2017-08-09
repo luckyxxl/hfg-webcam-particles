@@ -10,6 +10,8 @@ find_package(OpenGL REQUIRED)
 list(APPEND CMAKE_CXX_FLAGS "-std=c++1z -Wall -pthread")
 
 set(SOURCE_FILES
+  source/effects/AccumulationEffect.cpp
+  source/effects/AccumulationEffect.hpp
   source/effects/ConvergeCircleEffect.cpp
   source/effects/ConvergeCircleEffect.hpp
   source/effects/ConvergePointEffect.cpp
@@ -18,12 +20,24 @@ set(SOURCE_FILES
   source/effects/EffectRegistry.hpp
   source/effects/HueDisplaceEffect.cpp
   source/effects/HueDisplaceEffect.hpp
+  source/effects/SmearEffect.cpp
+  source/effects/SmearEffect.hpp
+  source/effects/SmoothTrailsEffect.cpp
+  source/effects/SmoothTrailsEffect.hpp
+  source/effects/TrailsEffect.cpp
+  source/effects/TrailsEffect.hpp
   source/effects/WaveEffect.cpp
   source/effects/WaveEffect.hpp
+  source/graphics/Framebuffer.cpp
+  source/graphics/Framebuffer.hpp
   source/graphics/ParticleBuffer.cpp
   source/graphics/ParticleBuffer.hpp
   source/graphics/Pipeline.cpp
   source/graphics/Pipeline.hpp
+  source/graphics/ScreenRectBuffer.cpp
+  source/graphics/ScreenRectBuffer.hpp
+  source/graphics/Texture.cpp
+  source/graphics/Texture.hpp
   source/graphics/Window.cpp
   source/graphics/Window.hpp
   source/sound/Renderer.hpp

@@ -6,6 +6,9 @@
 #include "effects/ConvergeCircleEffect.hpp"
 #include "effects/ConvergePointEffect.hpp"
 #include "effects/HueDisplaceEffect.hpp"
+#include "effects/SmearEffect.hpp"
+#include "effects/SmoothTrailsEffect.hpp"
+#include "effects/TrailsEffect.hpp"
 #include "effects/WaveEffect.hpp"
 #include "graphics/Window.hpp"
 #include "sound/Renderer.hpp"
@@ -18,6 +21,9 @@ bool Application::create(Resources *resources, graphics::Window *window,
   effectRegistry.registerEffect<ConvergeCircleEffect>();
   effectRegistry.registerEffect<ConvergePointEffect>();
   effectRegistry.registerEffect<HueDisplaceEffect>();
+  effectRegistry.registerEffect<SmearEffect>();
+  effectRegistry.registerEffect<SmoothTrailsEffect>();
+  effectRegistry.registerEffect<TrailsEffect>();
   effectRegistry.registerEffect<WaveEffect>();
 
   backgroundLoop.loadFromFile(resources, "sound/DroneLoopStereo01.wav");
@@ -45,6 +51,8 @@ bool Application::create(Resources *resources, graphics::Window *window,
 
   webcam_thread = std::thread([this] { this->webcamThreadFunc(); });
 
+  particleRendererGlobalState.create();
+
   {
     auto timeline = std::make_unique<Timeline>(&effectRegistry);
 
@@ -65,6 +73,13 @@ bool Application::create(Resources *resources, graphics::Window *window,
     timeline->emplaceEffectInstance<ConvergePointEffect>();
     timeline->emplaceEffectInstance<HueDisplaceEffect>();
     timeline->emplaceEffectInstance<WaveEffect>();
+
+    auto accum = timeline->emplaceEffectInstance<TrailsEffect>();
+    accum->timeBegin = 0.f;
+    accum->timeEnd = timeline->getPeriod();
+    accum->fadeIn = 1000.f;
+    accum->fadeOut = 1000.f;
+    accum->strength = .7f;
 
     reactionParticleRenderer.setTimeline(std::move(timeline));
 
@@ -95,6 +110,8 @@ void Application::destroy() {
   reactionParticleRenderer.reset();
   standbyParticleRenderer.reset();
 
+  particleRendererGlobalState.destroy();
+
   if (webcam_thread.joinable())
     webcam_thread.join();
 
@@ -108,6 +125,8 @@ void Application::reshape(uint32_t width, uint32_t height) {
   screen_height = height;
 
   glViewport(0, 0, width, height);
+
+  particleRendererGlobalState.reshape(width, height);
 }
 
 bool Application::handleEvents() {
@@ -196,6 +215,8 @@ static void randomizeTimeline(Timeline *timeline,
   const auto minLength = 2000.f;
 
   timeline->forEachInstance([&](IEffect &i) {
+    if(i.isAccumulationEffect()) return;
+
     i.timeBegin = std::uniform_real_distribution<float>(0.f, period - minLength)
                     (random);
     i.timeEnd = i.timeBegin + std::uniform_real_distribution<float>(minLength,
@@ -295,18 +316,22 @@ void Application::update(float dt) {
 }
 
 void Application::render() {
+  graphics::Framebuffer::unbind();
+
   glClear(GL_COLOR_BUFFER_BIT);
 
-  RendererParameters parameters(particleBuffer, random, screen_width, screen_height, webcam_width, webcam_height);
+  RendererParameters parameters(particleBuffer, random,
+                                screen_width, screen_height,
+                                webcam_width, webcam_height);
 
 #if 1
   if (reactionState == ReactionState::RenderReactionTimeline) {
-    reactionParticleRenderer.render(parameters);
+    reactionParticleRenderer.render(particleRendererGlobalState, parameters);
   } else {
-    standbyParticleRenderer.render(parameters);
+    standbyParticleRenderer.render(particleRendererGlobalState, parameters);
   }
 #else
-  testParticleRenderer.render(parameters);
+  testParticleRenderer.render(particleRendererGlobalState, parameters);
 #endif
 
   {

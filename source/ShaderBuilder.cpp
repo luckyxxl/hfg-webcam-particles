@@ -14,16 +14,18 @@ static const char *glslTypeString(GLSLType type) {
     return "vec4";
   case GLSLType::Mat4:
     return "mat4";
+  case GLSLType::Sampler2D:
+    return "sampler2D";
   }
   return "ERROR";
 }
 
-const char *Uniforms::addUniform(const char *name, GLSLType type,
+std::string Uniforms::addUniform(const char *name, GLSLType type,
                                  UniformValueFunction value) {
   const auto uniqueName =
       std::string(name) + (id != undefinedId ? "_" + std::to_string(id) : "");
   uniforms.emplace_back(uniqueName, type, value);
-  return uniforms.back().name.c_str();
+  return uniforms.back().name;
 }
 
 void ShaderBuilder::appendUniform(const UniformDescription &uniform) {

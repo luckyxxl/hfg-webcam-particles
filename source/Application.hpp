@@ -7,6 +7,7 @@
 #include "effects/EffectRegistry.hpp"
 #include "graphics/ParticleBuffer.hpp"
 #include "graphics/Pipeline.hpp"
+#include "graphics/Framebuffer.hpp"
 #include "sound/SampleBuffer.hpp"
 
 class Resources;
@@ -48,6 +49,8 @@ private:
 
   void webcamThreadFunc();
   std::thread webcam_thread;
+
+  ParticleRenderer::GlobalState particleRendererGlobalState;
 
   ParticleRenderer standbyParticleRenderer;
   ParticleRenderer reactionParticleRenderer;

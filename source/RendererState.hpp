@@ -1,6 +1,8 @@
 #pragma once
 
+#include "graphics/ScreenRectBuffer.hpp"
 #include "graphics/ParticleBuffer.hpp"
+#include "graphics/Framebuffer.hpp"
 
 struct RendererParameters {
   const graphics::ParticleBuffer &particle_buffer;
@@ -14,8 +16,7 @@ struct RendererParameters {
               const uint32_t &screen_width, const uint32_t &screen_height,
               const uint32_t &webcam_width, const uint32_t &webcam_height)
       : particle_buffer(particle_buffer), random(random), screen_width(screen_width),
-        screen_height(screen_height), webcam_width(webcam_width),
-        webcam_height(webcam_height) {}
+        screen_height(screen_height), webcam_width(webcam_width), webcam_height(webcam_height) {}
 };
 
 class Clock {
