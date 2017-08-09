@@ -45,6 +45,8 @@ bool Application::create(Resources *resources, graphics::Window *window,
 
   webcam_thread = std::thread([this] { this->webcamThreadFunc(); });
 
+  particleRendererGlobalState.create();
+
   {
     auto timeline = std::make_unique<Timeline>(&effectRegistry);
 
@@ -84,28 +86,18 @@ bool Application::create(Resources *resources, graphics::Window *window,
   current_frame_data.resize(webcam_width * webcam_height);
   particleBuffer.create(webcam_width * webcam_height);
 
-  screenRectBuffer.create();
-
-  particleFramebuffer.create(1, 1);
-  accumulationFramebuffer.create(1, 1);
-  resultFramebuffer.create(1, 1);
-
   return true;
 }
 
 void Application::destroy() {
   kill_threads = true;
 
-  resultFramebuffer.destroy();
-  accumulationFramebuffer.destroy();
-  particleFramebuffer.destroy();
-
-  screenRectBuffer.destroy();
-
   particleBuffer.destroy();
 
   reactionParticleRenderer.reset();
   standbyParticleRenderer.reset();
+
+  particleRendererGlobalState.destroy();
 
   if (webcam_thread.joinable())
     webcam_thread.join();
@@ -121,9 +113,7 @@ void Application::reshape(uint32_t width, uint32_t height) {
 
   glViewport(0, 0, width, height);
 
-  particleFramebuffer.resize(width, height);
-  accumulationFramebuffer.resize(width, height);
-  resultFramebuffer.resize(width, height);
+  particleRendererGlobalState.reshape(width, height);
 }
 
 bool Application::handleEvents() {
@@ -315,19 +305,18 @@ void Application::render() {
 
   glClear(GL_COLOR_BUFFER_BIT);
 
-  RendererParameters parameters(screenRectBuffer, particleBuffer, random, particleFramebuffer,
-                                accumulationFramebuffer, resultFramebuffer,
+  RendererParameters parameters(particleBuffer, random,
                                 screen_width, screen_height,
                                 webcam_width, webcam_height);
 
 #if 1
   if (reactionState == ReactionState::RenderReactionTimeline) {
-    reactionParticleRenderer.render(parameters);
+    reactionParticleRenderer.render(particleRendererGlobalState, parameters);
   } else {
-    standbyParticleRenderer.render(parameters);
+    standbyParticleRenderer.render(particleRendererGlobalState, parameters);
   }
 #else
-  testParticleRenderer.render(parameters);
+  testParticleRenderer.render(particleRendererGlobalState, parameters);
 #endif
 
   {

@@ -5,23 +5,18 @@
 #include "graphics/Framebuffer.hpp"
 
 struct RendererParameters {
-  const graphics::ScreenRectBuffer &screen_rect_buffer;
   const graphics::ParticleBuffer &particle_buffer;
-  graphics::Framebuffer &particle_fb, &accumulation_fb, &result_fb;
 
   std::default_random_engine &random;
 
   const uint32_t &screen_width, &screen_height;
   const uint32_t &webcam_width, &webcam_height;
 
-  RendererParameters(const graphics::ScreenRectBuffer &screen_rect_buffer,
-              const graphics::ParticleBuffer &particle_buffer, std::default_random_engine &random,
-              graphics::Framebuffer &particle_fb, graphics::Framebuffer &accumulation_fb, graphics::Framebuffer &result_fb,
+  RendererParameters(const graphics::ParticleBuffer &particle_buffer, std::default_random_engine &random,
               const uint32_t &screen_width, const uint32_t &screen_height,
               const uint32_t &webcam_width, const uint32_t &webcam_height)
-      : screen_rect_buffer(screen_rect_buffer), particle_buffer(particle_buffer), particle_fb(particle_fb), accumulation_fb(accumulation_fb), result_fb(result_fb),
-        random(random), screen_width(screen_width), screen_height(screen_height),
-        webcam_width(webcam_width), webcam_height(webcam_height) {}
+      : particle_buffer(particle_buffer), random(random), screen_width(screen_width),
+        screen_height(screen_height), webcam_width(webcam_width), webcam_height(webcam_height) {}
 };
 
 class Clock {

@@ -3,6 +3,49 @@
 #include "ParticleRenderer.hpp"
 #include "Timeline.hpp"
 
+void ParticleRenderer::GlobalState::create() {
+  screenRectBuffer.create();
+
+  particleFramebuffer.create(1, 1);
+  accumulationFramebuffer.create(1, 1);
+  resultFramebuffer.create(1, 1);
+
+  resultGraphicsPipeline.create(R"glsl(
+    #version 330 core
+    layout(location=0) in vec2 position;
+    void main() {
+      gl_Position = vec4(position, 0, 1);
+    }
+  )glsl", R"glsl(
+    #version 330 core
+    uniform sampler2D resultTexture;
+    out vec4 frag_color;
+    void main() {
+      vec3 color = texelFetch(resultTexture, ivec2(gl_FragCoord.xy), 0).rgb;
+      frag_color = vec4(color, 1);
+    }
+  )glsl", false);
+  resultGraphicsPipeline_resultTexture_location =
+      resultGraphicsPipeline.getUniformLocation("resultTexture");
+}
+
+void ParticleRenderer::GlobalState::destroy() {
+  resultGraphicsPipeline.destroy();
+
+  resultFramebuffer.destroy();
+  accumulationFramebuffer.destroy();
+  particleFramebuffer.destroy();
+
+  screenRectBuffer.destroy();
+}
+
+void ParticleRenderer::GlobalState::reshape(uint32_t width, uint32_t height) {
+  particleFramebuffer.resize(width, height);
+  accumulationFramebuffer.resize(width, height);
+  resultFramebuffer.resize(width, height);
+}
+
+
 void ParticleRenderer::reset() {
   graphicsPipeline.destroy();
   uniforms.clear();
@@ -241,22 +284,6 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
     }
   )glsl", false);
 
-  resultGraphicsPipeline.create(R"glsl(
-    #version 330 core
-    layout(location=0) in vec2 position;
-    void main() {
-      gl_Position = vec4(position, 0, 1);
-    }
-  )glsl", R"glsl(
-    #version 330 core
-    uniform sampler2D resultTexture;
-    out vec4 frag_color;
-    void main() {
-      vec3 color = texelFetch(resultTexture, ivec2(gl_FragCoord.xy), 0).rgb;
-      frag_color = vec4(color, 1);
-    }
-  )glsl", false);
-
   for (const auto &u : uniforms) {
     UniformElement newElement;
     newElement.location = graphicsPipeline.getUniformLocation(u.name.c_str());
@@ -276,29 +303,30 @@ void ParticleRenderer::update(float dt) {
   state.clock.frame(dt);
 }
 
-void ParticleRenderer::render(const RendererParameters &parameters) {
+void ParticleRenderer::render(GlobalState &globalState, const RendererParameters &parameters) {
   RenderProps props(parameters, state);
 
   if(/*accum active*/true) {
-    parameters.particle_fb.bind();
+    globalState.particleFramebuffer.bind();
     glClear(GL_COLOR_BUFFER_BIT);
     graphicsPipeline.bind();
     loadUniforms(uniforms, props);
     parameters.particle_buffer.draw();
 
-    std::swap(parameters.accumulation_fb, parameters.result_fb);
+    std::swap(globalState.accumulationFramebuffer, globalState.resultFramebuffer);
 
-    parameters.result_fb.bind();
+    globalState.resultFramebuffer.bind();
     accGraphicsPipeline.bind();
-    loadTextureUniform(accGraphicsPipeline, "particleTexture", parameters.particle_fb.getTexture(), 0);
-    loadTextureUniform(accGraphicsPipeline, "historyTexture", parameters.accumulation_fb.getTexture(), 1);
+    loadTextureUniform(accGraphicsPipeline, "particleTexture", globalState.particleFramebuffer.getTexture(), 0);
+    loadTextureUniform(accGraphicsPipeline, "historyTexture", globalState.accumulationFramebuffer.getTexture(), 1);
     loadUniforms(accUniforms, props);
-    parameters.screen_rect_buffer.draw();
+    globalState.screenRectBuffer.draw();
 
     graphics::Framebuffer::unbind();
-    resultGraphicsPipeline.bind();
-    loadTextureUniform(resultGraphicsPipeline, "resultTexture", parameters.result_fb.getTexture(), 0);
-    parameters.screen_rect_buffer.draw();
+    globalState.resultGraphicsPipeline.bind();
+    globalState.resultFramebuffer.getTexture().bind(0);
+    glUniform1i(globalState.resultGraphicsPipeline_resultTexture_location, 0);
+    globalState.screenRectBuffer.draw();
 
     graphics::Texture::unbind(0);
     graphics::Texture::unbind(1);

@@ -50,6 +50,8 @@ private:
   void webcamThreadFunc();
   std::thread webcam_thread;
 
+  ParticleRenderer::GlobalState particleRendererGlobalState;
+
   ParticleRenderer standbyParticleRenderer;
   ParticleRenderer reactionParticleRenderer;
 
@@ -64,12 +66,6 @@ private:
   // remove this and use glMapBuffer?  thought mapping is probably slower...
   std::vector<graphics::Particle> current_frame_data;
   graphics::ParticleBuffer particleBuffer;
-
-  graphics::ScreenRectBuffer screenRectBuffer;
-
-  graphics::Framebuffer particleFramebuffer;
-  graphics::Framebuffer accumulationFramebuffer;
-  graphics::Framebuffer resultFramebuffer;
 
   std::vector<float> background_frame;
 };
