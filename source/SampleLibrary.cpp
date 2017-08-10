@@ -6,26 +6,44 @@ bool SampleLibrary::create(std::default_random_engine &random,
                            Resources *resources) {
   this->random = &random;
 
-  backgroundLoop.loadFromFile(resources, "sound/DroneLoopStereo01.wav");
+  auto loadSample = [&](const std::string &name) {
+    samples[name].loadFromFile(resources, ("sound/" + name + ".wav").c_str());
+  };
 
-  whooshSamples.resize(5);
-  whooshSamples[0].loadFromFile(resources, "sound/FXStereo01.wav");
-  whooshSamples[1].loadFromFile(resources, "sound/FXStereo02.wav");
-  whooshSamples[2].loadFromFile(resources, "sound/FXStereo03.wav");
-  whooshSamples[3].loadFromFile(resources, "sound/FXStereo04.wav");
-  whooshSamples[4].loadFromFile(resources, "sound/FXStereo05.wav");
+  loadSample("DroneLoopStereo01");
+  loadSample("FXStereo01");
+  loadSample("FXStereo02");
+  loadSample("FXStereo03");
+  loadSample("FXStereo04");
+  loadSample("FXStereo05");
+  loadSample("sweep005");
+  loadSample("up_sweep018");
 
+  //TODO: check that all samples are loaded correctly
   return true;
 }
 
 void SampleLibrary::destroy() {
 }
 
+const sound::SampleBuffer *SampleLibrary::getSample(const char *name) const {
+  return &samples.at(name);
+}
+
 const sound::SampleBuffer *SampleLibrary::getBackgroundLoop() const {
-  return &backgroundLoop;
+  return getSample("DroneLoopStereo01");
 }
 
 const sound::SampleBuffer *SampleLibrary::getRandomWhoosh() const {
-  return &whooshSamples[
-      std::uniform_int_distribution<>(0, whooshSamples.size() - 1)(*random)];
+  constexpr const char *whooshSamples[] = {
+    "FXStereo01",
+    "FXStereo02",
+    "FXStereo03",
+    "FXStereo04",
+    "FXStereo05",
+  };
+  constexpr auto whooshSamplesSize = sizeof(whooshSamples) / sizeof(*whooshSamples);
+
+  const auto randomIndex = std::uniform_int_distribution<>(0, whooshSamplesSize-1)(*random);
+  return getSample(whooshSamples[randomIndex]);
 }

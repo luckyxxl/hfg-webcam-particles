@@ -7,6 +7,8 @@ public:
   bool create(std::default_random_engine &random, Resources *resources);
   void destroy();
 
+  const sound::SampleBuffer *getSample(const char *name) const;
+
   const sound::SampleBuffer *getBackgroundLoop() const;
 
   const sound::SampleBuffer *getRandomWhoosh() const;
@@ -14,6 +16,5 @@ public:
 private:
   std::default_random_engine *random;
 
-  sound::SampleBuffer backgroundLoop;
-  std::vector<sound::SampleBuffer> whooshSamples;
+  std::map<std::string, sound::SampleBuffer> samples;
 };
