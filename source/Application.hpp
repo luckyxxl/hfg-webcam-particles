@@ -54,8 +54,6 @@ private:
   ParticleRenderer standbyParticleRenderer;
   ParticleRenderer reactionParticleRenderer;
 
-  ParticleRenderer testParticleRenderer;
-
   enum class ReactionState {
     Inactive,
     FinishStandbyTimeline,

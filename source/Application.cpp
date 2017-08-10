@@ -83,15 +83,6 @@ bool Application::create(Resources *resources, graphics::Window *window,
     reactionParticleRenderer.getClock().pause();
   }
 
-  {
-    auto testTimeline = std::make_unique<Timeline>(&effectRegistry);
-
-    auto testJson = resources->readWholeTextFile("debug/particles.json");
-    testTimeline->load(json::parse(testJson)["effects"]);
-
-    testParticleRenderer.setTimeline(particleRendererGlobalState, std::move(testTimeline));
-  }
-
   current_frame_data.resize(webcam_width * webcam_height);
   particleBuffer.create(webcam_width * webcam_height);
 
@@ -301,8 +292,6 @@ void Application::update(float dt) {
 
   standbyParticleRenderer.update(particleRendererGlobalState, dt);
   reactionParticleRenderer.update(particleRendererGlobalState, dt);
-
-  testParticleRenderer.update(particleRendererGlobalState, dt);
 }
 
 void Application::render() {
@@ -314,15 +303,11 @@ void Application::render() {
                                 screen_width, screen_height,
                                 webcam_width, webcam_height);
 
-#if 1
   if (reactionState == ReactionState::RenderReactionTimeline) {
     reactionParticleRenderer.render(particleRendererGlobalState, parameters);
   } else {
     standbyParticleRenderer.render(particleRendererGlobalState, parameters);
   }
-#else
-  testParticleRenderer.render(particleRendererGlobalState, parameters);
-#endif
 
   {
     GLenum error = glGetError();
