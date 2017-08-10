@@ -83,8 +83,8 @@ bool Application::create(Resources *resources, graphics::Window *window,
 
     reactionParticleRenderer.setTimeline(std::move(timeline));
 
-    reactionParticleRenderer.getClock().setPaused(true);
-    reactionParticleRenderer.getClock().setLooping(false);
+    reactionParticleRenderer.getClock().disableLooping();
+    reactionParticleRenderer.getClock().pause();
   }
 
   {
@@ -269,7 +269,7 @@ void Application::update(float dt) {
       if (reactionState == ReactionState::Inactive) {
         std::cout << "trigger\n";
 
-        standbyParticleRenderer.getClock().setLooping(false);
+        standbyParticleRenderer.getClock().disableLooping();
 
         reactionState = ReactionState::FinishStandbyTimeline;
       }
@@ -279,12 +279,12 @@ void Application::update(float dt) {
   }
 
   if (reactionState == ReactionState::FinishStandbyTimeline
-      && standbyParticleRenderer.getClock().getPaused()) {
+      && standbyParticleRenderer.getClock().isPaused()) {
 
     std::cout << "start reaction\n";
 
     randomizeTimeline(reactionParticleRenderer.getTimeline(), random);
-    reactionParticleRenderer.getClock().setPaused(false);
+    reactionParticleRenderer.getClock().play();
 
     {
       std::uniform_int_distribution<> dis(0, whooshSamples.size() - 1);
@@ -300,11 +300,11 @@ void Application::update(float dt) {
   }
 
   if (reactionState == ReactionState::RenderReactionTimeline
-      && reactionParticleRenderer.getClock().getPaused()) {
+      && reactionParticleRenderer.getClock().isPaused()) {
 
     std::cout << "end reaction\n";
-    standbyParticleRenderer.getClock().setLooping(true);
-    standbyParticleRenderer.getClock().setPaused(false);
+    standbyParticleRenderer.getClock().enableLooping();
+    standbyParticleRenderer.getClock().play();
 
     reactionState = ReactionState::Inactive;
   }

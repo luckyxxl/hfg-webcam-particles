@@ -58,6 +58,14 @@ public:
   void setLooping(bool loop) { looping = loop; }
   bool getLooping() const { return looping; }
 
+  // just for readability
+  void play() { setPaused(false); }
+  void pause() { setPaused(true); }
+  bool isPlaying() { return !getPaused(); }
+  bool isPaused() { return getPaused(); }
+  void disableLooping() { setLooping(false); }
+  void enableLooping() { setLooping(true); }
+
 private:
   float time = 0.f;
   float delta = 0.f;
