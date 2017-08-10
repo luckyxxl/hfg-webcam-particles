@@ -47,7 +47,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
 
   webcam_thread = std::thread([this] { this->webcamThreadFunc(); });
 
-  particleRendererGlobalState.create(soundRenderer, &sampleLibrary);
+  particleRendererGlobalState.create(soundRenderer, &sampleLibrary, &random);
 
   {
     auto timeline = std::make_unique<Timeline>(&effectRegistry);
@@ -299,7 +299,7 @@ void Application::render() {
 
   glClear(GL_COLOR_BUFFER_BIT);
 
-  RendererParameters parameters(particleBuffer, random,
+  RendererParameters parameters(particleBuffer,
                                 screen_width, screen_height,
                                 webcam_width, webcam_height);
 

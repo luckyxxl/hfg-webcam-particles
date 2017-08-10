@@ -7,15 +7,13 @@
 struct RendererParameters {
   const graphics::ParticleBuffer &particle_buffer;
 
-  std::default_random_engine &random;
-
   const uint32_t &screen_width, &screen_height;
   const uint32_t &webcam_width, &webcam_height;
 
-  RendererParameters(const graphics::ParticleBuffer &particle_buffer, std::default_random_engine &random,
+  RendererParameters(const graphics::ParticleBuffer &particle_buffer,
               const uint32_t &screen_width, const uint32_t &screen_height,
               const uint32_t &webcam_width, const uint32_t &webcam_height)
-      : particle_buffer(particle_buffer), random(random), screen_width(screen_width),
+      : particle_buffer(particle_buffer), screen_width(screen_width),
         screen_height(screen_height), webcam_width(webcam_width), webcam_height(webcam_height) {}
 };
 
@@ -81,5 +79,9 @@ struct RendererState {
 struct RenderProps : RendererParameters {
   const RendererState &state;
 
-  RenderProps(const RendererParameters &parameters, const RendererState &state) : RendererParameters(parameters), state(state) {}
+  std::default_random_engine &random;
+
+  RenderProps(const RendererParameters &parameters, const RendererState &state,
+              std::default_random_engine &random)
+              : RendererParameters(parameters), state(state), random(random) {}
 };

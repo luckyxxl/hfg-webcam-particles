@@ -5,9 +5,11 @@
 #include "effects/AccumulationEffect.hpp"
 
 void ParticleRenderer::GlobalState::create(sound::Renderer *soundRenderer,
-                                          const SampleLibrary *sampleLibrary) {
+                                           const SampleLibrary *sampleLibrary,
+                                           std::default_random_engine *random) {
   this->soundRenderer = soundRenderer;
   this->sampleLibrary = sampleLibrary;
+  this->random = random;
 
   screenRectBuffer.create();
 
@@ -324,7 +326,8 @@ void ParticleRenderer::enableSound(GlobalState &globalState) {
 
   timeline->forEachInstance([&](const IEffect &i) {
     EffectSoundRegistrationData registrationData(soundPlaylist,
-                                                 globalState.sampleLibrary);
+                                                 globalState.sampleLibrary,
+                                                 *globalState.random);
     i.registerEffectSound(registrationData);
   });
 }
@@ -342,7 +345,7 @@ void ParticleRenderer::update(GlobalState &globalState, float dt) {
 }
 
 void ParticleRenderer::render(GlobalState &globalState, const RendererParameters &parameters) {
-  RenderProps props(parameters, state);
+  RenderProps props(parameters, state, *globalState.random);
 
   if(accumulationActive) {
     globalState.particleFramebuffer.bind();

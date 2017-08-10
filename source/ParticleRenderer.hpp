@@ -9,13 +9,16 @@ public:
   class GlobalState {
   public:
     void create(sound::Renderer *soundRenderer,
-                const SampleLibrary *sampleLibrary);
+                const SampleLibrary *sampleLibrary,
+                std::default_random_engine *random);
     void destroy();
     void reshape(uint32_t width, uint32_t height);
 
   private:
     sound::Renderer *soundRenderer;
     const SampleLibrary *sampleLibrary;
+
+    std::default_random_engine *random;
 
     graphics::ScreenRectBuffer screenRectBuffer;
 

@@ -28,10 +28,14 @@ struct EffectSoundRegistrationData {
 
   const SampleLibrary *sampleLibrary;
 
+  std::default_random_engine &random;
+
   EffectSoundRegistrationData(SoundPlaylist &soundPlaylist,
-                              const SampleLibrary *sampleLibrary)
+                              const SampleLibrary *sampleLibrary,
+                              std::default_random_engine &random)
                               : soundPlaylist(soundPlaylist),
-                                sampleLibrary(sampleLibrary) {}
+                                sampleLibrary(sampleLibrary),
+                                random(random) {}
 };
 
 class IEffect {

@@ -89,4 +89,11 @@ void WaveEffect::registerEffect(EffectRegistrationData &data) const {
 }
 
 void WaveEffect::registerEffectSound(EffectSoundRegistrationData &data) const {
+  if(amplitude > .1f /*&& std::bernoulli_distribution()(data.random)*/) {
+    if(getPeriod() >= 2500.f) {
+      data.soundPlaylist.add(data.sampleLibrary->getSample("sweep005"), timeBegin);
+    } else {
+      data.soundPlaylist.add(data.sampleLibrary->getSample("up_sweep018"), timeBegin);
+    }
+  }
 }
