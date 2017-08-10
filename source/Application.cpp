@@ -26,16 +26,12 @@ bool Application::create(Resources *resources, graphics::Window *window,
   effectRegistry.registerEffect<TrailsEffect>();
   effectRegistry.registerEffect<WaveEffect>();
 
-  backgroundLoop.loadFromFile(resources, "sound/DroneLoopStereo01.wav");
-  soundRenderer->play(&backgroundLoop,
-                      sound::Renderer::PlayParameters().setLooping(true));
+  if(!sampleLibrary.create(random, resources)) {
+    return false;
+  }
 
-  whooshSamples.resize(5);
-  whooshSamples[0].loadFromFile(resources, "sound/FXStereo01.wav");
-  whooshSamples[1].loadFromFile(resources, "sound/FXStereo02.wav");
-  whooshSamples[2].loadFromFile(resources, "sound/FXStereo03.wav");
-  whooshSamples[3].loadFromFile(resources, "sound/FXStereo04.wav");
-  whooshSamples[4].loadFromFile(resources, "sound/FXStereo05.wav");
+  soundRenderer->play(sampleLibrary.getBackgroundLoop(),
+                      sound::Renderer::PlayParameters().setLooping(true));
 
   if (!webcam.open() || !webcam.getFrameSize(webcam_width, webcam_height)) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open webcam",
@@ -51,7 +47,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
 
   webcam_thread = std::thread([this] { this->webcamThreadFunc(); });
 
-  particleRendererGlobalState.create();
+  particleRendererGlobalState.create(soundRenderer, &sampleLibrary);
 
   {
     auto timeline = std::make_unique<Timeline>(&effectRegistry);
@@ -62,7 +58,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
     hueDisplace->distance = .01f;
     hueDisplace->scaleByForegroundMask = 1.f;
 
-    standbyParticleRenderer.setTimeline(std::move(timeline));
+    standbyParticleRenderer.setTimeline(particleRendererGlobalState, std::move(timeline));
   }
 
   {
@@ -81,7 +77,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
     accum->fadeOut = 1000.f;
     accum->strength = .7f;
 
-    reactionParticleRenderer.setTimeline(std::move(timeline));
+    reactionParticleRenderer.setTimeline(particleRendererGlobalState, std::move(timeline));
 
     reactionParticleRenderer.getClock().disableLooping();
     reactionParticleRenderer.getClock().pause();
@@ -93,7 +89,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
     auto testJson = resources->readWholeTextFile("debug/particles.json");
     testTimeline->load(json::parse(testJson)["effects"]);
 
-    testParticleRenderer.setTimeline(std::move(testTimeline));
+    testParticleRenderer.setTimeline(particleRendererGlobalState, std::move(testTimeline));
   }
 
   current_frame_data.resize(webcam_width * webcam_height);
@@ -118,6 +114,8 @@ void Application::destroy() {
   webcam.close();
 
   soundRenderer->killAllVoices();
+
+  sampleLibrary.destroy();
 }
 
 void Application::reshape(uint32_t width, uint32_t height) {
@@ -285,16 +283,7 @@ void Application::update(float dt) {
 
     randomizeTimeline(reactionParticleRenderer.getTimeline(), random);
     reactionParticleRenderer.getClock().play();
-
-    {
-      std::uniform_int_distribution<> dis(0, whooshSamples.size() - 1);
-      soundRenderer->play(
-          &whooshSamples[dis(random)],
-          sound::Renderer::PlayParameters().setStartDelay(0.));
-      soundRenderer->play(
-          &whooshSamples[dis(random)],
-          sound::Renderer::PlayParameters().setStartDelay(1500.));
-    }
+    reactionParticleRenderer.enableSound(particleRendererGlobalState);
 
     reactionState = ReactionState::RenderReactionTimeline;
   }
@@ -303,16 +292,17 @@ void Application::update(float dt) {
       && reactionParticleRenderer.getClock().isPaused()) {
 
     std::cout << "end reaction\n";
+
     standbyParticleRenderer.getClock().enableLooping();
     standbyParticleRenderer.getClock().play();
 
     reactionState = ReactionState::Inactive;
   }
 
-  standbyParticleRenderer.update(dt);
-  reactionParticleRenderer.update(dt);
+  standbyParticleRenderer.update(particleRendererGlobalState, dt);
+  reactionParticleRenderer.update(particleRendererGlobalState, dt);
 
-  testParticleRenderer.update(dt);
+  testParticleRenderer.update(particleRendererGlobalState, dt);
 }
 
 void Application::render() {

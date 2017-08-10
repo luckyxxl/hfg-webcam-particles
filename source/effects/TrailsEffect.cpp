@@ -40,3 +40,6 @@ void TrailsEffect::registerEffect(EffectRegistrationData &data) const {
           })
           .c_str());
 }
+
+void TrailsEffect::registerEffectSound(EffectSoundRegistrationData &data) const {
+}

@@ -83,3 +83,6 @@ void HueDisplaceEffect::registerEffect(EffectRegistrationData &data) const {
           })
           .c_str());
 }
+
+void HueDisplaceEffect::registerEffectSound(EffectSoundRegistrationData &data) const {
+}

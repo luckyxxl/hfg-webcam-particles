@@ -56,11 +56,14 @@ void Renderer::killAllVoices() {
 }
 
 void Renderer::update() {
+  auto activeVoicesCount = 0u;
+
   for (auto &voice : voices) {
     if (voice.state.load() == Voice::State::Empty)
       continue;
 
     assert(voice.state == Voice::State::Playing);
+    activeVoicesCount++;
 
     const auto sampleBufferValue =
         voice.sampleBuffer.load(std::memory_order_relaxed);
@@ -73,10 +76,16 @@ void Renderer::update() {
       voice.state.store(Voice::State::Empty);
     }
   }
+
+#if 0
+  std::cout << "active voices: " << activeVoicesCount << "\n";
+#endif
 }
 
 Voice *Renderer::play(const SampleBuffer *sampleBuffer,
                       const PlayParameters &parameters) {
+  assert(sampleBuffer);
+
   for (auto &voice : voices) {
     if (voice.state.load() != Voice::State::Empty)
       continue;

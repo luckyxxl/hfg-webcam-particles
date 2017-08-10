@@ -16,6 +16,7 @@ public:
   void randomizeConfig(std::default_random_engine &random) override;
 
   void registerEffect(EffectRegistrationData &data) const override;
+  void registerEffectSound(EffectSoundRegistrationData &data) const override;
 
 public:
   float strength = .8f;

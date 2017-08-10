@@ -5,6 +5,7 @@
 #include "Timeline.hpp"
 #include "Webcam.hpp"
 #include "effects/EffectRegistry.hpp"
+#include "SampleLibrary.hpp"
 #include "graphics/ParticleBuffer.hpp"
 #include "graphics/Pipeline.hpp"
 #include "graphics/Framebuffer.hpp"
@@ -33,9 +34,7 @@ private:
   sound::Renderer *soundRenderer;
 
   EffectRegistry effectRegistry;
-
-  sound::SampleBuffer backgroundLoop;
-  std::vector<sound::SampleBuffer> whooshSamples;
+  SampleLibrary sampleLibrary;
 
   std::default_random_engine random;
 

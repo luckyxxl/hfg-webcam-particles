@@ -1,17 +1,22 @@
 #pragma once
 
 #include "Timeline.hpp"
+#include "SoundPlaylist.hpp"
 #include "graphics/Pipeline.hpp"
 
 class ParticleRenderer {
 public:
   class GlobalState {
   public:
-    void create();
+    void create(sound::Renderer *soundRenderer,
+                const SampleLibrary *sampleLibrary);
     void destroy();
     void reshape(uint32_t width, uint32_t height);
 
   private:
+    sound::Renderer *soundRenderer;
+    const SampleLibrary *sampleLibrary;
+
     graphics::ScreenRectBuffer screenRectBuffer;
 
     graphics::Framebuffer particleFramebuffer;
@@ -25,9 +30,12 @@ public:
   };
 
   void reset();
-  void setTimeline(std::unique_ptr<Timeline> timeline);
+  void setTimeline(GlobalState &globalState, std::unique_ptr<Timeline> timeline);
 
-  void update(float dt);
+  void enableSound(GlobalState &globalState);
+  void disableSound(GlobalState &globalState);
+
+  void update(GlobalState &globalState, float dt);
   void render(GlobalState &globalState, const RendererParameters &parameters);
 
   Timeline *getTimeline() { return timeline.get(); }
@@ -55,4 +63,6 @@ private:
   RendererState state;
 
   void loadUniforms(const std::vector<UniformElement> &uniforms, const RenderProps &props);
+
+  SoundPlaylist soundPlaylist;
 };

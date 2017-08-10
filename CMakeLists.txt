@@ -53,8 +53,12 @@ set(SOURCE_FILES
   source/main.hpp
   source/Resources.cpp
   source/Resources.hpp
+  source/SampleLibrary.cpp
+  source/SampleLibrary.hpp
   source/ShaderBuilder.cpp
   source/ShaderBuilder.hpp
+  source/SoundPlaylist.cpp
+  source/SoundPlaylist.hpp
   source/Template.hpp
   source/ThreadSyncTripleBuffer.hpp
   source/Timeline.cpp

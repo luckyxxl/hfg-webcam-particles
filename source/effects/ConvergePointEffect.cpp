@@ -68,3 +68,6 @@ void ConvergePointEffect::registerEffect(EffectRegistrationData &data) const {
           })
           .c_str());
 }
+
+void ConvergePointEffect::registerEffectSound(EffectSoundRegistrationData &data) const {
+}

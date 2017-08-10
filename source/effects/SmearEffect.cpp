@@ -53,3 +53,6 @@ void SmearEffect::registerEffect(EffectRegistrationData &data) const {
           })
           .c_str());
 }
+
+void SmearEffect::registerEffectSound(EffectSoundRegistrationData &data) const {
+}

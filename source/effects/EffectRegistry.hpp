@@ -2,6 +2,8 @@
 
 #include "../RendererState.hpp"
 #include "../ShaderBuilder.hpp"
+#include "../SampleLibrary.hpp"
+#include "../SoundPlaylist.hpp"
 
 struct EffectRegistrationData {
   Uniforms &uniforms;
@@ -21,6 +23,17 @@ struct EffectRegistrationData {
                            accumulationShader(accumulationShader) {}
 };
 
+struct EffectSoundRegistrationData {
+  SoundPlaylist &soundPlaylist;
+
+  const SampleLibrary *sampleLibrary;
+
+  EffectSoundRegistrationData(SoundPlaylist &soundPlaylist,
+                              const SampleLibrary *sampleLibrary)
+                              : soundPlaylist(soundPlaylist),
+                                sampleLibrary(sampleLibrary) {}
+};
+
 class IEffect {
 public:
   virtual const char *getName() const = 0;
@@ -33,6 +46,7 @@ public:
   virtual void randomizeConfig(std::default_random_engine &random) = 0;
 
   virtual void registerEffect(EffectRegistrationData &data) const = 0;
+  virtual void registerEffectSound(EffectSoundRegistrationData &data) const = 0;
 
   virtual bool isAccumulationEffect() const { return false; }
 
@@ -44,7 +58,7 @@ public:
 
 public:
   float timeBegin = 0.f;
-  float timeEnd = 1.f;
+  float timeEnd = 1000.f;
   unsigned repetitions = 1u;
 
   float getPeriod() const { return (timeEnd - timeBegin) / repetitions; }

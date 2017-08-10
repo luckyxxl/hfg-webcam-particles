@@ -4,7 +4,11 @@
 #include "Timeline.hpp"
 #include "effects/AccumulationEffect.hpp"
 
-void ParticleRenderer::GlobalState::create() {
+void ParticleRenderer::GlobalState::create(sound::Renderer *soundRenderer,
+                                          const SampleLibrary *sampleLibrary) {
+  this->soundRenderer = soundRenderer;
+  this->sampleLibrary = sampleLibrary;
+
   screenRectBuffer.create();
 
   particleFramebuffer.create(1, 1);
@@ -53,9 +57,11 @@ void ParticleRenderer::reset() {
   accGraphicsPipeline.destroy();
   uniforms.clear();
   accUniforms.clear();
+  soundPlaylist.clear();
 }
 
-void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
+void ParticleRenderer::setTimeline(GlobalState &globalState,
+                                   std::unique_ptr<Timeline> _timeline) {
   reset();
 
   timeline = std::move(_timeline);
@@ -313,8 +319,26 @@ void ParticleRenderer::setTimeline(std::unique_ptr<Timeline> _timeline) {
   }
 }
 
-void ParticleRenderer::update(float dt) {
+void ParticleRenderer::enableSound(GlobalState &globalState) {
+  soundPlaylist.clear();
+
+  timeline->forEachInstance([&](const IEffect &i) {
+    EffectSoundRegistrationData registrationData(soundPlaylist,
+                                                 globalState.sampleLibrary);
+    i.registerEffectSound(registrationData);
+  });
+}
+
+void ParticleRenderer::disableSound(GlobalState &globalState) {
+  soundPlaylist.clear();
+}
+
+void ParticleRenderer::update(GlobalState &globalState, float dt) {
   state.clock.frame(dt);
+
+  if(state.clock.isPlaying()) {
+    soundPlaylist.update(state.clock, globalState.soundRenderer);
+  }
 }
 
 void ParticleRenderer::render(GlobalState &globalState, const RendererParameters &parameters) {
