@@ -5,6 +5,9 @@
 bool Resources::create(const char *argv0) {
   rootPath = argv0;
   rootPath.erase(rootPath.find_last_of("/") + 1);
+#ifdef __APPLE__
+  rootPath.append("../Resources/");
+#endif
   rootPath.append("resource/");
   return true;
 }
