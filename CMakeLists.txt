@@ -61,7 +61,9 @@ endif()
 
 if(APPLE)
   # https://github.com/ultitech/GLMaze/blob/master/CMakeLists.txt
+
   set_target_properties(${EXECUTABLE_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
+
   file(GLOB_RECURSE RESOURCES "${PROJECT_SOURCE_DIR}/resource/*")
   foreach(FILE ${RESOURCES})
     get_filename_component(LOCATION ${FILE} DIRECTORY)
@@ -69,6 +71,18 @@ if(APPLE)
     set_source_files_properties(${FILE} PROPERTIES MACOSX_PACKAGE_LOCATION ${LOCATION})
   endforeach()
   target_sources(${EXECUTABLE_NAME} PUBLIC ${RESOURCES})
+
+  foreach(LIB ${OpenCV_LIBS} ${SDL2_LIBRARY})
+    if(TARGET ${LIB})
+      list(APPEND DYLIBS "$<TARGET_FILE:${LIB}>")
+    elseif((IS_ABSOLUTE ${LIB}) AND (LIB MATCHES ".*\\.dylib$"))
+      list(APPEND DYLIBS "${LIB}")
+    endif()
+  endforeach()
+  foreach(DYLIB ${DYLIBS})
+    set_source_files_properties(${DYLIB} PROPERTIES MACOSX_PACKAGE_LOCATION Frameworks)
+  endforeach()
+  target_sources(${EXECUTABLE_NAME} PUBLIC ${DYLIBS})
 endif()
 
 add_custom_target(update-format
