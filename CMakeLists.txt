@@ -68,7 +68,7 @@ set(SOURCE_FILES
 )
 set(EXECUTABLE_NAME "webcam-particles")
 
-add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCE_FILES})
+add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE source 3rdparty ${SDL2_INCLUDE_DIR})
 target_link_libraries(${EXECUTABLE_NAME} ${OpenCV_LIBS} ${SDL2_LIBRARY} ${OPENGL_gl_LIBRARY} m)
@@ -79,6 +79,7 @@ endif()
 
 if(APPLE)
   # https://github.com/ultitech/GLMaze/blob/master/CMakeLists.txt
+  set_target_properties(${EXECUTABLE_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
   file(GLOB_RECURSE RESOURCES "${PROJECT_SOURCE_DIR}/resource/*")
   foreach(FILE ${RESOURCES})
     get_filename_component(LOCATION ${FILE} DIRECTORY)
