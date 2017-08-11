@@ -68,42 +68,28 @@ set(SOURCE_FILES
 )
 set(EXECUTABLE_NAME "webcam-particles")
 
-add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
+add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCE_FILES})
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE source 3rdparty ${SDL2_INCLUDE_DIR})
 target_link_libraries(${EXECUTABLE_NAME} ${OpenCV_LIBS} ${SDL2_LIBRARY} ${OPENGL_gl_LIBRARY} m)
 
-add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:webcam-particles>/resource")
+if(NOT APPLE)
+  add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:webcam-particles>/resource")
+endif()
+
+if(APPLE)
+  # https://github.com/ultitech/GLMaze/blob/master/CMakeLists.txt
+  file(GLOB_RECURSE RESOURCES "${PROJECT_SOURCE_DIR}/resource/*")
+  foreach(FILE ${RESOURCES})
+    get_filename_component(LOCATION ${FILE} DIRECTORY)
+    string(REPLACE "${PROJECT_SOURCE_DIR}/" "Resources/" LOCATION ${LOCATION})
+    set_source_files_properties(${FILE} PROPERTIES MACOSX_PACKAGE_LOCATION ${LOCATION})
+  endforeach()
+  target_sources(${EXECUTABLE_NAME} PUBLIC ${RESOURCES})
+endif()
 
 add_custom_target(update-format
   clang-format -i -style=LLVM ${SOURCE_FILES}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Format all source files. Requires clang-format to be installed"
 )
-
-# Install target
-install(TARGETS ${EXECUTABLE_NAME}
-        RUNTIME DESTINATION bin)
-install(DIRECTORY "${PROJECT_SOURCE_DIR}/resource" DESTINATION .)
-if (APPLE)
-  foreach(LIB ${OpenCV_LIBS} ${SDL2_LIBRARY})
-    if (TARGET ${LIB})
-      list(APPEND CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS "$<TARGET_FILE:${LIB}>")
-    elseif ((IS_ABSOLUTE ${LIB}) AND (LIB MATCHES ".*\\.dylib$"))
-      list(APPEND CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS "${LIB}")
-    endif()
-  endforeach()
-  message(STATUS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})
-  include(InstallRequiredSystemLibraries)
-endif()
-
-# CPack packaging
-set(CPACK_PACKAGE_FILE_NAME "narcistic_machine")
-set(CPACK_PACKAGE_ICON "${PROJECT_SOURCE_DIR}/resource/install.icns")
-set(CPACK_BUNDLE_NAME "Narcistic Machine")
-set(CPACK_BUNDLE_ICON "${PROJECT_SOURCE_DIR}/resource/app.icns")
-set(CPACK_BUNDLE_PLIST "${PROJECT_SOURCE_DIR}/resource/Info.plist")
-set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
-set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
-include(CPack)
