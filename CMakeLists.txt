@@ -60,9 +60,15 @@ if(NOT APPLE)
 endif()
 
 if(APPLE)
-  # https://github.com/ultitech/GLMaze/blob/master/CMakeLists.txt
-
   set_target_properties(${EXECUTABLE_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
+  set(MACOSX_BUNDLE_INFO_STRING "Narzistische Maschine")
+  set(MACOSX_BUNDLE_ICON_FILE "app")
+  set(MACOSX_BUNDLE_GUI_IDENTIFIER "de.hfg-karlsruhe.bielicky.narcistic-machine")
+  set(MACOSX_BUNDLE_LONG_VERSION_STRING "1.0.0")
+  set(MACOSX_BUNDLE_BUNDLE_NAME "Narcistic Machine")
+  set(MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0")
+  set(MACOSX_BUNDLE_BUNDLE_VERSION "1.0.0")
+  set(MACOSX_BUNDLE_COPYRIGHT "2017 Lukas + Lukas")
 
   file(GLOB_RECURSE RESOURCES "${PROJECT_SOURCE_DIR}/resource/*")
   foreach(FILE ${RESOURCES})
@@ -74,7 +80,9 @@ if(APPLE)
 
   foreach(LIB ${OpenCV_LIBS} ${SDL2_LIBRARY})
     if(TARGET ${LIB})
-      list(APPEND DYLIBS "$<TARGET_FILE:${LIB}>")
+      get_target_property(LIBPATH ${LIB} IMPORTED_LOCATION_RELEASE)
+      target_sources(${EXECUTABLE_NAME} PUBLIC ${LIBPATH})
+      set_source_files_properties(${LIBPATH} PROPERTIES MACOSX_PACKAGE_LOCATION Frameworks)
     elseif((IS_ABSOLUTE ${LIB}) AND (LIB MATCHES ".*\\.dylib$"))
       list(APPEND DYLIBS "${LIB}")
     endif()
