@@ -11,5 +11,5 @@ public:
   std::vector<uint8_t> readWholeBinaryFile(const char *filename);
 
 private:
-  std::string rootPath;
+  std::experimental::filesystem::path rootPath;
 };
