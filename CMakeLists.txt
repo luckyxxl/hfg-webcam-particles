@@ -73,9 +73,12 @@ add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE source 3rdparty ${SDL2_INCLUDE_DIR})
 target_link_libraries(${EXECUTABLE_NAME} ${OpenCV_LIBS} ${SDL2_LIBRARY} ${OPENGL_gl_LIBRARY} m)
 
-if(NOT APPLE)
-  add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:webcam-particles>/resource")
-endif()
+add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
+add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy "${OpenCV_DIR}/haarcascades/haarcascade_frontalface_alt.xml" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
+add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy "${OpenCV_DIR}/haarcascades/haarcascade_eye_tree_eyeglasses.xml" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
 
 if(APPLE)
   set_target_properties(${EXECUTABLE_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
