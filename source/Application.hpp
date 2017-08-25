@@ -1,15 +1,10 @@
 #pragma once
 
 #include "ParticleRenderer.hpp"
-#include "ThreadSyncTripleBuffer.hpp"
-#include "Timeline.hpp"
-#include "Webcam.hpp"
 #include "effects/EffectRegistry.hpp"
 #include "SampleLibrary.hpp"
 #include "graphics/ParticleBuffer.hpp"
-#include "graphics/Pipeline.hpp"
-#include "graphics/Framebuffer.hpp"
-#include "sound/SampleBuffer.hpp"
+#include "ImageProvider.hpp"
 
 class Resources;
 namespace sound {
@@ -40,14 +35,7 @@ private:
 
   uint32_t screen_width, screen_height;
 
-  Webcam webcam;
-  uint32_t webcam_width, webcam_height;
-  ThreadSyncTripleBuffer<std::vector<float>> webcam_buffer;
-
-  std::atomic<bool> kill_threads{false};
-
-  void webcamThreadFunc();
-  std::thread webcam_thread;
+  ImageProvider imageProvider;
 
   ParticleRenderer::GlobalState particleRendererGlobalState;
 

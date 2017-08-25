@@ -1,5 +1,7 @@
 #pragma once
 
+#include <opencv2/videoio.hpp>
+
 class Webcam {
 public:
   bool open();
