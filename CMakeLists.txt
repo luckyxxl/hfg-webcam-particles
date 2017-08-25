@@ -46,6 +46,8 @@ set(SOURCE_FILES
   source/sound/SampleBuffer.cpp
   source/Application.cpp
   source/Application.hpp
+  source/ImageProvider.cpp
+  source/ImageProvider.hpp
   source/ParticleRenderer.cpp
   source/ParticleRenderer.hpp
   source/RendererState.hpp
