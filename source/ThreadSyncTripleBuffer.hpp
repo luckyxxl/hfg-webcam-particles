@@ -1,19 +1,32 @@
+#pragma once
+
+#include <atomic>
+#include <array>
+#include <cstdint>
+#include <cassert>
+#include <iterator>
+
 template <class T> class ThreadSyncTripleBuffer {
+  using dataId_t = uint32_t;
+  struct Buffer {
+    dataId_t dataId;
+    T data;
+  };
 public:
   static constexpr auto size = 3;
-  using dataId_t = uint32_t;
+  using buffers_t = std::array<Buffer, size>;
 
   ThreadSyncTripleBuffer()
       : writeId(0), previousCopyDataId(writeId), writeBuffer(0), readBuffer(1),
         copyBuffer(2) {
-    for (auto i = 0; i < size; ++i) {
-      buffers[i].dataId = writeId;
+    for (auto &b : buffers) {
+      b.dataId = writeId;
     }
   }
 
-  T *startWrite() {
+  T &startWrite() {
     buffers[writeBuffer].dataId = ++writeId;
-    return &buffers[writeBuffer].data;
+    return buffers[writeBuffer].data;
   }
 
   void finishWrite() {
@@ -48,6 +61,38 @@ public:
     return buffers[i].data;
   }
 
+  class iterator {
+    friend class ThreadSyncTripleBuffer<T>;
+    using it_t = typename ThreadSyncTripleBuffer<T>::buffers_t::iterator;
+    it_t It;
+    iterator(it_t It) : It(It) {}
+  public:
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
+    using reference = T&;
+    using pointer = T*;
+    using iterator_category = std::forward_iterator_tag;
+    iterator() = default;
+    iterator(const iterator &) = default;
+    iterator(iterator &&) = default;
+    iterator &operator=(const iterator &) = default;
+    iterator &operator=(iterator &&) = default;
+    T &operator*() { return It->data; }
+    const T &operator*() const { return It->data; }
+    T &operator->() { return *this; }
+    const T &operator->() const { return *this; }
+    bool operator==(const iterator &o) const { return It == o.It; }
+    bool operator!=(const iterator &o) const { return It != o.It; }
+    iterator &operator++() { ++It; return *this; }
+    iterator operator++(int) { auto copy = *this; ++(*this); return copy; }
+  };
+  iterator begin() {
+    return buffers.begin();
+  }
+  iterator end() {
+    return buffers.end();
+  }
+
 private:
   dataId_t writeId;
 
@@ -57,10 +102,5 @@ private:
   std::atomic<uint32_t> readBuffer;
   uint32_t copyBuffer;
 
-  struct Buffer {
-    dataId_t dataId;
-    T data;
-  };
-
-  Buffer buffers[size];
+  buffers_t buffers;
 };

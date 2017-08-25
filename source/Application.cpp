@@ -319,7 +319,7 @@ void Application::render() {
 void Application::webcamThreadFunc() {
   while (!kill_threads) {
     auto frame = webcam_buffer.startWrite();
-    if (!webcam.getFrame(frame->data())) {
+    if (!webcam.getFrame(frame.data())) {
       std::cerr << "webcam lost, you need to restart the app\n";
       break;
     }
