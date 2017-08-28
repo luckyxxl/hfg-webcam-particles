@@ -80,7 +80,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
 }
 
 void Application::destroy() {
-  auto providerStopped = imageProvider.stop();
+  imageProvider.stop();
 
   particleBuffer.destroy();
 
@@ -88,9 +88,6 @@ void Application::destroy() {
   standbyParticleRenderer.reset();
 
   particleRendererGlobalState.destroy();
-
-  providerStopped.wait();
-  imageProvider.destroy();
 
   soundRenderer->killAllVoices();
 
@@ -203,9 +200,10 @@ static void randomizeTimeline(Timeline *timeline,
 }
 
 void Application::update(float dt) {
-  auto imgData = imageProvider.consume();
-  if (imgData) {
-    auto *frame = &imgData->webcam_pixels;
+  ImageData imgData;
+  imageProvider >> imgData;
+  if (!imgData.empty()) {
+    auto *frame = &imgData.webcam_pixels;
     // first frame is background plate
     // TODO: update this dynamically during runtime
     if (background_frame.empty()) {
@@ -252,8 +250,6 @@ void Application::update(float dt) {
         reactionState = ReactionState::FinishStandbyTimeline;
       }
     }
-
-    imageProvider.consumed();
   }
 
   if (reactionState == ReactionState::FinishStandbyTimeline
