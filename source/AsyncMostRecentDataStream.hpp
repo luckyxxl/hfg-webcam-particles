@@ -77,18 +77,19 @@ template <class provider_t, class product_t> class AsyncMostRecentDataStream {
     if (S < 8)
       return 0;
     switch (S) {
-    case 11:
-    case 13:
+    case FLN:
+    case FNL:
       return 0;
-    case 9:
-    case 12:
+    case NFL:
+    case LFN:
       return 1;
-    case 8:
-    case 10:
+    case NLF:
+    case LNF:
       return 2;
     default:
       assert(false);
     }
+    return 0;
   }
   void commitUpdate(int pos) {
     auto getNewState = [pos](STATE S) {
@@ -122,9 +123,8 @@ template <class provider_t, class product_t> class AsyncMostRecentDataStream {
     } while (!state.compare_exchange_weak(S, NewS));
   }
 
-  bool onBeforeStart() { return true; }
-
 protected:
+  bool onBeforeStart() { return true; }
   void update_proto(std::function<void(return_t &)> updater) {
     for (auto &slot : slots) {
       updater(slot);
