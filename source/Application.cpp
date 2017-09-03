@@ -33,19 +33,9 @@ bool Application::create(Resources *resources, graphics::Window *window,
   soundRenderer->play(sampleLibrary.getBackgroundLoop(),
                       sound::Renderer::PlayParameters().setLooping(true));
 
-  if (!webcam.open() || !webcam.getFrameSize(webcam_width, webcam_height)) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not open webcam",
-                             "Could not open webcam", NULL);
+  if(!imageProvider.create(*resources) || !imageProvider.start()) {
     return false;
   }
-
-  for (auto i = 0; i < webcam_buffer.size; ++i) {
-    auto &b = webcam_buffer.getBuffer(i);
-    b.resize(webcam_width * webcam_height * 3);
-    std::fill(b.begin(), b.end(), 0.f);
-  }
-
-  webcam_thread = std::thread([this] { this->webcamThreadFunc(); });
 
   particleRendererGlobalState.create(soundRenderer, &sampleLibrary, &random);
 
@@ -83,14 +73,14 @@ bool Application::create(Resources *resources, graphics::Window *window,
     reactionParticleRenderer.getClock().pause();
   }
 
-  current_frame_data.resize(webcam_width * webcam_height);
-  particleBuffer.create(webcam_width * webcam_height);
+  current_frame_data.resize(imageProvider.size());
+  particleBuffer.create(imageProvider.size());
 
   return true;
 }
 
 void Application::destroy() {
-  kill_threads = true;
+  imageProvider.stop();
 
   particleBuffer.destroy();
 
@@ -98,11 +88,6 @@ void Application::destroy() {
   standbyParticleRenderer.reset();
 
   particleRendererGlobalState.destroy();
-
-  if (webcam_thread.joinable())
-    webcam_thread.join();
-
-  webcam.close();
 
   soundRenderer->killAllVoices();
 
@@ -215,34 +200,38 @@ static void randomizeTimeline(Timeline *timeline,
 }
 
 void Application::update(float dt) {
-  auto frame = webcam_buffer.startCopyNew();
-  if (frame) {
+  ImageData imgData; // FIXME this could be a member variable to cache previous allocations
+  imageProvider >> imgData;
+  if (!imgData.empty()) {
+    auto *frame = imgData.data();
     // first frame is background plate
     // TODO: update this dynamically during runtime
     if (background_frame.empty()) {
-      background_frame = *frame;
+      auto &img = imgData.normalized_pixels;
+      auto size = img.channels() * img.total();
+      background_frame = std::vector<float>(frame, frame + size);
     }
 
     auto totalDifference = 0.f;
 
     for (size_t i = 0; i < current_frame_data.size(); ++i) {
       auto &particle = current_frame_data[i];
-      auto x = i % webcam_width;
-      auto y = i / webcam_width;
-      particle.position[0] = x / (float)webcam_width;
-      particle.position[1] = y / (float)webcam_height;
-      particle.rgb[0] = (*frame)[i * 3 + 0];
-      particle.rgb[1] = (*frame)[i * 3 + 1];
-      particle.rgb[2] = (*frame)[i * 3 + 2];
+      auto x = i % imageProvider.width();
+      auto y = i / imageProvider.width();
+      particle.position[0] = x / (float)imageProvider.width();
+      particle.position[1] = y / (float)imageProvider.height();
+      particle.rgb[0] = frame[i * 3 + 0];
+      particle.rgb[1] = frame[i * 3 + 1];
+      particle.rgb[2] = frame[i * 3 + 2];
       rgb2Hsv(particle.hsv, particle.rgb);
 
       const auto backgroundDifference =
-          ((*frame)[i * 3 + 0] - background_frame[i * 3 + 0]) *
-              ((*frame)[i * 3 + 0] - background_frame[i * 3 + 0]) +
-          ((*frame)[i * 3 + 1] - background_frame[i * 3 + 1]) *
-              ((*frame)[i * 3 + 1] - background_frame[i * 3 + 1]) +
-          ((*frame)[i * 3 + 2] - background_frame[i * 3 + 2]) *
-              ((*frame)[i * 3 + 2] - background_frame[i * 3 + 2]);
+          (frame[i * 3 + 0] - background_frame[i * 3 + 0]) *
+              (frame[i * 3 + 0] - background_frame[i * 3 + 0]) +
+          (frame[i * 3 + 1] - background_frame[i * 3 + 1]) *
+              (frame[i * 3 + 1] - background_frame[i * 3 + 1]) +
+          (frame[i * 3 + 2] - background_frame[i * 3 + 2]) *
+              (frame[i * 3 + 2] - background_frame[i * 3 + 2]);
 
       totalDifference += backgroundDifference;
 
@@ -254,7 +243,7 @@ void Application::update(float dt) {
     particleBuffer.setParticleData(current_frame_data.data(),
                                    current_frame_data.size());
 
-    if (totalDifference / (webcam_width * webcam_height) > .05f) {
+    if (totalDifference / imageProvider.size() > .05f) {
       if (reactionState == ReactionState::Inactive) {
         std::cout << "trigger\n";
 
@@ -263,8 +252,6 @@ void Application::update(float dt) {
         reactionState = ReactionState::FinishStandbyTimeline;
       }
     }
-
-    webcam_buffer.finishCopy();
   }
 
   if (reactionState == ReactionState::FinishStandbyTimeline
@@ -301,7 +288,7 @@ void Application::render() {
 
   RendererParameters parameters(particleBuffer,
                                 screen_width, screen_height,
-                                webcam_width, webcam_height);
+                                imageProvider.width(), imageProvider.height());
 
   if (reactionState == ReactionState::RenderReactionTimeline) {
     reactionParticleRenderer.render(particleRendererGlobalState, parameters);
@@ -313,16 +300,5 @@ void Application::render() {
     GLenum error = glGetError();
     if (error != GL_NO_ERROR)
       printf("opengl error: %d\n", error);
-  }
-}
-
-void Application::webcamThreadFunc() {
-  while (!kill_threads) {
-    auto frame = webcam_buffer.startWrite();
-    if (!webcam.getFrame(frame->data())) {
-      std::cerr << "webcam lost, you need to restart the app\n";
-      break;
-    }
-    webcam_buffer.finishWrite();
   }
 }

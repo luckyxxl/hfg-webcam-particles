@@ -46,6 +46,9 @@ set(SOURCE_FILES
   source/sound/SampleBuffer.cpp
   source/Application.cpp
   source/Application.hpp
+  source/AsyncMostRecentDataStream.hpp
+  source/ImageProvider.cpp
+  source/ImageProvider.hpp
   source/ParticleRenderer.cpp
   source/ParticleRenderer.hpp
   source/RendererState.hpp
@@ -60,11 +63,8 @@ set(SOURCE_FILES
   source/SoundPlaylist.cpp
   source/SoundPlaylist.hpp
   source/Template.hpp
-  source/ThreadSyncTripleBuffer.hpp
   source/Timeline.cpp
   source/Timeline.hpp
-  source/Webcam.cpp
-  source/Webcam.hpp
 )
 set(EXECUTABLE_NAME "webcam-particles")
 

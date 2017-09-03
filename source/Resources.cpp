@@ -14,8 +14,12 @@ bool Resources::create(const char *argv0) {
 
 void Resources::destroy() {}
 
+Resources::path_t Resources::resolve(const char *filename) {
+  return rootPath + filename;
+}
+
 SDL_RWops *Resources::openFile(const char *filename) {
-  std::string systemFileName(rootPath + filename);
+  auto systemFileName = resolve(filename);
   auto result = SDL_RWFromFile(systemFileName.c_str(), "rb");
   if (!result) {
     std::cout << "could not open file " << systemFileName << "\n";
@@ -26,7 +30,7 @@ SDL_RWops *Resources::openFile(const char *filename) {
 std::string Resources::readWholeTextFile(const char *filename) {
   std::string result;
 
-  std::ifstream file(rootPath + filename);
+  std::ifstream file(resolve(filename));
   std::string line;
   while (file.good()) {
     std::getline(file, line);
@@ -38,7 +42,7 @@ std::string Resources::readWholeTextFile(const char *filename) {
 
 std::vector<uint8_t> Resources::readWholeBinaryFile(const char *filename) {
   // https://stackoverflow.com/questions/18816126/c-read-the-whole-file-in-buffer
-  std::ifstream file(rootPath + filename, std::ios::binary | std::ios::ate);
+  std::ifstream file(resolve(filename), std::ios::binary | std::ios::ate);
   const auto size = file.tellg();
   file.seekg(0, std::ios::beg);
 
