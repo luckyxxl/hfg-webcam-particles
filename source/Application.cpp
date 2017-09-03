@@ -33,7 +33,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   soundRenderer->play(sampleLibrary.getBackgroundLoop(),
                       sound::Renderer::PlayParameters().setLooping(true));
 
-  if(!imageProvider.start()) {
+  if(!imageProvider.create(*resources) || !imageProvider.start()) {
     return false;
   }
 
@@ -200,14 +200,16 @@ static void randomizeTimeline(Timeline *timeline,
 }
 
 void Application::update(float dt) {
-  ImageData imgData;
+  ImageData imgData; // FIXME this could be a member variable to cache previous allocations
   imageProvider >> imgData;
   if (!imgData.empty()) {
-    auto *frame = &imgData.webcam_pixels;
+    auto *frame = imgData.data();
     // first frame is background plate
     // TODO: update this dynamically during runtime
     if (background_frame.empty()) {
-      background_frame = *frame;
+      auto &img = imgData.normalized_pixels;
+      auto size = img.channels() * img.total();
+      background_frame = std::vector<float>(frame, frame + size);
     }
 
     auto totalDifference = 0.f;
@@ -218,18 +220,18 @@ void Application::update(float dt) {
       auto y = i / imageProvider.width();
       particle.position[0] = x / (float)imageProvider.width();
       particle.position[1] = y / (float)imageProvider.height();
-      particle.rgb[0] = (*frame)[i * 3 + 0];
-      particle.rgb[1] = (*frame)[i * 3 + 1];
-      particle.rgb[2] = (*frame)[i * 3 + 2];
+      particle.rgb[0] = frame[i * 3 + 0];
+      particle.rgb[1] = frame[i * 3 + 1];
+      particle.rgb[2] = frame[i * 3 + 2];
       rgb2Hsv(particle.hsv, particle.rgb);
 
       const auto backgroundDifference =
-          ((*frame)[i * 3 + 0] - background_frame[i * 3 + 0]) *
-              ((*frame)[i * 3 + 0] - background_frame[i * 3 + 0]) +
-          ((*frame)[i * 3 + 1] - background_frame[i * 3 + 1]) *
-              ((*frame)[i * 3 + 1] - background_frame[i * 3 + 1]) +
-          ((*frame)[i * 3 + 2] - background_frame[i * 3 + 2]) *
-              ((*frame)[i * 3 + 2] - background_frame[i * 3 + 2]);
+          (frame[i * 3 + 0] - background_frame[i * 3 + 0]) *
+              (frame[i * 3 + 0] - background_frame[i * 3 + 0]) +
+          (frame[i * 3 + 1] - background_frame[i * 3 + 1]) *
+              (frame[i * 3 + 1] - background_frame[i * 3 + 1]) +
+          (frame[i * 3 + 2] - background_frame[i * 3 + 2]) *
+              (frame[i * 3 + 2] - background_frame[i * 3 + 2]);
 
       totalDifference += backgroundDifference;
 

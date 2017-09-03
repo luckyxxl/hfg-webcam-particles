@@ -65,8 +65,6 @@ set(SOURCE_FILES
   source/Template.hpp
   source/Timeline.cpp
   source/Timeline.hpp
-  source/Webcam.cpp
-  source/Webcam.hpp
 )
 set(EXECUTABLE_NAME "webcam-particles")
 

@@ -1,37 +1,56 @@
 #pragma once
 
 #include "AsyncMostRecentDataStream.hpp"
-#include "Webcam.hpp"
-#include <vector>
-#include <thread>
 #include <atomic>
-#include <future>
 #include <cstdint>
+#include <future>
+#include <opencv2/objdetect/objdetect.hpp>
+#include <opencv2/videoio.hpp>
+#include <thread>
+#include <vector>
+
+class Resources;
 
 struct ImageData {
+  cv::Mat webcam_pixels;
+  cv::Mat normalized_pixels;
+  std::vector<cv::Rect> faces;
+
   ImageData() = default;
   ImageData(const ImageData &) = default;
   ImageData(ImageData &&) = default;
   ImageData &operator=(const ImageData &) = default;
   ImageData &operator=(ImageData &&) = default;
-  std::vector<float> webcam_pixels;
-  bool empty() { return webcam_pixels.empty(); }
+
+  void resize(size_t width, size_t height);
+  float *data() { return normalized_pixels.ptr<float>(); }
+  bool empty() { return normalized_pixels.empty(); }
 };
 
-class ImageProvider : public AsyncMostRecentDataStream<ImageProvider, ImageData> {
+class ImageProvider
+    : public AsyncMostRecentDataStream<ImageProvider, ImageData> {
   friend class AsyncMostRecentDataStream<ImageProvider, ImageData>;
+
 public:
   ImageProvider();
+  bool create(Resources &resources) {
+    this->resources = &resources;
+    return true;
+  }
 
-  size_t width() const { return webcam_width; }
-  size_t height() const { return webcam_height; }
+  size_t width() const { return webcam_size.width; }
+  size_t height() const { return webcam_size.height; }
   size_t size() const { return width() * height(); }
 
 private:
   bool onBeforeStart();
   void onAfterStop();
   void produce(ImageData &assigned);
+
 private:
-  Webcam webcam;
-  uint32_t webcam_width, webcam_height;
+  Resources *resources;
+  cv::VideoCapture capture;
+  cv::Size webcam_size;
+  cv::CascadeClassifier face_cascade;
+  cv::CascadeClassifier eyes_cascade;
 };
