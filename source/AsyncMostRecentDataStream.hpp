@@ -13,41 +13,38 @@ template <class provider_t, class product_t> class AsyncMostRecentDataStream {
   std::array<return_t, 3> slots;
   std::atomic<bool> stopped = false;
   std::thread provider_thread;
-  enum STATE {
-    /// Slot roles encoded as New (N), Free (F), Locked (L)
-    // Invariants:
-    // * locked versions are always +1
-    // * the position of the lock is denoted by the second and third bit
-    // interpreted as unary
-    // * if 4th bit is set, new and locked exist in parallel
-    // * there is always at least one F slot available
-    FFF = 0,
-    NFF = 1, // +1 locks
-    LFF = 2,
-    FNF = 3, // +1 locks
-    FLF = 4,
-    FFN = 5, // +1 locks
-    FFL = 6,
-
-    LNF = 8,  // unlocked: 3
-    LFN = 9,  // unlocked: 5
-    NLF = 10, // unlocked: 1
-    FLN = 11, // unlocked: 5
-    NFL = 12, // unlocked: 1
-    FNL = 13  // unlocked: 3
-  };
   std::atomic_int_fast8_t state;
   using state_t = std::remove_reference_t<decltype(state.load())>;
 
-  int getLockedPosition() {
+  /// Slot roles encoded as New (N), Free (F), Locked (L)
+  // Invariants:
+  // * locked versions are always +1
+  // * the position of the lock is denoted by the second and third bit
+  // interpreted as unary
+  // * if 4th bit is set, new and locked exist in parallel
+  // * there is always at least one F slot available
+  static inline constexpr state_t FFF = 0;
+  static inline constexpr state_t NFF = 1; // +1 locks
+  static inline constexpr state_t LFF = 2;
+  static inline constexpr state_t FNF = 3; // +1 locks
+  static inline constexpr state_t FLF = 4;
+  static inline constexpr state_t FFN = 5; // +1 locks
+  static inline constexpr state_t FFL = 6;
+
+  static inline constexpr state_t LNF = 8;
+  static inline constexpr state_t LFN = 9;
+  static inline constexpr state_t NLF = 10;
+  static inline constexpr state_t FLN = 11;
+  static inline constexpr state_t NFL = 12;
+  static inline constexpr state_t FNL = 13;
+
+  static inline constexpr state_t ERR = 66;
+
+  state_t acquire_read_lock() {
     assert(state != FFF);
-    auto bits = (state >> 1) & 0B11;
-    assert(bits);
-    return bits - 1;
-  }
-  STATE acquire_read_lock() {
-    assert(state < LNF);
-    return static_cast<STATE>(++state);
+    assert(state < FFL);
+    assert(state % 2 == 1);
+    return ++state;
   }
   void release_read_lock() {
     if (state >= LNF) {
@@ -71,7 +68,50 @@ template <class provider_t, class product_t> class AsyncMostRecentDataStream {
       --state; // don't "Free" the slot's content for we might want to re-serve
                // it in the future while there is no new content
   }
-  int getWritePosition(STATE S) {
+  void commitUpdate(int pos) {
+    auto getNewState = [pos](state_t S) {
+      std::array<std::array<state_t, 3>, 14> LUT = {
+          {/* FFF: */ {NFF, FNF, FFN},
+           /* NFF: */ {ERR, FNF, FFN},
+           /* LFF: */ {ERR, LNF, LFN},
+           /* FNF: */ {NFF, ERR, FFN},
+           /* FLF: */ {NLF, ERR, FLN},
+           /* FFN: */ {NFF, FNF, ERR},
+           /* FFL: */ {NFL, FNL, ERR},
+           /* ---  */ {ERR, ERR, ERR},
+           /* LNF: */ {ERR, ERR, LFN},
+           /* LFN: */ {ERR, LNF, ERR},
+           /* NLF: */ {ERR, ERR, FLN},
+           /* FLN: */ {NLF, ERR, ERR},
+           /* NFL: */ {ERR, FNL, ERR},
+           /* FNL: */ {NFL, ERR, ERR}}};
+      auto res = LUT[S][pos];
+      assert(res != ERR);
+      return res;
+    };
+
+    /// This is probably the method which is hardest to get right:
+    /// If only F exist, just set it from F to N
+    /// If N and F exist in parallel, we have to switch those two positions
+    /// (practically discarding the "old" N)
+    state_t S, NewS;
+    do {
+      S = state;
+      NewS = getNewState(S);
+    } while (!state.compare_exchange_weak(S, NewS));
+  }
+
+  static int getLockedPosition(state_t state) {
+    assert(state != FFF && state != ERR);
+    assert(state < LNF); // This makes things much easier and the only use-case
+                         // of this method actually allows us to ignore the
+                         // other cases
+    assert(state % 2 == 0);
+    auto bits = (state >> 1) & 0B11;
+    assert(bits);
+    return bits - 1;
+  }
+  static int getWritePosition(state_t S) {
     if (S < 5)
       return 2;
     if (S < 8)
@@ -91,37 +131,6 @@ template <class provider_t, class product_t> class AsyncMostRecentDataStream {
     }
     return 0;
   }
-  void commitUpdate(int pos) {
-    auto getNewState = [pos](STATE S) {
-      std::array<std::array<STATE, 3>, 14> LUT = {{/* FFF: */ {NFF, FNF, FFN},
-                                                  /* NFF: */ {FFF, FNF, FFN},
-                                                  /* LFF: */ {FFF, LNF, LFN},
-                                                  /* FNF: */ {NFF, FFF, FFN},
-                                                  /* FLF: */ {NLF, FFF, FLN},
-                                                  /* FFN: */ {NFF, FNF, FFF},
-                                                  /* FFL: */ {NFL, FNL, FFF},
-                                                  /* ---  */ {FFF, FFF, FFF},
-                                                  /* LNF: */ {FFF, FFF, LFN},
-                                                  /* LFN: */ {FFF, LNF, FFF},
-                                                  /* NLF: */ {FFF, FFF, FLN},
-                                                  /* FLN: */ {NLF, FFF, FFF},
-                                                  /* NFL: */ {FFF, FNL, FFF},
-                                                  /* FNL: */ {NFL, FFF, FFF}}};
-      auto res = LUT[S][pos];
-      assert(res != FFF);
-      return res;
-    };
-
-    /// This is probably the method which is hardest to get right:
-    /// If only F exist, just set it from F to N
-    /// If N and F exist in parallel, we have to switch those two positions
-    /// (practically discarding the "old" N)
-    state_t S, NewS;
-    do {
-      S = state;
-      NewS = static_cast<state_t>(getNewState(static_cast<STATE>(S)));
-    } while (!state.compare_exchange_weak(S, NewS));
-  }
 
 protected:
   bool onBeforeStart() { return true; }
@@ -133,11 +142,11 @@ protected:
 
 public:
   bool start() {
-    if(!static_cast<provider_t &>(*this).onBeforeStart())
+    if (!static_cast<provider_t &>(*this).onBeforeStart())
       return false;
     provider_thread = std::thread([this] {
       while (!stopped) {
-        auto S = static_cast<STATE>(state.load());
+        auto S = state.load();
         auto pos = getWritePosition(S);
         static_cast<provider_t &>(*this).produce(slots[pos]);
         commitUpdate(pos);
@@ -151,13 +160,12 @@ public:
       provider_thread.join();
   }
   friend self_t &operator>>(self_t &self, return_t &assigned) {
-    STATE S = static_cast<STATE>(self.state.load());
-    if (S ==
-        FFF) // we don't *have to* update @p assigned if state is FFF
+    state_t S = self.state.load();
+    if (S == FFF) // we don't *have to* update @p assigned if state is FFF
       return self;
     assert(S < LNF);
     S = self.acquire_read_lock();
-    assigned = self.slots[self.getLockedPosition()];
+    assigned = self.slots[getLockedPosition(S)];
     self.release_read_lock();
     return self;
   }
