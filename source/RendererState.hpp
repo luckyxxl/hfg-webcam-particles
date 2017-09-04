@@ -7,8 +7,8 @@
 struct RendererParameters {
   const graphics::ParticleBuffer &particle_buffer;
 
-  const uint32_t &screen_width, &screen_height;
-  const uint32_t &webcam_width, &webcam_height;
+  const uint32_t screen_width, screen_height;
+  const uint32_t webcam_width, webcam_height;
 
   RendererParameters(const graphics::ParticleBuffer &particle_buffer,
               const uint32_t &screen_width, const uint32_t &screen_height,
