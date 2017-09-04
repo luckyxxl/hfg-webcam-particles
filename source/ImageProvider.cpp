@@ -16,8 +16,13 @@ ImageProvider::ImageProvider()
     : AsyncMostRecentDataStream<ImageProvider, ImageData>() {}
 
 static cv::Size getFrameSize(cv::VideoCapture &capture) {
+#if CV_VERSION_EPOCH < 3
+  int w = capture.get(CV_CAP_PROP_FRAME_WIDTH);
+  int h = capture.get(CV_CAP_PROP_FRAME_HEIGHT);
+#else
   int w = capture.get(cv::CAP_PROP_FRAME_WIDTH);
   int h = capture.get(cv::CAP_PROP_FRAME_HEIGHT);
+#endif
   return {w, h};
 }
 
@@ -25,7 +30,7 @@ bool ImageProvider::onBeforeStart() {
   capture.open(0);
   if (capture.isOpened()) {
     webcam_size = getFrameSize(capture);
-    if (!webcam_size.empty()) {
+    if (webcam_size.width > 0 && webcam_size.height > 0) {
       update_proto([this](ImageData &b) {
         b.resize(webcam_size.width, webcam_size.height);
       });

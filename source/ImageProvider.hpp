@@ -5,7 +5,11 @@
 #include <cstdint>
 #include <future>
 #include <opencv2/objdetect/objdetect.hpp>
+#if CV_VERSION_EPOCH < 3
+#include <opencv2/highgui/highgui.hpp>
+#else
 #include <opencv2/videoio.hpp>
+#endif
 #include <thread>
 #include <vector>
 

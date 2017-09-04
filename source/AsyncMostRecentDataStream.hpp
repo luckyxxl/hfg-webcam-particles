@@ -11,7 +11,7 @@ template <class provider_t, class product_t> class AsyncMostRecentDataStream {
   using self_t = AsyncMostRecentDataStream<provider_t, product_t>;
   using return_t = product_t;
   std::array<return_t, 3> slots;
-  std::atomic<bool> stopped = false;
+  std::atomic<bool> stopped{false};
   std::thread provider_thread;
   std::atomic_int_fast8_t state;
   using state_t = std::remove_reference_t<decltype(state.load())>;
@@ -23,22 +23,22 @@ template <class provider_t, class product_t> class AsyncMostRecentDataStream {
   // interpreted as unary
   // * if 4th bit is set, new and locked exist in parallel
   // * there is always at least one F slot available
-  static inline constexpr state_t FFF = 0;
-  static inline constexpr state_t NFF = 1; // +1 locks
-  static inline constexpr state_t LFF = 2;
-  static inline constexpr state_t FNF = 3; // +1 locks
-  static inline constexpr state_t FLF = 4;
-  static inline constexpr state_t FFN = 5; // +1 locks
-  static inline constexpr state_t FFL = 6;
+  static constexpr state_t FFF = 0;
+  static constexpr state_t NFF = 1; // +1 locks
+  static constexpr state_t LFF = 2;
+  static constexpr state_t FNF = 3; // +1 locks
+  static constexpr state_t FLF = 4;
+  static constexpr state_t FFN = 5; // +1 locks
+  static constexpr state_t FFL = 6;
 
-  static inline constexpr state_t LNF = 8;
-  static inline constexpr state_t LFN = 9;
-  static inline constexpr state_t NLF = 10;
-  static inline constexpr state_t FLN = 11;
-  static inline constexpr state_t NFL = 12;
-  static inline constexpr state_t FNL = 13;
+  static constexpr state_t LNF = 8;
+  static constexpr state_t LFN = 9;
+  static constexpr state_t NLF = 10;
+  static constexpr state_t FLN = 11;
+  static constexpr state_t NFL = 12;
+  static constexpr state_t FNL = 13;
 
-  static inline constexpr state_t ERR = 66;
+  static constexpr state_t ERR = 66;
 
   state_t acquire_read_lock() {
     assert(state != FFF);
