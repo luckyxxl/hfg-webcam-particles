@@ -175,7 +175,9 @@ void Renderer::audioCallback(Uint8 *stream, int len) {
     if (loopingValue && cursorValue == sampleBufferLengthSamples) {
       cursorValue = 0;
       destinationOffset += copySamplesCount;
-      goto loop;
+      if(destinationOffset != bufferLengthSamples) {
+        goto loop;
+      }
     }
   }
 
