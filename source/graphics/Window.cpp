@@ -6,10 +6,19 @@ namespace graphics {
 
 static const char *windowTitle = "webcam-particles";
 
+#ifdef OPENGL_DEBUG
+static void APIENTRY openglDebugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam) {
+  std::cout << message << "\n";
+}
+#endif
+
 bool Window::create() {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#ifdef OPENGL_DEBUG
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+#endif
 
   window = SDL_CreateWindow(windowTitle, SDL_WINDOWPOS_CENTERED,
                             SDL_WINDOWPOS_CENTERED, 720 / 2, 1280 / 2,
@@ -27,6 +36,10 @@ bool Window::create() {
                              nullptr);
     return false;
   }
+
+#ifdef OPENGL_DEBUG
+  glDebugMessageCallback(openglDebugMessageCallback, nullptr);
+#endif
 
   SDL_GL_SetSwapInterval(1);
 

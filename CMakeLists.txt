@@ -8,6 +8,8 @@ find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 
 list(APPEND CMAKE_CXX_FLAGS "-std=c++1z -Wall -pthread")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DOPENGL_DEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -DOPENGL_DEBUG")
 
 set(SOURCE_FILES
   source/effects/AccumulationEffect.cpp
@@ -38,6 +40,8 @@ set(SOURCE_FILES
   source/graphics/ScreenRectBuffer.hpp
   source/graphics/Texture.cpp
   source/graphics/Texture.hpp
+  source/graphics/Util.cpp
+  source/graphics/Util.hpp
   source/graphics/Window.cpp
   source/graphics/Window.hpp
   source/sound/Renderer.hpp
@@ -51,6 +55,8 @@ set(SOURCE_FILES
   source/ImageProvider.hpp
   source/ParticleRenderer.cpp
   source/ParticleRenderer.hpp
+  source/ParticleTextureToBuffer.cpp
+  source/ParticleTextureToBuffer.hpp
   source/RendererState.hpp
   source/main.cpp
   source/main.hpp

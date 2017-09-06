@@ -5,6 +5,7 @@
 #include "SampleLibrary.hpp"
 #include "graphics/ParticleBuffer.hpp"
 #include "ImageProvider.hpp"
+#include "ParticleTextureToBuffer.hpp"
 
 class Resources;
 namespace sound {
@@ -37,6 +38,8 @@ private:
 
   ImageProvider imageProvider;
 
+  ParticleTextureToBuffer particleTextureToBuffer;
+
   ParticleRenderer::GlobalState particleRendererGlobalState;
 
   ParticleRenderer standbyParticleRenderer;
@@ -48,9 +51,9 @@ private:
     RenderReactionTimeline,
   } reactionState = ReactionState::Inactive;
 
-  // remove this and use glMapBuffer?  thought mapping is probably slower...
-  std::vector<graphics::Particle> current_frame_data;
-  graphics::ParticleBuffer particleBuffer;
+  graphics::Texture particleTexture;
+  graphics::Texture backgroundTexture;
+  bool backgroundTextureIsSet = false;
 
-  std::vector<float> background_frame;
+  graphics::ParticleBuffer particleBuffer;
 };

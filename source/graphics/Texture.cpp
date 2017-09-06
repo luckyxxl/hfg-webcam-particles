@@ -2,6 +2,9 @@
 
 #include "Texture.hpp"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+
 namespace graphics {
 
 void Texture::create(uint32_t width, uint32_t height) {
@@ -21,6 +24,11 @@ void Texture::resize(uint32_t width, uint32_t height) {
                GL_UNSIGNED_BYTE, nullptr);
 }
 
+void Texture::setImage(uint32_t width, uint32_t height, const uint8_t *pixels) {
+  bind(0);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+}
+
 void Texture::bind(uint32_t unit) {
   glActiveTexture(GL_TEXTURE0 + unit);
   glBindTexture(GL_TEXTURE_2D, texture);
@@ -30,6 +38,19 @@ void Texture::bind(uint32_t unit) {
 void Texture::unbind(uint32_t unit) {
   glActiveTexture(GL_TEXTURE0 + unit);
   glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Texture::dbgSaveToFile(const char *filename) {
+  bind(0);
+
+  GLint width, height;
+  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+
+  auto pixels = std::vector<uint8_t>(width * height * 3);
+  glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+
+  stbi_write_bmp(filename, width, height, 3, pixels.data());
 }
 
 } // namespace graphics

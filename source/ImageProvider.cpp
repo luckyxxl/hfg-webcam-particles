@@ -9,7 +9,7 @@ static const char *face_cascade_xml = "haarcascade_frontalface_alt.xml";
 static const char *eyes_cascade_xml = "haarcascade_eye_tree_eyeglasses.xml";
 
 void ImageData::resize(size_t width, size_t height) {
-  normalized_pixels = cv::Mat::zeros(height, width, CV_32FC3);
+  webcam_pixels = cv::Mat::zeros(height, width, CV_8UC3);
 }
 
 ImageProvider::ImageProvider()
@@ -46,7 +46,6 @@ void ImageProvider::onAfterStop() { capture.release(); }
 
 void ImageProvider::produce(ImageData &assigned) {
   auto &frame = assigned.webcam_pixels;
-  auto &normalized = assigned.normalized_pixels;
   auto &faces = assigned.faces;
 
   if (!capture.isOpened()) {
@@ -62,10 +61,6 @@ void ImageProvider::produce(ImageData &assigned) {
            static_cast<int>(S.height) == frame.rows);
   }
 #endif
-
-  frame.convertTo(normalized, CV_32F, 1 / 255.);
-  cv::cvtColor(normalized, normalized, CV_BGR2RGB);
-  cv::flip(normalized, normalized, 0);
 
   cv::Mat frame_gray;
 

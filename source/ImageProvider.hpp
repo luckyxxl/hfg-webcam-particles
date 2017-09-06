@@ -17,7 +17,6 @@ class Resources;
 
 struct ImageData {
   cv::Mat webcam_pixels;
-  cv::Mat normalized_pixels;
   std::vector<cv::Rect> faces;
 
   ImageData() = default;
@@ -27,8 +26,7 @@ struct ImageData {
   ImageData &operator=(ImageData &&) = default;
 
   void resize(size_t width, size_t height);
-  float *data() { return normalized_pixels.ptr<float>(); }
-  bool empty() { return normalized_pixels.empty(); }
+  bool empty() { return webcam_pixels.empty(); }
 };
 
 class ImageProvider

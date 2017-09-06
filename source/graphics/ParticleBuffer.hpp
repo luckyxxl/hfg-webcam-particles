@@ -20,6 +20,8 @@ public:
 
   void draw() const;
 
+  GLuint getVertexBuffer() const { return vertexBuffer; }
+
 private:
   size_t particleCount = 0u;
 

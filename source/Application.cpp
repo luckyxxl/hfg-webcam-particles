@@ -37,6 +37,8 @@ bool Application::create(Resources *resources, graphics::Window *window,
     return false;
   }
 
+  particleTextureToBuffer.create();
+
   particleRendererGlobalState.create(soundRenderer, &sampleLibrary, &random);
 
   {
@@ -73,21 +75,26 @@ bool Application::create(Resources *resources, graphics::Window *window,
     reactionParticleRenderer.getClock().pause();
   }
 
-  current_frame_data.resize(imageProvider.size());
+  particleTexture.create(imageProvider.width(), imageProvider.height());
+  backgroundTexture.create(imageProvider.width(), imageProvider.height());
   particleBuffer.create(imageProvider.size());
 
   return true;
 }
 
 void Application::destroy() {
-  imageProvider.stop();
-
   particleBuffer.destroy();
+  backgroundTexture.destroy();
+  particleTexture.destroy();
 
   reactionParticleRenderer.reset();
   standbyParticleRenderer.reset();
 
   particleRendererGlobalState.destroy();
+
+  particleTextureToBuffer.destroy();
+
+  imageProvider.stop();
 
   soundRenderer->killAllVoices();
 
@@ -154,34 +161,6 @@ bool Application::handleEvents() {
   return true;
 }
 
-static void rgb2Hsv(float *hsv, const float *rgb) {
-  const auto cMax = std::max(std::max(rgb[0], rgb[1]), rgb[2]);
-  const auto cMin = std::min(std::min(rgb[0], rgb[1]), rgb[2]);
-  const auto d = cMax - cMin;
-
-  if (d < 0.00001f || cMax < 0.00001f) {
-    hsv[0] = 0.f;
-    hsv[1] = 0.f;
-    hsv[2] = cMax;
-    return;
-  }
-
-  float h;
-  if (cMax == rgb[0]) {
-    h = (rgb[1] - rgb[2]) / d;
-    if (h < 0)
-      h += 6.f;
-  } else if (cMax == rgb[1]) {
-    h = (rgb[2] - rgb[0]) / d + 2.f;
-  } else {
-    h = (rgb[0] - rgb[1]) / d + 4.f;
-  }
-
-  hsv[0] = h * 60.f * PI / 180.f;
-  hsv[1] = d / cMax;
-  hsv[2] = cMax;
-}
-
 static void randomizeTimeline(Timeline *timeline,
                               std::default_random_engine &random) {
   assert(timeline->hasFixedPeriod());
@@ -203,47 +182,19 @@ void Application::update(float dt) {
   ImageData imgData; // FIXME this could be a member variable to cache previous allocations
   imageProvider >> imgData;
   if (!imgData.empty()) {
-    auto *frame = imgData.data();
+    particleTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
+
     // first frame is background plate
     // TODO: update this dynamically during runtime
-    if (background_frame.empty()) {
-      auto &img = imgData.normalized_pixels;
-      auto size = img.channels() * img.total();
-      background_frame = std::vector<float>(frame, frame + size);
+    if(!backgroundTextureIsSet) {
+      backgroundTextureIsSet = true;
+      backgroundTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
     }
 
-    auto totalDifference = 0.f;
+    particleTextureToBuffer.render(imageProvider.width(), imageProvider.height(),
+      particleTexture, backgroundTexture, particleBuffer);
 
-    for (size_t i = 0; i < current_frame_data.size(); ++i) {
-      auto &particle = current_frame_data[i];
-      auto x = i % imageProvider.width();
-      auto y = i / imageProvider.width();
-      particle.position[0] = x / (float)imageProvider.width();
-      particle.position[1] = y / (float)imageProvider.height();
-      particle.rgb[0] = frame[i * 3 + 0];
-      particle.rgb[1] = frame[i * 3 + 1];
-      particle.rgb[2] = frame[i * 3 + 2];
-      rgb2Hsv(particle.hsv, particle.rgb);
-
-      const auto backgroundDifference =
-          (frame[i * 3 + 0] - background_frame[i * 3 + 0]) *
-              (frame[i * 3 + 0] - background_frame[i * 3 + 0]) +
-          (frame[i * 3 + 1] - background_frame[i * 3 + 1]) *
-              (frame[i * 3 + 1] - background_frame[i * 3 + 1]) +
-          (frame[i * 3 + 2] - background_frame[i * 3 + 2]) *
-              (frame[i * 3 + 2] - background_frame[i * 3 + 2]);
-
-      totalDifference += backgroundDifference;
-
-      // TODO: animate this
-      particle.foregroundMask =
-          std::min(std::max(backgroundDifference - .2f, 0.f) * 100.f, 1.f);
-    }
-
-    particleBuffer.setParticleData(current_frame_data.data(),
-                                   current_frame_data.size());
-
-    if (totalDifference / imageProvider.size() > .05f) {
+    if (!imgData.faces.empty()) {
       if (reactionState == ReactionState::Inactive) {
         std::cout << "trigger\n";
 
