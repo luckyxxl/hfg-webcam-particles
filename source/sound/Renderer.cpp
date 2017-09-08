@@ -183,6 +183,11 @@ void Renderer::audioCallback(Uint8 *stream, int len) {
 
     voice.cursor.store(cursorValue);
   }
+
+  // disable sound (for listening to smooth jazz while coding :) )
+#if 0
+  memset(stream, 0, len);
+#endif
 }
 
 } // namespace sound

@@ -42,7 +42,7 @@ static GLuint createProgram(GLuint vertexShader, GLuint fragmentShader) {
 
 bool Pipeline::create(const char *vertexShaderSource,
                       const char *fragmentShaderSource,
-                      bool enableBlending) {
+                      BlendMode blendMode) {
   vertexShader = createShader(GL_VERTEX_SHADER, vertexShaderSource);
   fragmentShader = createShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
   if (!vertexShader || !fragmentShader)
@@ -52,12 +52,11 @@ bool Pipeline::create(const char *vertexShaderSource,
   if (!program)
     return false;
 
-  this->enableBlending = enableBlending;
+  this->blendMode = blendMode;
 
   // This is the same for all pipelines for now... If required, set those in
   // bind().
   glEnable(GL_PROGRAM_POINT_SIZE);
-  glBlendFunc(GL_ONE, GL_ONE);
 
   return true;
 }
@@ -69,8 +68,23 @@ void Pipeline::destroy() {
 }
 
 void Pipeline::bind() const {
-  if(enableBlending) glEnable(GL_BLEND);
-  else glDisable(GL_BLEND);
+  if(blendMode == BlendMode::None) {
+    glDisable(GL_BLEND);
+  } else {
+    glEnable(GL_BLEND);
+
+    switch(blendMode) {
+      case BlendMode::None:
+      break;
+      case BlendMode::Normal:
+      glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_DST_ALPHA);
+      break;
+      case BlendMode::Addition:
+      glBlendFunc(GL_ONE, GL_ONE);
+      break;
+    }
+  }
+
   glUseProgram(program);
 }
 

@@ -22,9 +22,12 @@ void Texture::resize(uint32_t width, uint32_t height) {
   bind(0);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
                GL_UNSIGNED_BYTE, nullptr);
+  this->width = width;
+  this->height = height;
 }
 
 void Texture::setImage(uint32_t width, uint32_t height, const uint8_t *pixels) {
+  assert(width == this->width && height == this->height);
   bind(0);
   glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 }
@@ -34,7 +37,6 @@ void Texture::bind(uint32_t unit) {
   glBindTexture(GL_TEXTURE_2D, texture);
 }
 
-
 void Texture::unbind(uint32_t unit) {
   glActiveTexture(GL_TEXTURE0 + unit);
   glBindTexture(GL_TEXTURE_2D, 0);
@@ -42,10 +44,6 @@ void Texture::unbind(uint32_t unit) {
 
 void Texture::dbgSaveToFile(const char *filename) {
   bind(0);
-
-  GLint width, height;
-  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
 
   auto pixels = std::vector<uint8_t>(width * height * 3);
   glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());

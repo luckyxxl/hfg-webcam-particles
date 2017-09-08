@@ -37,9 +37,32 @@ bool Application::create(Resources *resources, graphics::Window *window,
     return false;
   }
 
+  screenRectBuffer.create();
+
+  faceBlitter.create(&screenRectBuffer);
   particleTextureToBuffer.create();
 
-  particleRendererGlobalState.create(soundRenderer, &sampleLibrary, &random);
+  overlayComposePilpeline.create(R"glsl(
+    #version 330 core
+    layout(location=0) in vec2 position;
+    void main() { gl_Position = vec4(position, 0.0, 1.0); }
+    )glsl", R"glsl(
+    #version 330 core
+    uniform sampler2D webcam;
+    uniform sampler2D overlay;
+    uniform float overlayVisibility;
+    out vec4 frag_color;
+    void main() {
+      vec4 w = texelFetch(webcam, ivec2(gl_FragCoord.xy), 0);
+      vec4 o = texelFetch(overlay, ivec2(gl_FragCoord.xy), 0);
+      frag_color = vec4(mix(w.rgb, o.rgb, o.a * overlayVisibility), 0.0);
+    }
+    )glsl", graphics::Pipeline::BlendMode::None);
+  overlayComposePilpeline_webcam_location = overlayComposePilpeline.getUniformLocation("webcam");
+  overlayComposePilpeline_overlay_location = overlayComposePilpeline.getUniformLocation("overlay");
+  overlayComposePilpeline_overlayVisibility_location = overlayComposePilpeline.getUniformLocation("overlayVisibility");
+
+  particleRendererGlobalState.create(soundRenderer, &sampleLibrary, &random, &screenRectBuffer);
 
   {
     auto timeline = std::make_unique<Timeline>(&effectRegistry);
@@ -75,24 +98,41 @@ bool Application::create(Resources *resources, graphics::Window *window,
     reactionParticleRenderer.getClock().pause();
   }
 
-  particleTexture.create(imageProvider.width(), imageProvider.height());
+  webcamTexture.create(imageProvider.width(), imageProvider.height());
   backgroundTexture.create(imageProvider.width(), imageProvider.height());
+  overlayFramebuffer.create(imageProvider.width(), imageProvider.height());
+  particleFramebuffer.create(imageProvider.width(), imageProvider.height());
   particleBuffer.create(imageProvider.size());
+
+  // prevent undefined images at startup
+  {
+    std::vector<uint8_t> pixels(imageProvider.width() * imageProvider.height() * 3, 0.f);
+    webcamTexture.setImage(imageProvider.width(), imageProvider.height(), pixels.data());
+  }
+
+  overlayFramebuffer.clear();
 
   return true;
 }
 
 void Application::destroy() {
   particleBuffer.destroy();
+  particleFramebuffer.destroy();
+  overlayFramebuffer.destroy();
   backgroundTexture.destroy();
-  particleTexture.destroy();
+  webcamTexture.destroy();
 
   reactionParticleRenderer.reset();
   standbyParticleRenderer.reset();
 
   particleRendererGlobalState.destroy();
 
+  overlayComposePilpeline.destroy();
+
   particleTextureToBuffer.destroy();
+  faceBlitter.destroy();
+
+  screenRectBuffer.destroy();
 
   imageProvider.stop();
 
@@ -179,10 +219,14 @@ static void randomizeTimeline(Timeline *timeline,
 }
 
 void Application::update(float dt) {
+  if(reactionState == ReactionState::Inactive) {
+    standbyBlitTimeout -= dt;
+  }
+
   ImageData imgData; // FIXME this could be a member variable to cache previous allocations
   imageProvider >> imgData;
   if (!imgData.empty()) {
-    particleTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
+    webcamTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
 
     // first frame is background plate
     // TODO: update this dynamically during runtime
@@ -191,12 +235,30 @@ void Application::update(float dt) {
       backgroundTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
     }
 
-    particleTextureToBuffer.render(imageProvider.width(), imageProvider.height(),
-      particleTexture, backgroundTexture, particleBuffer);
+    if (!imgData.faces.empty() && reactionState == ReactionState::Inactive && standbyBlitTimeout <= 0.f) {
 
-    if (!imgData.faces.empty()) {
-      if (reactionState == ReactionState::Inactive) {
-        std::cout << "trigger\n";
+      {
+        auto rect = imgData.faces[0];
+
+        auto rectTl = glm::vec2(rect.tl().x, rect.tl().y);
+        auto rectBr = glm::vec2(rect.br().x, rect.br().y);
+        glm::vec2 faceMin = rectTl / glm::vec2(imageProvider.width(), imageProvider.height());
+        glm::vec2 faceMax = rectBr / glm::vec2(imageProvider.width(), imageProvider.height());
+
+        glm::vec2 targetSize = glm::vec2(std::uniform_real_distribution<float>(.2f, .4f)(random),
+                                          std::uniform_real_distribution<float>(.2f, .4f)(random));
+        glm::vec2 targetMin = glm::vec2(std::uniform_real_distribution<float>(0.f, 1.f - targetSize.x)(random),
+                                          std::uniform_real_distribution<float>(0.f, 1.f - targetSize.y)(random));
+        glm::vec2 targetMax = targetMin + targetSize;
+
+        faceBlitter.blit(webcamTexture, faceMin, faceMax, overlayFramebuffer, targetMin, targetMax);
+      }
+
+      ++standbyBlitCount;
+      standbyBlitTimeout = std::uniform_real_distribution<float>(250.f, 750.f)(random);
+
+      if(standbyBlitCount == 10u) {
+        standbyBlitCount = 0u;
 
         standbyParticleRenderer.getClock().disableLooping();
 
@@ -222,6 +284,8 @@ void Application::update(float dt) {
 
     std::cout << "end reaction\n";
 
+    overlayFramebuffer.clear();
+
     standbyParticleRenderer.getClock().enableLooping();
     standbyParticleRenderer.getClock().play();
 
@@ -233,15 +297,45 @@ void Application::update(float dt) {
 }
 
 void Application::render() {
-  graphics::Framebuffer::unbind();
+  // compose webcam and overlay into particleFramebuffer
+  {
+    particleFramebuffer.bind();
+    glViewport(0, 0, particleFramebuffer.getWidth(), particleFramebuffer.getHeight());
 
-  glClear(GL_COLOR_BUFFER_BIT);
+    overlayComposePilpeline.bind();
+    webcamTexture.bind(0);
+    glUniform1i(overlayComposePilpeline_webcam_location, 0);
+    overlayFramebuffer.getTexture().bind(1);
+    glUniform1i(overlayComposePilpeline_overlay_location, 1);
+
+    float overlayVisibility = 1.f;
+    if(reactionState == ReactionState::RenderReactionTimeline) {
+      if(reactionParticleRenderer.getClock().isPaused()) {
+        overlayVisibility = 0.f;
+      } else {
+        auto p = reactionParticleRenderer.getClock().getPeriod();
+        auto t = reactionParticleRenderer.getClock().getTime();
+        overlayVisibility = std::min((p - t) / 2000.f, 1.f);
+      }
+    }
+    glUniform1f(overlayComposePilpeline_overlayVisibility_location, overlayVisibility);
+
+    screenRectBuffer.draw();
+  }
+
+  particleTextureToBuffer.render(imageProvider.width(), imageProvider.height(),
+    particleFramebuffer.getTexture(), backgroundTexture, particleBuffer);
 
   RendererParameters parameters(particleBuffer,
                                 screen_width, screen_height,
                                 imageProvider.width(), imageProvider.height());
 
   if (reactionState == ReactionState::RenderReactionTimeline) {
+#if 0
+    if(reactionParticleRenderer.getClock().getTime() < 100) {
+      particleFramebuffer.getTexture().dbgSaveToFile("comp.bmp");
+    }
+#endif
     reactionParticleRenderer.render(particleRendererGlobalState, parameters);
   } else {
     standbyParticleRenderer.render(particleRendererGlobalState, parameters);
