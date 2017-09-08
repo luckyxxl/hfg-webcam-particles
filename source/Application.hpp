@@ -60,6 +60,7 @@ private:
     RenderReactionTimeline,
   } reactionState = ReactionState::Inactive;
 
+  float standbyBlitTimeout = 0.f;
   uint32_t standbyBlitCount = 0u;
 
   graphics::Texture webcamTexture;

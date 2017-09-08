@@ -219,6 +219,10 @@ static void randomizeTimeline(Timeline *timeline,
 }
 
 void Application::update(float dt) {
+  if(reactionState == ReactionState::Inactive) {
+    standbyBlitTimeout -= dt;
+  }
+
   ImageData imgData; // FIXME this could be a member variable to cache previous allocations
   imageProvider >> imgData;
   if (!imgData.empty()) {
@@ -231,7 +235,7 @@ void Application::update(float dt) {
       backgroundTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
     }
 
-    if (!imgData.faces.empty() && reactionState == ReactionState::Inactive) {
+    if (!imgData.faces.empty() && reactionState == ReactionState::Inactive && standbyBlitTimeout <= 0.f) {
 
       {
         auto rect = imgData.faces[0];
@@ -251,6 +255,7 @@ void Application::update(float dt) {
       }
 
       ++standbyBlitCount;
+      standbyBlitTimeout = std::uniform_real_distribution<float>(250.f, 750.f)(random);
 
       if(standbyBlitCount == 10u) {
         standbyBlitCount = 0u;
