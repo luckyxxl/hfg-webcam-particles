@@ -77,7 +77,7 @@ void Pipeline::bind() const {
       case BlendMode::None:
       break;
       case BlendMode::Normal:
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_DST_ALPHA);
       break;
       case BlendMode::Addition:
       glBlendFunc(GL_ONE, GL_ONE);

@@ -11,9 +11,14 @@ void FaceBlitter::create(const graphics::ScreenRectBuffer *rectangle) {
     uniform vec2 sourceExtend;
     uniform vec2 targetCenter;
     uniform vec2 targetExtend;
+
     layout(location=0) in vec2 position;
+
+    out vec2 fragPosition;
     out vec2 sourceTexcoord;
+
     void main() {
+      fragPosition = position;
       sourceTexcoord = sourceCenter + position * sourceExtend;
       vec2 p = targetCenter + position * targetExtend;
       gl_Position = vec4(mix(vec2(-1.f), vec2(1.f), p), 0.0, 1.0);
@@ -23,12 +28,28 @@ void FaceBlitter::create(const graphics::ScreenRectBuffer *rectangle) {
   static const char *fragmentShaderSource = R"glsl(
     #version 330 core
     uniform sampler2D source;
+
+    in vec2 fragPosition;
     in vec2 sourceTexcoord;
+
     out vec4 frag_color;
+
+    const float PI = 3.14159265;
+
+    float vignette(float x) {
+      const float blendStart = 0.9;
+      const float blendEnd = 1.0;
+
+      // linear ramp from blend start to blend end
+      float l = clamp((x - blendStart) * (1.0 / (blendEnd - blendStart)), 0.0, 1.0);
+
+      return 1.0 - l;
+    }
+
     void main() {
       vec3 c = texture(source, sourceTexcoord).rgb;
-      //c = vec3(1.0, 0.0, 0.0).bgr;
-      frag_color = vec4(c, 1.0);
+      float a = vignette(min(length(fragPosition), 1.0));
+      frag_color = vec4(c, a);
     }
   )glsl";
 

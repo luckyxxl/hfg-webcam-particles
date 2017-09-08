@@ -231,20 +231,29 @@ void Application::update(float dt) {
       backgroundTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
     }
 
-    if (!imgData.faces.empty()) {
-      if (reactionState == ReactionState::Inactive) {
-        std::cout << "trigger\n";
+    if (!imgData.faces.empty() && reactionState == ReactionState::Inactive) {
 
-        {
-          auto rect = imgData.faces[0];
+      {
+        auto rect = imgData.faces[0];
 
-          auto rectTl = glm::vec2(rect.tl().x, rect.tl().y);
-          auto rectBr = glm::vec2(rect.br().x, rect.br().y);
-          glm::vec2 faceMin = rectTl / glm::vec2(imageProvider.width(), imageProvider.height());
-          glm::vec2 faceMax = rectBr / glm::vec2(imageProvider.width(), imageProvider.height());
+        auto rectTl = glm::vec2(rect.tl().x, rect.tl().y);
+        auto rectBr = glm::vec2(rect.br().x, rect.br().y);
+        glm::vec2 faceMin = rectTl / glm::vec2(imageProvider.width(), imageProvider.height());
+        glm::vec2 faceMax = rectBr / glm::vec2(imageProvider.width(), imageProvider.height());
 
-          faceBlitter.blit(webcamTexture, faceMin, faceMax, overlayFramebuffer, glm::vec2(0., 0.), glm::vec2(.5, .5));
-        }
+        glm::vec2 targetSize = glm::vec2(std::uniform_real_distribution<float>(.2f, .4f)(random),
+                                          std::uniform_real_distribution<float>(.2f, .4f)(random));
+        glm::vec2 targetMin = glm::vec2(std::uniform_real_distribution<float>(0.f, 1.f - targetSize.x)(random),
+                                          std::uniform_real_distribution<float>(0.f, 1.f - targetSize.y)(random));
+        glm::vec2 targetMax = targetMin + targetSize;
+
+        faceBlitter.blit(webcamTexture, faceMin, faceMax, overlayFramebuffer, targetMin, targetMax);
+      }
+
+      ++standbyBlitCount;
+
+      if(standbyBlitCount == 10u) {
+        standbyBlitCount = 0u;
 
         standbyParticleRenderer.getClock().disableLooping();
 
@@ -301,7 +310,7 @@ void Application::render() {
       } else {
         auto p = reactionParticleRenderer.getClock().getPeriod();
         auto t = reactionParticleRenderer.getClock().getTime();
-        overlayVisibility = std::min((p - t) / 1000.f, 1.f);
+        overlayVisibility = std::min((p - t) / 2000.f, 1.f);
       }
     }
     glUniform1f(overlayComposePilpeline_overlayVisibility_location, overlayVisibility);
@@ -317,6 +326,11 @@ void Application::render() {
                                 imageProvider.width(), imageProvider.height());
 
   if (reactionState == ReactionState::RenderReactionTimeline) {
+#if 0
+    if(reactionParticleRenderer.getClock().getTime() < 100) {
+      particleFramebuffer.getTexture().dbgSaveToFile("comp.bmp");
+    }
+#endif
     reactionParticleRenderer.render(particleRendererGlobalState, parameters);
   } else {
     standbyParticleRenderer.render(particleRendererGlobalState, parameters);

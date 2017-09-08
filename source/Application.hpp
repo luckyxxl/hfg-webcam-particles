@@ -60,6 +60,8 @@ private:
     RenderReactionTimeline,
   } reactionState = ReactionState::Inactive;
 
+  uint32_t standbyBlitCount = 0u;
+
   graphics::Texture webcamTexture;
   graphics::Texture backgroundTexture;
   bool backgroundTextureIsSet = false;
