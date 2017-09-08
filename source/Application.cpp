@@ -219,6 +219,8 @@ static void randomizeTimeline(Timeline *timeline,
 }
 
 void Application::update(float dt) {
+  lastBackgroundUpdateTime += dt;
+
   if(reactionState == ReactionState::Inactive) {
     standbyBlitTimeout -= dt;
   }
@@ -228,11 +230,17 @@ void Application::update(float dt) {
   if (!imgData.empty()) {
     webcamTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
 
-    // first frame is background plate
-    // TODO: update this dynamically during runtime
-    if(!backgroundTextureIsSet) {
-      backgroundTextureIsSet = true;
+    if (!imgData.faces.empty()) {
+      lastBackgroundUpdateTime = 0.f;
+    }
+
+    if(!backgroundTextureIsSet || lastBackgroundUpdateTime >= 15000.f) {
+      std::cout << "set background\n";
+
       backgroundTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
+
+      backgroundTextureIsSet = true;
+      lastBackgroundUpdateTime = 0.f;
     }
 
     if (!imgData.faces.empty() && reactionState == ReactionState::Inactive && standbyBlitTimeout <= 0.f) {

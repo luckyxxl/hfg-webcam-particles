@@ -66,6 +66,7 @@ private:
   graphics::Texture webcamTexture;
   graphics::Texture backgroundTexture;
   bool backgroundTextureIsSet = false;
+  float lastBackgroundUpdateTime;
 
   graphics::Framebuffer overlayFramebuffer;
 
