@@ -51,6 +51,8 @@ set(SOURCE_FILES
   source/Application.cpp
   source/Application.hpp
   source/AsyncMostRecentDataStream.hpp
+  source/FaceBlitter.cpp
+  source/FaceBlitter.hpp
   source/ImageProvider.cpp
   source/ImageProvider.hpp
   source/ParticleRenderer.cpp

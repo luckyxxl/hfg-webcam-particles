@@ -37,6 +37,7 @@ public:
   }
 
   void setPeriod(float p) { period = p; }
+  float getPeriod() const { return period; }
 
   float getTime() const { return time; }
 

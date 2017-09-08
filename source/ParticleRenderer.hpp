@@ -10,7 +10,8 @@ public:
   public:
     void create(sound::Renderer *soundRenderer,
                 const SampleLibrary *sampleLibrary,
-                std::default_random_engine *random);
+                std::default_random_engine *random,
+                const graphics::ScreenRectBuffer *screenRectBuffer);
     void destroy();
     void reshape(uint32_t width, uint32_t height);
 
@@ -20,7 +21,7 @@ public:
 
     std::default_random_engine *random;
 
-    graphics::ScreenRectBuffer screenRectBuffer;
+    const graphics::ScreenRectBuffer *screenRectBuffer;
 
     graphics::Framebuffer particleFramebuffer;
     graphics::Framebuffer accumulationFramebuffer;

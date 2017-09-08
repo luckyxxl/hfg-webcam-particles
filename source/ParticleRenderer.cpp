@@ -6,12 +6,12 @@
 
 void ParticleRenderer::GlobalState::create(sound::Renderer *soundRenderer,
                                            const SampleLibrary *sampleLibrary,
-                                           std::default_random_engine *random) {
+                                           std::default_random_engine *random,
+                                           const graphics::ScreenRectBuffer *screenRectBuffer) {
   this->soundRenderer = soundRenderer;
   this->sampleLibrary = sampleLibrary;
   this->random = random;
-
-  screenRectBuffer.create();
+  this->screenRectBuffer = screenRectBuffer;
 
   particleFramebuffer.create(1, 1);
   accumulationFramebuffer.create(1, 1);
@@ -31,7 +31,7 @@ void ParticleRenderer::GlobalState::create(sound::Renderer *soundRenderer,
       vec3 color = texelFetch(resultTexture, ivec2(gl_FragCoord.xy), 0).rgb;
       frag_color = vec4(color, 1);
     }
-  )glsl", false);
+  )glsl", graphics::Pipeline::BlendMode::None);
   resultGraphicsPipeline_resultTexture_location =
       resultGraphicsPipeline.getUniformLocation("resultTexture");
 }
@@ -42,8 +42,6 @@ void ParticleRenderer::GlobalState::destroy() {
   resultFramebuffer.destroy();
   accumulationFramebuffer.destroy();
   particleFramebuffer.destroy();
-
-  screenRectBuffer.destroy();
 }
 
 void ParticleRenderer::GlobalState::reshape(uint32_t width, uint32_t height) {
@@ -292,7 +290,8 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
   const auto accShaderSource = accShader.assemble();
 
   graphicsPipeline.create(vertexShaderSource.c_str(),
-                          fragmentShaderSource.c_str(), true);
+                          fragmentShaderSource.c_str(),
+                          graphics::Pipeline::BlendMode::Addition);
 
   accGraphicsPipeline.create(R"glsl(
     #version 330 core
@@ -300,7 +299,7 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
     void main() {
       gl_Position = vec4(position, 0, 1);
     }
-  )glsl", accShaderSource.c_str(), false);
+  )glsl", accShaderSource.c_str(), graphics::Pipeline::BlendMode::None);
   accGraphicsPipeline_particleTexture_location =
       accGraphicsPipeline.getUniformLocation("particleTexture");
   accGraphicsPipeline_historyTexture_location =
@@ -345,9 +344,16 @@ void ParticleRenderer::update(GlobalState &globalState, float dt) {
 }
 
 void ParticleRenderer::render(GlobalState &globalState, const RendererParameters &parameters) {
+  glViewport(0, 0, parameters.screen_width, parameters.screen_height);
+
   RenderProps props(parameters, state, *globalState.random);
 
   if(accumulationActive) {
+    assert(globalState.particleFramebuffer.getWidth() == parameters.screen_width
+             && globalState.particleFramebuffer.getHeight() == parameters.screen_height);
+    assert(globalState.resultFramebuffer.getWidth() == parameters.screen_width
+             && globalState.resultFramebuffer.getHeight() == parameters.screen_height);
+
     globalState.particleFramebuffer.bind();
     glClear(GL_COLOR_BUFFER_BIT);
     graphicsPipeline.bind();
@@ -363,17 +369,19 @@ void ParticleRenderer::render(GlobalState &globalState, const RendererParameters
     globalState.accumulationFramebuffer.getTexture().bind(1);
     glUniform1i(accGraphicsPipeline_historyTexture_location, 1);
     loadUniforms(accUniforms, props);
-    globalState.screenRectBuffer.draw();
+    globalState.screenRectBuffer->draw();
 
     graphics::Framebuffer::unbind();
     globalState.resultGraphicsPipeline.bind();
     globalState.resultFramebuffer.getTexture().bind(0);
     glUniform1i(globalState.resultGraphicsPipeline_resultTexture_location, 0);
-    globalState.screenRectBuffer.draw();
+    globalState.screenRectBuffer->draw();
 
     graphics::Texture::unbind(0);
     graphics::Texture::unbind(1);
   } else {
+    graphics::Framebuffer::unbind();
+    glClear(GL_COLOR_BUFFER_BIT);
     graphicsPipeline.bind();
     loadUniforms(uniforms, props);
     parameters.particle_buffer.draw();

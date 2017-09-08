@@ -5,6 +5,7 @@
 #include "SampleLibrary.hpp"
 #include "graphics/ParticleBuffer.hpp"
 #include "ImageProvider.hpp"
+#include "FaceBlitter.hpp"
 #include "ParticleTextureToBuffer.hpp"
 
 class Resources;
@@ -38,7 +39,15 @@ private:
 
   ImageProvider imageProvider;
 
+  graphics::ScreenRectBuffer screenRectBuffer;
+
+  FaceBlitter faceBlitter;
   ParticleTextureToBuffer particleTextureToBuffer;
+
+  graphics::Pipeline overlayComposePilpeline;
+  GLint overlayComposePilpeline_webcam_location;
+  GLint overlayComposePilpeline_overlay_location;
+  GLint overlayComposePilpeline_overlayVisibility_location;
 
   ParticleRenderer::GlobalState particleRendererGlobalState;
 
@@ -51,9 +60,13 @@ private:
     RenderReactionTimeline,
   } reactionState = ReactionState::Inactive;
 
-  graphics::Texture particleTexture;
+  graphics::Texture webcamTexture;
   graphics::Texture backgroundTexture;
   bool backgroundTextureIsSet = false;
+
+  graphics::Framebuffer overlayFramebuffer;
+
+  graphics::Framebuffer particleFramebuffer;
 
   graphics::ParticleBuffer particleBuffer;
 };
