@@ -79,7 +79,7 @@ set(EXECUTABLE_NAME "webcam-particles")
 add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE source 3rdparty ${SDL2_INCLUDE_DIR})
-target_link_libraries(${EXECUTABLE_NAME} ${OpenCV_LIBS} ${SDL2_LIBRARY} ${OPENGL_gl_LIBRARY} m)
+target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_gl_LIBRARY} ${OpenCV_LIBS} ${SDL2_LIBRARY} m)
 
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
@@ -107,18 +107,11 @@ if(APPLE)
   endforeach()
   target_sources(${EXECUTABLE_NAME} PUBLIC ${RESOURCES})
 
-  foreach(LIB ${OpenCV_LIBS} ${SDL2_LIBRARY})
-    if(TARGET ${LIB})
-      get_target_property(LIBPATH ${LIB} IMPORTED_LOCATION_RELEASE)
-      list(APPEND DYLIBS "${LIBPATH}")
-    elseif((IS_ABSOLUTE ${LIB}) AND (LIB MATCHES ".*\\.dylib$"))
-      list(APPEND DYLIBS "${LIB}")
-    endif()
-  endforeach()
-  foreach(DYLIB ${DYLIBS})
-    set_source_files_properties(${DYLIB} PROPERTIES MACOSX_PACKAGE_LOCATION Frameworks)
-  endforeach()
-  target_sources(${EXECUTABLE_NAME} PUBLIC ${DYLIBS})
+  set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR})
+  install(CODE "
+    include(BundleUtilities)
+    fixup_bundle(${CMAKE_INSTALL_PREFIX}/webcam-particles.app \"\" \"\")
+  " COMPONENT Runtime)
 endif()
 
 add_custom_target(update-format
