@@ -22,6 +22,8 @@ set(SOURCE_FILES
   source/effects/EffectRegistry.hpp
   source/effects/HueDisplaceEffect.cpp
   source/effects/HueDisplaceEffect.hpp
+  source/effects/ParticleSizeByHueEffect.cpp
+  source/effects/ParticleSizeByHueEffect.hpp
   source/effects/SmearEffect.cpp
   source/effects/SmearEffect.hpp
   source/effects/SmoothTrailsEffect.cpp

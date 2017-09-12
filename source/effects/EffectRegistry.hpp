@@ -81,3 +81,21 @@ public:
 private:
   std::map<std::string, std::function<std::unique_ptr<IEffect>()>> effects;
 };
+
+template<class T>
+static T jsonEnumValue(const json &json, const char *member, T defaultValue, const std::initializer_list<const char*> &strings) {
+  auto string = json.value(member, "");
+  if(!string.empty()) {
+    for(uint32_t i=0u; i<strings.size(); ++i) {
+      if(string == *(strings.begin() + i)) {
+        return static_cast<T>(i);
+      }
+    }
+  }
+  return defaultValue;
+}
+
+template<class T>
+static void jsonEnumEmplace(json &json, const char *member, T value, const std::initializer_list<const char*> &strings) {
+  json.emplace(member, *(strings.begin() + static_cast<int>(value)));
+}

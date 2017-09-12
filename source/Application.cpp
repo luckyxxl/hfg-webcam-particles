@@ -6,6 +6,7 @@
 #include "effects/ConvergeCircleEffect.hpp"
 #include "effects/ConvergePointEffect.hpp"
 #include "effects/HueDisplaceEffect.hpp"
+#include "effects/ParticleSizeByHueEffect.hpp"
 #include "effects/SmearEffect.hpp"
 #include "effects/SmoothTrailsEffect.hpp"
 #include "effects/StandingWaveEffect.hpp"
@@ -22,6 +23,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   effectRegistry.registerEffect<ConvergeCircleEffect>();
   effectRegistry.registerEffect<ConvergePointEffect>();
   effectRegistry.registerEffect<HueDisplaceEffect>();
+  effectRegistry.registerEffect<ParticleSizeByHueEffect>();
   effectRegistry.registerEffect<SmearEffect>();
   effectRegistry.registerEffect<SmoothTrailsEffect>();
   effectRegistry.registerEffect<StandingWaveEffect>();
