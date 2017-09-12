@@ -404,6 +404,9 @@ void ParticleRenderer::loadUniforms(const std::vector<UniformElement> &uniforms,
     case GLSLType::Vec4:
       glUniform4fv(uniform.location, 1, &value.data.v4[0]);
       break;
+    case GLSLType::Int:
+      glUniform1iv(uniform.location, 1, &value.data.i);
+      break;
     case GLSLType::Mat4:
       glUniformMatrix4fv(uniform.location, 1, GL_FALSE, &value.data.m4[0][0]);
       break;

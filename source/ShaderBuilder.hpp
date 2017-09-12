@@ -9,6 +9,7 @@ enum class GLSLType {
   Vec2,
   Vec3,
   Vec4,
+  Int,
   Mat4,
   Sampler2D,
 };
@@ -20,15 +21,17 @@ struct UniformValue {
     glm::vec2 v2;
     glm::vec3 v3;
     glm::vec4 v4;
+    int i;
     glm::mat4 m4;
 
     Data() : m4(0.f) {}
   } data;
 
-  UniformValue(float x) : type(GLSLType::Float) { data.f = x; }
-  UniformValue(glm::vec2 x) : type(GLSLType::Vec2) { data.v2 = x; }
-  UniformValue(glm::vec3 x) : type(GLSLType::Vec3) { data.v3 = x; }
-  UniformValue(glm::mat4 x) : type(GLSLType::Mat4) { data.m4 = x; }
+  explicit UniformValue(float x) : type(GLSLType::Float) { data.f = x; }
+  explicit UniformValue(glm::vec2 x) : type(GLSLType::Vec2) { data.v2 = x; }
+  explicit UniformValue(glm::vec3 x) : type(GLSLType::Vec3) { data.v3 = x; }
+  explicit UniformValue(int x) : type(GLSLType::Int) { data.i = x; }
+  explicit UniformValue(glm::mat4 x) : type(GLSLType::Mat4) { data.m4 = x; }
 
   static UniformValue Sampler2D() {
     UniformValue result(0.f);

@@ -35,6 +35,7 @@ bool ImageProvider::onBeforeStart() {
         b.resize(webcam_size.width, webcam_size.height);
       });
       face_cascade.load(resources->resolve(face_cascade_xml));
+      (void)eyes_cascade_xml; // fix unused variable warning
       return true;
     }
   }

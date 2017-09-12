@@ -7,7 +7,7 @@ find_package(OpenCV REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 
-list(APPEND CMAKE_CXX_FLAGS "-std=c++1z -Wall -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -Wall -pthread")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DOPENGL_DEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -DOPENGL_DEBUG")
 
@@ -26,6 +26,8 @@ set(SOURCE_FILES
   source/effects/SmearEffect.hpp
   source/effects/SmoothTrailsEffect.cpp
   source/effects/SmoothTrailsEffect.hpp
+  source/effects/StandingWaveEffect.cpp
+  source/effects/StandingWaveEffect.hpp
   source/effects/TrailsEffect.cpp
   source/effects/TrailsEffect.hpp
   source/effects/WaveEffect.cpp

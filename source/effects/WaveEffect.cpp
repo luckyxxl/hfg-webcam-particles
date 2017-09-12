@@ -82,7 +82,7 @@ void WaveEffect::registerEffect(EffectRegistrationData &data) const {
                       }),
               UNIFORM(data.uniforms, "repetitions", GLSLType::Float,
                       [this](const RenderProps &props) {
-                        return UniformValue(repetitions);
+                        return UniformValue(static_cast<float>(repetitions));
                       }),
           })
           .c_str());

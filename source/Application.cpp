@@ -8,6 +8,7 @@
 #include "effects/HueDisplaceEffect.hpp"
 #include "effects/SmearEffect.hpp"
 #include "effects/SmoothTrailsEffect.hpp"
+#include "effects/StandingWaveEffect.hpp"
 #include "effects/TrailsEffect.hpp"
 #include "effects/WaveEffect.hpp"
 #include "graphics/Window.hpp"
@@ -23,6 +24,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   effectRegistry.registerEffect<HueDisplaceEffect>();
   effectRegistry.registerEffect<SmearEffect>();
   effectRegistry.registerEffect<SmoothTrailsEffect>();
+  effectRegistry.registerEffect<StandingWaveEffect>();
   effectRegistry.registerEffect<TrailsEffect>();
   effectRegistry.registerEffect<WaveEffect>();
 
@@ -83,6 +85,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
     timeline->emplaceEffectInstance<ConvergeCircleEffect>();
     timeline->emplaceEffectInstance<ConvergePointEffect>();
     timeline->emplaceEffectInstance<HueDisplaceEffect>();
+    timeline->emplaceEffectInstance<StandingWaveEffect>();
     timeline->emplaceEffectInstance<WaveEffect>();
 
     auto accum = timeline->emplaceEffectInstance<TrailsEffect>();

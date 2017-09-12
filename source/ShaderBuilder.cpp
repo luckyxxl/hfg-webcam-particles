@@ -12,6 +12,8 @@ static const char *glslTypeString(GLSLType type) {
     return "vec3";
   case GLSLType::Vec4:
     return "vec4";
+  case GLSLType::Int:
+    return "int";
   case GLSLType::Mat4:
     return "mat4";
   case GLSLType::Sampler2D:
