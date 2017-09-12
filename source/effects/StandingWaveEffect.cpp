@@ -80,6 +80,9 @@ void StandingWaveEffect::registerEffect(EffectRegistrationData &data) const {
     float timeAmp = 0.;
     switch(${timeInterpolationFunc}) {
       case 0: // linear
+      // 'linear' is a triangle function that interpolates the points (0,0),(0.25,1),(0.5,0),(0.75,-1),(1,0)
+      // i.e. |/\___
+      //      |  \/
       timeAmp = abs(fract(t + 0.75) - 0.5) * 4. - 1.;
       break;
       case 1: // sine
