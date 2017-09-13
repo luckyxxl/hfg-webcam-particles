@@ -69,7 +69,4 @@ void ImageProvider::produce(ImageData &assigned) {
   cv::equalizeHist(frame_gray, frame_gray);
   face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2,
                                 0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
-  if (faces.size() > 0) {
-    std::cout << "Detected faces: " << faces.size() << "\n";
-  }
 }
