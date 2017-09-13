@@ -17,6 +17,7 @@ bool Window::create() {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 #ifdef OPENGL_DEBUG
+  std::cout << "OPENGL_DEBUG is enabled!\n";
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 #endif
 
@@ -36,6 +37,12 @@ bool Window::create() {
                              nullptr);
     return false;
   }
+
+  std::cout << "OpenGL:\n"
+      << "\tVersion: " << glGetString(GL_VERSION) << "\n"
+      << "\tGLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n"
+      << "\tRenderer: " << glGetString(GL_RENDERER) << "\n"
+      << "\tVendor: " << glGetString(GL_VENDOR) << "\n";
 
 #ifdef OPENGL_DEBUG
   glDebugMessageCallback(openglDebugMessageCallback, nullptr);

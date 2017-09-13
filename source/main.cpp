@@ -11,6 +11,11 @@ int main(int argc, const char *argv[]) {
   sound::Renderer *soundRenderer = nullptr;
   Application *application = nullptr;
 
+  std::cout << "This is hfg-webcam-particles\n";
+#ifndef NDEBUG
+  std::cout << "This is a debug build and could have inferior performance!\n";
+#endif
+
   resources = new Resources();
   if (!resources->create(argv[0])) {
     goto quit;

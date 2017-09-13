@@ -29,6 +29,11 @@ bool Renderer::create() {
     }
   }
 
+  std::cout << "Audio:\n"
+      << "\tsamplerate: " << audioSpec.freq << "\n"
+      << "\tchannels: " << (int)audioSpec.channels << "\n"
+      << "\tsamples: " << audioSpec.samples << "\n";
+
   assert(std::atomic_is_lock_free(&voices[0].sampleBuffer));
   assert(std::atomic_is_lock_free(&voices[0].state));
   assert(std::atomic_is_lock_free(&voices[0].cursor));
