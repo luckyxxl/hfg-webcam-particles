@@ -12,9 +12,6 @@ void ImageData::resize(size_t width, size_t height) {
   webcam_pixels = cv::Mat::zeros(height, width, CV_8UC3);
 }
 
-ImageProvider::ImageProvider()
-    : AsyncMostRecentDataStream<ImageProvider, ImageData>() {}
-
 static cv::Size getFrameSize(cv::VideoCapture &capture) {
 #if CV_VERSION_EPOCH < 3
   int w = capture.get(CV_CAP_PROP_FRAME_WIDTH);
@@ -26,16 +23,23 @@ static cv::Size getFrameSize(cv::VideoCapture &capture) {
   return {w, h};
 }
 
-bool ImageProvider::onBeforeStart() {
+bool ImageProvider::create(Resources *resources) {
+  face_cascade.load(resources->resolve(face_cascade_xml));
+  (void)eyes_cascade_xml; // fix unused variable warning
+  return true;
+}
+
+bool ImageProvider::start() {
   capture.open(0);
   if (capture.isOpened()) {
     webcam_size = getFrameSize(capture);
     if (webcam_size.width > 0 && webcam_size.height > 0) {
-      update_proto([this](ImageData &b) {
-        b.resize(webcam_size.width, webcam_size.height);
-      });
-      face_cascade.load(resources->resolve(face_cascade_xml));
-      (void)eyes_cascade_xml; // fix unused variable warning
+      for(size_t i=0u; i<data.size; ++i) {
+        data.getBuffer(i).resize(webcam_size.width, webcam_size.height);
+      }
+
+      webcam_thread = std::thread([this] { this->webcamThreadFunc(); });
+
       return true;
     }
   }
@@ -43,33 +47,46 @@ bool ImageProvider::onBeforeStart() {
                            "Could not open webcam", NULL);
   return false;
 }
-void ImageProvider::onAfterStop() { capture.release(); }
-
-void ImageProvider::produce(ImageData &assigned) {
-  auto &frame = assigned.webcam_pixels;
-  auto &faces = assigned.faces;
-
-  if (!capture.isOpened()) {
-    return;
+void ImageProvider::stop() {
+  if(webcam_thread.joinable()) {
+    kill_threads = true;
+    webcam_thread.join();
   }
-  if (!capture.read(frame)) {
-    return;
-  }
+
+  capture.release();
+}
+
+void ImageProvider::webcamThreadFunc() {
+  while(!kill_threads) {
+    auto assigned = data.startWrite();
+
+    auto &frame = assigned->webcam_pixels;
+    auto &faces = assigned->faces;
+
+    if (!capture.isOpened()) {
+      return;
+    }
+    if (!capture.read(frame)) {
+      return;
+    }
 #ifndef NDEBUG
-  {
-    auto S = getFrameSize(capture);
-    assert(static_cast<int>(S.width) == frame.cols &&
-           static_cast<int>(S.height) == frame.rows);
-  }
+    {
+      auto S = getFrameSize(capture);
+      assert(static_cast<int>(S.width) == frame.cols &&
+             static_cast<int>(S.height) == frame.rows);
+    }
 #endif
 
-  cv::Mat frame_gray;
+    cv::Mat frame_gray;
 
-  cv::cvtColor(frame, frame_gray, CV_BGR2GRAY);
-  cv::equalizeHist(frame_gray, frame_gray);
-  face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2,
-                                0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
-  if (faces.size() > 0) {
-    std::cout << "Detected faces: " << faces.size() << "\n";
+    cv::cvtColor(frame, frame_gray, CV_BGR2GRAY);
+    cv::equalizeHist(frame_gray, frame_gray);
+    face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2,
+                                  0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
+    if (faces.size() > 0) {
+      std::cout << "Detected faces: " << faces.size() << "\n";
+    }
+
+    data.finishWrite();
   }
 }
