@@ -108,9 +108,14 @@ Voice *Renderer::play(const SampleBuffer *sampleBuffer,
 void Renderer::audioCallback(Uint8 *stream, int len) {
   memset(stream, 0, len);
 
+  static_assert(alignof(std::max_align_t) >= (4u * sizeof(float))); // sse alignment requirement
+  assert(reinterpret_cast<size_t>(stream) % (4u * sizeof(float)) == 0u); // sse alignment requirement
+
   float *const buffer = reinterpret_cast<float *>(stream);
   const auto bufferLengthSamples =
       int32_t(len / sizeof(float) / 2); // two channels per sample
+
+  assert(bufferLengthSamples % 2 == 0);
 
   for (auto &voice : voices) {
     if (voice.state.load() == Voice::State::Empty)
@@ -145,6 +150,7 @@ void Renderer::audioCallback(Uint8 *stream, int len) {
         std::min(bufferLengthSamples - destinationOffset,
                  sampleBufferLengthSamples - std::max(cursorValue, 0));
     assert(copySamplesCount > 0);
+    assert(copySamplesCount % 4 == 0);
 
     // please don't generalize/combine the cases, so that there's a better
     // chance for optimization
@@ -153,20 +159,45 @@ void Renderer::audioCallback(Uint8 *stream, int len) {
       const auto copySrc = sampleBuffer + 1 * std::max(cursorValue, 0);
       const auto copyDest = buffer + 2 * destinationOffset;
 
+      assert(copySamplesCount % 8 == 0);
+
+#if 1
+      for (auto i = 0; i < copySamplesCount; i += 4) {
+        __m128 s = _mm_load_ps(copySrc + i);
+        __m128 s1 = _mm_shuffle_ps(s, s, 0x50);
+        __m128 s2 = _mm_shuffle_ps(s, s, 0xFA);
+        __m128 d1 = _mm_load_ps(copyDest + 2*i);
+        __m128 d2 = _mm_load_ps(copyDest + 2*i + 4);
+        d1 = _mm_add_ps(d1, s1);
+        d2 = _mm_add_ps(d2, s2);
+        _mm_store_ps(copyDest + 2*i, d1);
+        _mm_store_ps(copyDest + 2*i + 4, d2);
+      }
+#else
       for (auto i = 0; i < copySamplesCount; ++i) {
         copyDest[2 * i + 0] += copySrc[i];
         copyDest[2 * i + 1] += copySrc[i];
       }
+#endif
     } break;
 
     case 2: {
       const auto copySrc = sampleBuffer + 2 * std::max(cursorValue, 0);
       const auto copyDest = buffer + 2 * destinationOffset;
 
+#if 1
+      for (auto i = 0; i < copySamplesCount; i += 2) {
+        __m128 s = _mm_load_ps(copySrc + 2*i);
+        __m128 d = _mm_load_ps(copyDest + 2*i);
+        d = _mm_add_ps(d, s);
+        _mm_store_ps(copyDest + 2*i, d);
+      }
+#else
       for (auto i = 0; i < copySamplesCount; ++i) {
         copyDest[2 * i + 0] += copySrc[2 * i + 0];
         copyDest[2 * i + 1] += copySrc[2 * i + 1];
       }
+#endif
     } break;
     }
 

@@ -11,7 +11,7 @@ public:
   const float *getBuffer() const { return buffer.data(); }
 
   uint32_t getBufferLengthSamples() const {
-    return buffer.size() / getChannels();
+    return buffer.size() / channels;
   }
 
   uint8_t getChannels() const { return channels; }

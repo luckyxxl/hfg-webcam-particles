@@ -61,13 +61,18 @@ bool SampleBuffer::loadFromFile(Resources *resources, const char *filename) {
   }
 
   channels = header->numChannels;
-  buffer.resize(header->subchunk2Size / (header->bitsPerSample / 8));
+
+  const auto elementsCount = header->subchunk2Size / (header->bitsPerSample / 8);
+  const auto padElements = elementsCount == 0u ? 4u : elementsCount % 4 != 0 ? 4 - elementsCount % 4 : 0;
+
+  buffer.resize(elementsCount + padElements);
+  assert(reinterpret_cast<size_t>(buffer.data()) % (4u * sizeof(float)) == 0u); // sse alignment requirement
 
   switch (header->bitsPerSample) {
   case 16: {
     auto samples =
         reinterpret_cast<const int16_t *>(data.data() + sizeof(Header));
-    for (auto i = 0u; i < buffer.size(); ++i) {
+    for (auto i = 0u; i < elementsCount; ++i) {
       buffer[i] = samples[i] / float(1 << (16 - 1));
     }
   } break;
@@ -79,7 +84,7 @@ bool SampleBuffer::loadFromFile(Resources *resources, const char *filename) {
     static_assert(sizeof(sample24_t) == 3);
     auto samples =
         reinterpret_cast<const sample24_t *>(data.data() + sizeof(Header));
-    for (auto i = 0u; i < buffer.size(); ++i) {
+    for (auto i = 0u; i < elementsCount; ++i) {
       const auto s = samples[i];
       auto v = (s.b[2] & 0x7F) << 16 | s.b[1] << 8 | s.b[0];
       if (s.b[2] & 0x80)
@@ -87,6 +92,10 @@ bool SampleBuffer::loadFromFile(Resources *resources, const char *filename) {
       buffer[i] = v / float(1 << (24 - 1));
     }
   } break;
+  }
+
+  for(auto i = 0u; i < padElements; ++i) {
+    buffer[elementsCount + i] = 0.f;
   }
 
   return true;
