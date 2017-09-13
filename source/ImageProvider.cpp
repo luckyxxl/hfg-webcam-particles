@@ -13,6 +13,7 @@ void ImageData::resize(size_t width, size_t height) {
 }
 
 static cv::Size getFrameSize(cv::VideoCapture &capture) {
+  /*
 #if CV_VERSION_EPOCH < 3
   int w = capture.get(CV_CAP_PROP_FRAME_WIDTH);
   int h = capture.get(CV_CAP_PROP_FRAME_HEIGHT);
@@ -20,7 +21,8 @@ static cv::Size getFrameSize(cv::VideoCapture &capture) {
   int w = capture.get(cv::CAP_PROP_FRAME_WIDTH);
   int h = capture.get(cv::CAP_PROP_FRAME_HEIGHT);
 #endif
-  return {w, h};
+  */
+  return {640, 480};
 }
 
 bool ImageProvider::create(Resources *resources) {
@@ -30,8 +32,8 @@ bool ImageProvider::create(Resources *resources) {
 }
 
 bool ImageProvider::start() {
-  capture.open(0);
-  if (capture.isOpened()) {
+  //capture.open(0);
+  /*if (capture.isOpened())*/ {
     webcam_size = getFrameSize(capture);
     if (webcam_size.width > 0 && webcam_size.height > 0) {
       for(size_t i=0u; i<data.size; ++i) {
@@ -53,7 +55,7 @@ void ImageProvider::stop() {
     webcam_thread.join();
   }
 
-  capture.release();
+  //capture.release();
 }
 
 void ImageProvider::webcamThreadFunc() {
@@ -63,6 +65,7 @@ void ImageProvider::webcamThreadFunc() {
     auto &frame = assigned->webcam_pixels;
     auto &faces = assigned->faces;
 
+/*
     if (!capture.isOpened()) {
       return;
     }
@@ -76,6 +79,9 @@ void ImageProvider::webcamThreadFunc() {
              static_cast<int>(S.height) == frame.rows);
     }
 #endif
+*/
+
+    cv::circle(frame, cv::Point(width()/2, height()/2), 100, cv::Scalar(255, 0, 0));
 
     cv::Mat frame_gray;
 
