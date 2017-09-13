@@ -45,7 +45,7 @@ bool Window::create() {
       << "\tVendor: " << glGetString(GL_VENDOR) << "\n";
 
 #ifdef OPENGL_DEBUG
-  glDebugMessageCallback(openglDebugMessageCallback, nullptr);
+  //glDebugMessageCallback(openglDebugMessageCallback, nullptr);
 #endif
 
   SDL_GL_SetSwapInterval(1);

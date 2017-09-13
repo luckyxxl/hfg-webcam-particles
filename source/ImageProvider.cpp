@@ -87,8 +87,8 @@ void ImageProvider::webcamThreadFunc() {
 
     cv::cvtColor(frame, frame_gray, CV_BGR2GRAY);
     cv::equalizeHist(frame_gray, frame_gray);
-    face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2,
-                                  0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
+//  face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2,
+//                                0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
 
     data.finishWrite();
   }
