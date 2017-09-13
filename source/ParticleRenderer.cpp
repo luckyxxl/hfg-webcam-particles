@@ -13,6 +13,8 @@ void ParticleRenderer::GlobalState::create(sound::Renderer *soundRenderer,
   this->random = random;
   this->screenRectBuffer = screenRectBuffer;
 
+  glGenVertexArrays(1, &dummyVao);
+
   particleFramebuffer.create(1, 1);
   accumulationFramebuffer.create(1, 1);
   resultFramebuffer.create(1, 1);
@@ -42,6 +44,8 @@ void ParticleRenderer::GlobalState::destroy() {
   resultFramebuffer.destroy();
   accumulationFramebuffer.destroy();
   particleFramebuffer.destroy();
+
+  glDeleteVertexArrays(1, &dummyVao);
 }
 
 void ParticleRenderer::GlobalState::reshape(uint32_t width, uint32_t height) {
@@ -71,6 +75,15 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
   std::vector<UniformDescription> uniforms, accUniforms;
   ShaderBuilder vertexShader, fragmentShader;
   ShaderBuilder accShader;
+
+  uniforms.emplace_back("particleTexture", GLSLType::Sampler2D,
+                        [](const RenderProps &props) {
+                          return UniformValue::Sampler2D();
+                        });
+  uniforms.emplace_back("backgroundTexture", GLSLType::Sampler2D,
+                        [](const RenderProps &props) {
+                          return UniformValue::Sampler2D();
+                        });
 
   uniforms.emplace_back("invImageAspectRatio", GLSLType::Float,
                         [](const RenderProps &props) {
@@ -131,15 +144,33 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
                              return UniformValue(props.state.clock.getTime());
                            });
 
-  // keep in sync with graphics::Pipeline
-  vertexShader.appendIn("texcoord", GLSLType::Vec2);
-  vertexShader.appendIn("rgb", GLSLType::Vec3);
-  vertexShader.appendIn("hsv", GLSLType::Vec3);
-  vertexShader.appendIn("foregroundMask", GLSLType::Float);
-
   vertexShader.appendOut("color", GLSLType::Vec3);
 
   vertexShader.appendGlobal("PI", GLSLType::Float, std::to_string(PI));
+
+  vertexShader.appendFunction(R"glsl(
+    vec3 rgb2hsv(vec3 rgb) {
+      float cMax = max(max(rgb.r, rgb.g), rgb.b);
+      float cMin = min(min(rgb.r, rgb.g), rgb.b);
+      float d = cMax - cMin;
+
+      if (d < 0.00001 || cMax < 0.00001) {
+        return vec3(0., 0., cMax);
+      }
+
+      float h;
+      if (cMax == rgb.r) {
+        h = (rgb.g - rgb.b) / d;
+        if (h < 0) h += 6.;
+      } else if (cMax == rgb.g) {
+        h = (rgb.b - rgb.r) / d + 2.;
+      } else {
+        h = (rgb.r - rgb.g) / d + 4.;
+      }
+
+      return vec3(h * 60. * PI / 180., d / cMax, cMax);
+    }
+  )glsl");
 
   vertexShader.appendFunction(R"glsl(
     vec2 getDirectionVector(float angle) {
@@ -156,6 +187,20 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
   accShader.appendOut("frag_color", GLSLType::Vec4);
 
   vertexShader.appendMainBody(R"glsl(
+    ivec2 particleTextureSize = textureSize(particleTexture, 0);
+    ivec2 pixelPosition = ivec2(gl_VertexID % particleTextureSize.x, gl_VertexID / particleTextureSize.x);
+
+    vec2 texcoord = pixelPosition / vec2(particleTextureSize);
+    texcoord.y = 1 - texcoord.y;
+
+    vec3 rgb = texelFetch(particleTexture, pixelPosition, 0).bgr;
+
+    vec3 hsv = rgb2hsv(rgb);
+
+    vec3 backgroundDelta = rgb - texelFetch(backgroundTexture, pixelPosition, 0).bgr;
+    float backgroundDifference = dot(backgroundDelta, backgroundDelta);
+    float foregroundMask = clamp((backgroundDifference - .2) * 100.f, 0., 1.);
+
     vec3 initialPosition = vec3(texcoord, 0);
     initialPosition.x /= invImageAspectRatio;
     float pointSize = max(particleSize, 0.);
@@ -293,6 +338,11 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
                           fragmentShaderSource.c_str(),
                           graphics::Pipeline::BlendMode::Addition);
 
+  graphicsPipeline_particleTexture_location =
+      graphicsPipeline.getUniformLocation("particleTexture");
+  graphicsPipeline_backgroundTexture_location =
+      graphicsPipeline.getUniformLocation("backgroundTexture");
+
   accGraphicsPipeline.create(R"glsl(
     #version 330 core
     layout(location=0) in vec2 position;
@@ -358,7 +408,12 @@ void ParticleRenderer::render(GlobalState &globalState, const RendererParameters
     glClear(GL_COLOR_BUFFER_BIT);
     graphicsPipeline.bind();
     loadUniforms(uniforms, props);
-    parameters.particle_buffer.draw();
+    const_cast<graphics::Texture*>(parameters.particleTexture)->bind(0);
+    glUniform1i(graphicsPipeline_particleTexture_location, 0);
+    const_cast<graphics::Texture*>(parameters.backgroundTexture)->bind(1);
+    glUniform1i(graphicsPipeline_backgroundTexture_location, 1);
+    glBindVertexArray(globalState.dummyVao);
+    glDrawArrays(GL_POINTS, 0, parameters.webcam_width * parameters.webcam_height);
 
     std::swap(globalState.accumulationFramebuffer, globalState.resultFramebuffer);
 
@@ -384,7 +439,12 @@ void ParticleRenderer::render(GlobalState &globalState, const RendererParameters
     glClear(GL_COLOR_BUFFER_BIT);
     graphicsPipeline.bind();
     loadUniforms(uniforms, props);
-    parameters.particle_buffer.draw();
+    const_cast<graphics::Texture*>(parameters.particleTexture)->bind(0);
+    glUniform1i(graphicsPipeline_particleTexture_location, 0);
+    const_cast<graphics::Texture*>(parameters.backgroundTexture)->bind(1);
+    glUniform1i(graphicsPipeline_backgroundTexture_location, 1);
+    glBindVertexArray(globalState.dummyVao);
+    glDrawArrays(GL_POINTS, 0, parameters.webcam_width * parameters.webcam_height);
   }
 }
 

@@ -36,8 +36,6 @@ set(SOURCE_FILES
   source/effects/WaveEffect.hpp
   source/graphics/Framebuffer.cpp
   source/graphics/Framebuffer.hpp
-  source/graphics/ParticleBuffer.cpp
-  source/graphics/ParticleBuffer.hpp
   source/graphics/Pipeline.cpp
   source/graphics/Pipeline.hpp
   source/graphics/ScreenRectBuffer.cpp
@@ -61,8 +59,6 @@ set(SOURCE_FILES
   source/ImageProvider.hpp
   source/ParticleRenderer.cpp
   source/ParticleRenderer.hpp
-  source/ParticleTextureToBuffer.cpp
-  source/ParticleTextureToBuffer.hpp
   source/RendererState.hpp
   source/main.cpp
   source/main.hpp

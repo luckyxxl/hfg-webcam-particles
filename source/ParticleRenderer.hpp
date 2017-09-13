@@ -23,6 +23,8 @@ public:
 
     const graphics::ScreenRectBuffer *screenRectBuffer;
 
+    GLuint dummyVao;
+
     graphics::Framebuffer particleFramebuffer;
     graphics::Framebuffer accumulationFramebuffer;
     graphics::Framebuffer resultFramebuffer;
@@ -54,8 +56,11 @@ private:
   graphics::Pipeline graphicsPipeline;
   graphics::Pipeline accGraphicsPipeline;
 
-  GLuint accGraphicsPipeline_particleTexture_location;
-  GLuint accGraphicsPipeline_historyTexture_location;
+  GLint graphicsPipeline_particleTexture_location;
+  GLint graphicsPipeline_backgroundTexture_location;
+
+  GLint accGraphicsPipeline_particleTexture_location;
+  GLint accGraphicsPipeline_historyTexture_location;
 
   struct UniformElement {
     GLint location;

@@ -24,12 +24,6 @@ static GLuint createProgram(GLuint vertexShader, GLuint fragmentShader) {
   glAttachShader(program, vertexShader);
   glAttachShader(program, fragmentShader);
 
-  // keep in sync with ParticleRenderer
-  glBindAttribLocation(program, 0, "position");
-  glBindAttribLocation(program, 1, "rgb");
-  glBindAttribLocation(program, 2, "hsv");
-  glBindAttribLocation(program, 3, "foregroundMask");
-
   if(!Util::linkProgram(program)) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not link program",
                              "Could not link program", nullptr);

@@ -3,10 +3,8 @@
 #include "ParticleRenderer.hpp"
 #include "effects/EffectRegistry.hpp"
 #include "SampleLibrary.hpp"
-#include "graphics/ParticleBuffer.hpp"
 #include "ImageProvider.hpp"
 #include "FaceBlitter.hpp"
-#include "ParticleTextureToBuffer.hpp"
 
 class Resources;
 namespace sound {
@@ -42,7 +40,6 @@ private:
   graphics::ScreenRectBuffer screenRectBuffer;
 
   FaceBlitter faceBlitter;
-  ParticleTextureToBuffer particleTextureToBuffer;
 
   graphics::Pipeline overlayComposePilpeline;
   GLint overlayComposePilpeline_webcam_location;
@@ -71,6 +68,4 @@ private:
   graphics::Framebuffer overlayFramebuffer;
 
   graphics::Framebuffer particleFramebuffer;
-
-  graphics::ParticleBuffer particleBuffer;
 };

@@ -44,7 +44,6 @@ bool Application::create(Resources *resources, graphics::Window *window,
   screenRectBuffer.create();
 
   faceBlitter.create(&screenRectBuffer);
-  particleTextureToBuffer.create();
 
   overlayComposePilpeline.create(R"glsl(
     #version 330 core
@@ -107,7 +106,6 @@ bool Application::create(Resources *resources, graphics::Window *window,
   backgroundTexture.create(imageProvider.width(), imageProvider.height());
   overlayFramebuffer.create(imageProvider.width(), imageProvider.height());
   particleFramebuffer.create(imageProvider.width(), imageProvider.height());
-  particleBuffer.create(imageProvider.size());
 
   // prevent undefined images at startup
   {
@@ -121,7 +119,6 @@ bool Application::create(Resources *resources, graphics::Window *window,
 }
 
 void Application::destroy() {
-  particleBuffer.destroy();
   particleFramebuffer.destroy();
   overlayFramebuffer.destroy();
   backgroundTexture.destroy();
@@ -134,7 +131,6 @@ void Application::destroy() {
 
   overlayComposePilpeline.destroy();
 
-  particleTextureToBuffer.destroy();
   faceBlitter.destroy();
 
   screenRectBuffer.destroy();
@@ -336,10 +332,7 @@ void Application::render() {
     screenRectBuffer.draw();
   }
 
-  particleTextureToBuffer.render(imageProvider.width(), imageProvider.height(),
-    particleFramebuffer.getTexture(), backgroundTexture, particleBuffer);
-
-  RendererParameters parameters(particleBuffer,
+  RendererParameters parameters(&particleFramebuffer.getTexture(), &backgroundTexture,
                                 screen_width, screen_height,
                                 imageProvider.width(), imageProvider.height());
 

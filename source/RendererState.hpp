@@ -1,20 +1,21 @@
 #pragma once
 
 #include "graphics/ScreenRectBuffer.hpp"
-#include "graphics/ParticleBuffer.hpp"
 #include "graphics/Framebuffer.hpp"
 
 struct RendererParameters {
-  const graphics::ParticleBuffer &particle_buffer;
+  const graphics::Texture *particleTexture, *backgroundTexture;
 
   const uint32_t screen_width, screen_height;
   const uint32_t webcam_width, webcam_height;
 
-  RendererParameters(const graphics::ParticleBuffer &particle_buffer,
+  RendererParameters(graphics::Texture *particleTexture,
+              graphics::Texture *backgroundTexture,
               const uint32_t &screen_width, const uint32_t &screen_height,
               const uint32_t &webcam_width, const uint32_t &webcam_height)
-      : particle_buffer(particle_buffer), screen_width(screen_width),
-        screen_height(screen_height), webcam_width(webcam_width), webcam_height(webcam_height) {}
+      : particleTexture(particleTexture), backgroundTexture(backgroundTexture),
+        screen_width(screen_width), screen_height(screen_height),
+        webcam_width(webcam_width), webcam_height(webcam_height) {}
 };
 
 class Clock {
