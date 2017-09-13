@@ -37,7 +37,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   soundRenderer->play(sampleLibrary.getBackgroundLoop(),
                       sound::Renderer::PlayParameters().setLooping(true));
 
-  if(!imageProvider.create(*resources) || !imageProvider.start()) {
+  if(!imageProvider.create(resources) || !imageProvider.start()) {
     return false;
   }
 
@@ -136,6 +136,7 @@ void Application::destroy() {
   screenRectBuffer.destroy();
 
   imageProvider.stop();
+  imageProvider.destroy();
 
   soundRenderer->killAllVoices();
 
@@ -226,9 +227,10 @@ void Application::update(float dt) {
     standbyBlitTimeout -= dt;
   }
 
-  ImageData imgData; // FIXME this could be a member variable to cache previous allocations
-  imageProvider >> imgData;
-  if (!imgData.empty()) {
+  auto imgDataP = imageProvider.consume();
+  if (imgDataP) {
+    auto &imgData = *imgDataP;
+
     webcamTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
 
     if (!imgData.faces.empty()) {
@@ -274,6 +276,8 @@ void Application::update(float dt) {
         reactionState = ReactionState::FinishStandbyTimeline;
       }
     }
+
+    imageProvider.consumed();
   }
 
   if (reactionState == ReactionState::FinishStandbyTimeline
