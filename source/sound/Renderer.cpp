@@ -15,7 +15,7 @@ bool Renderer::create() {
     desiredAudioSpec.freq = 48000;
     desiredAudioSpec.format = AUDIO_F32SYS;
     desiredAudioSpec.channels = 2;
-    desiredAudioSpec.samples = 512;
+    desiredAudioSpec.samples = 1024;
     desiredAudioSpec.callback = sdlAudioCallback;
     desiredAudioSpec.userdata = this;
 
