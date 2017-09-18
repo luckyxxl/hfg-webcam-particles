@@ -270,7 +270,7 @@ void Application::update(float dt) {
                                           std::uniform_real_distribution<float>(0.2f, 0.8f - targetSize.y)(random));
         glm::vec2 targetMax = targetMin + targetSize;
 
-        faceBlitter.blit(webcamTexture, faceMin, faceMax, overlayFramebuffer, targetMin, targetMax);
+        faceBlitter.blit(webcamTexture, faceMin, faceMax, overlayFramebuffer, targetMin, targetMax, backgroundTexture);
       }
 
       ++standbyBlitCount;

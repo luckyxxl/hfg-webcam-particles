@@ -10,7 +10,8 @@ public:
   void destroy();
 
   void blit(graphics::Texture &source, glm::vec2 sourceMin, glm::vec2 sourceMax,
-    graphics::Framebuffer &target, glm::vec2 targetMin, glm::vec2 targetMax);
+    graphics::Framebuffer &target, glm::vec2 targetMin, glm::vec2 targetMax,
+    graphics::Texture &background);
 
 private:
   const graphics::ScreenRectBuffer *rectangle;
@@ -20,4 +21,5 @@ private:
   GLint targetCenter_location;
   GLint targetExtend_location;
   GLint source_location;
+  GLint background_location;
 };
