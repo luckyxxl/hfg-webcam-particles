@@ -59,6 +59,7 @@ private:
 
   float standbyBlitTimeout = 0.f;
   uint32_t standbyBlitCount = 0u;
+  uint32_t standbyBlitTargetCount = 10u;
 
   graphics::Texture webcamTexture;
   graphics::Texture backgroundTexture;

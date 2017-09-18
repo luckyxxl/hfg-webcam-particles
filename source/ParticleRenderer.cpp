@@ -87,8 +87,7 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
   reset();
 
   timeline = std::move(_timeline);
-
-  state.clock.setPeriod(timeline->getPeriod());
+  refreshPeriod();
 
   std::vector<UniformDescription> uniforms, accUniforms;
   ShaderBuilder vertexShader, fragmentShader;
@@ -395,6 +394,11 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
     newElement.value = u.value;
     this->accUniforms.push_back(newElement);
   }
+}
+
+void ParticleRenderer::refreshPeriod() {
+  assert(timeline);
+  state.clock.setPeriod(timeline->getPeriod());
 }
 
 void ParticleRenderer::enableSound(GlobalState &globalState) {

@@ -37,6 +37,7 @@ public:
 
   void reset();
   void setTimeline(GlobalState &globalState, std::unique_ptr<Timeline> timeline);
+  void refreshPeriod();
 
   void enableSound(GlobalState &globalState);
   void disableSound(GlobalState &globalState);

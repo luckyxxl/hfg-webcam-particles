@@ -119,3 +119,10 @@ add_custom_target(update-format
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Format all source files. Requires clang-format to be installed"
 )
+
+add_executable(unittests
+  test/catch.hpp
+  test/main.cpp
+  test/TestIntervalMath.cpp
+)
+target_include_directories(unittests PRIVATE source)

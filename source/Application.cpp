@@ -14,6 +14,7 @@
 #include "effects/WaveEffect.hpp"
 #include "graphics/Window.hpp"
 #include "sound/Renderer.hpp"
+#include "IntervalMath.hpp"
 
 #include <stb_image_write.h>
 
@@ -74,7 +75,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
 
     auto hueDisplace = timeline->emplaceEffectInstance<HueDisplaceEffect>();
     hueDisplace->timeBegin = 0.f;
-    hueDisplace->timeEnd = 2000.f;
+    hueDisplace->timeEnd = 4000.f;
     hueDisplace->distance = .01f;
     hueDisplace->scaleByForegroundMask = 1.f;
 
@@ -83,7 +84,6 @@ bool Application::create(Resources *resources, graphics::Window *window,
 
   {
     auto timeline = std::make_unique<Timeline>(&effectRegistry);
-    timeline->setFixedPeriod(6000.f);
 
     timeline->emplaceEffectInstance<ConvergeCircleEffect>();
     timeline->emplaceEffectInstance<ConvergePointEffect>();
@@ -92,11 +92,9 @@ bool Application::create(Resources *resources, graphics::Window *window,
     timeline->emplaceEffectInstance<WaveEffect>();
 
     auto accum = timeline->emplaceEffectInstance<TrailsEffect>();
-    accum->timeBegin = 0.f;
-    accum->timeEnd = timeline->getPeriod();
     accum->fadeIn = 1000.f;
     accum->fadeOut = 1000.f;
-    accum->strength = .7f;
+    accum->strength = .8f;
 
     reactionParticleRenderer.setTimeline(particleRendererGlobalState, std::move(timeline));
 
@@ -197,6 +195,17 @@ bool Application::handleEvents() {
         stbi_write_png("screenshot.png", screen_width, screen_height, 3, pixels.data(), 0);
       }
       break;
+      case SDL_SCANCODE_S:
+      // save current reaction timeline
+      {
+        json j;
+        j["period"] = reactionParticleRenderer.getTimeline()->getPeriod();
+        reactionParticleRenderer.getTimeline()->save(j["effects"]);
+
+        std::ofstream f("reaction.json");
+        f << j;
+      }
+      break;
       default:
         break;
       }
@@ -212,27 +221,79 @@ bool Application::handleEvents() {
   return true;
 }
 
-static void randomizeTimeline(Timeline *timeline,
-                              std::default_random_engine &random) {
-  assert(timeline->hasFixedPeriod());
-  const auto period = timeline->getPeriod();
-  const auto minLength = 2000.f;
+static void removeEmptySpace(Timeline *timeline) {
+  const auto instanceCount = timeline->getInstanceCount();
+  if(instanceCount == 0u) return;
 
-  timeline->forEachInstance([&](IEffect &i) {
+  std::vector<Interval> intervals;
+  intervals.reserve(instanceCount);
+  timeline->forEachInstance([&](const IEffect &i) {
     if(i.isAccumulationEffect()) return;
 
-    i.timeBegin = std::uniform_real_distribution<float>(0.f, period - minLength)
-                    (random);
-    i.timeEnd = i.timeBegin + std::uniform_real_distribution<float>(minLength,
-                                period - i.timeBegin)(random);
-    i.randomizeConfig(random);
+    intervals.emplace_back(i.timeBegin, i.timeEnd);
   });
+  std::sort(intervals.begin(), intervals.end());
+
+  auto emptyIntervals = getEmptyIntervals(intervals, 0.f);
+
+  assert(std::is_sorted(emptyIntervals.begin(), emptyIntervals.end()));
+
+  for(auto interval = emptyIntervals.begin(); interval != emptyIntervals.end(); ++interval) {
+    const auto move = -interval->length();
+
+    timeline->forEachInstance([&](IEffect &i) {
+      if(i.isAccumulationEffect()) return;
+
+      if(interval->start() <= i.timeBegin) {
+        i.timeBegin += move;
+        i.timeEnd += move;
+      }
+    });
+
+    for(auto i = interval+1; i != emptyIntervals.end(); ++i) {
+      i->start() += move;
+      i->end() += move;
+    }
+  }
+}
+
+static void randomizeTimeline(Timeline *timeline,
+                              std::default_random_engine &random) {
+  const auto period = std::uniform_real_distribution<float>(10000.f, 30000.f)(random);
+  const auto minLength = 3000.f;
+
+  timeline->forEachInstance([&](IEffect &i) {
+    if(i.isAccumulationEffect()) {
+      i.timeBegin = 0.f;
+      i.timeEnd = 0.f;
+    } else {
+      i.timeBegin = std::uniform_real_distribution<float>(0.f, period - minLength)
+                      (random);
+      i.timeEnd = i.timeBegin + std::uniform_real_distribution<float>(minLength,
+                                  period - i.timeBegin)(random);
+      i.randomizeConfig(random);
+    }
+  });
+
+  removeEmptySpace(timeline);
+
+  timeline->forEachInstance([&](IEffect &i) {
+    if(i.isAccumulationEffect()) {
+      i.timeEnd = timeline->getPeriod();
+    }
+  });
+}
+
+static glm::vec2 sampleCircle(std::default_random_engine &random) {
+  float a = std::uniform_real_distribution<float>(0.f, 2.f * PI)(random);
+  float r = std::sqrt(std::uniform_real_distribution<float>()(random));
+  return glm::vec2(r * std::cos(a), r * std::sin(a));
 }
 
 void Application::update(float dt) {
   lastBackgroundUpdateTime += dt;
 
-  if(reactionState == ReactionState::Inactive) {
+  if(reactionState == ReactionState::Inactive || reactionState == ReactionState::FinishStandbyTimeline) {
     standbyBlitTimeout -= dt;
   }
 
@@ -254,10 +315,12 @@ void Application::update(float dt) {
       lastBackgroundUpdateTime = 0.f;
     }
 
-    if (!imgData.faces.empty() && reactionState == ReactionState::Inactive && standbyBlitTimeout <= 0.f) {
+    if (!imgData.faces.empty()
+      && (reactionState == ReactionState::Inactive || reactionState == ReactionState::FinishStandbyTimeline)
+      && standbyBlitTimeout <= 0.f) {
 
       {
-        auto rect = imgData.faces[0];
+        auto rect = imgData.faces[std::uniform_int_distribution<size_t>(0u, imgData.faces.size()-1u)(random)];
 
         auto rectTl = glm::vec2(rect.tl().x, rect.tl().y);
         auto rectBr = glm::vec2(rect.br().x, rect.br().y);
@@ -266,18 +329,22 @@ void Application::update(float dt) {
 
         glm::vec2 targetSize = glm::vec2(std::uniform_real_distribution<float>(.1f, .3f)(random),
                                           std::uniform_real_distribution<float>(.1f, .3f)(random));
-        glm::vec2 targetMin = glm::vec2(std::uniform_real_distribution<float>(0.2f, 0.8f - targetSize.x)(random),
-                                          std::uniform_real_distribution<float>(0.2f, 0.8f - targetSize.y)(random));
-        glm::vec2 targetMax = targetMin + targetSize;
+        glm::vec2 targetCenter = sampleCircle(random) * glm::vec2(.4f) + glm::vec2(.5f);
+        glm::vec2 targetMin = targetCenter - targetSize / 2.f;
+        glm::vec2 targetMax = targetCenter + targetSize / 2.f;
 
         faceBlitter.blit(webcamTexture, faceMin, faceMax, overlayFramebuffer, targetMin, targetMax, backgroundTexture);
       }
 
-      ++standbyBlitCount;
-      standbyBlitTimeout = std::uniform_real_distribution<float>(250.f, 750.f)(random);
+      standbyBlitTimeout = std::normal_distribution<float>(250.f, 100.f)(random);
 
-      if(standbyBlitCount == 10u) {
+      if(reactionState == ReactionState::Inactive) {
+        ++standbyBlitCount;
+      }
+
+      if(standbyBlitCount == standbyBlitTargetCount) {
         standbyBlitCount = 0u;
+        standbyBlitTargetCount = std::uniform_int_distribution<uint32_t>(32u, 128u)(random);
 
         standbyParticleRenderer.getClock().disableLooping();
 
@@ -292,6 +359,7 @@ void Application::update(float dt) {
     std::cout << "start reaction\n";
 
     randomizeTimeline(reactionParticleRenderer.getTimeline(), random);
+    reactionParticleRenderer.refreshPeriod();
     reactionParticleRenderer.getClock().play();
     reactionParticleRenderer.enableSound(particleRendererGlobalState);
 
@@ -332,9 +400,9 @@ void Application::render() {
       if(reactionParticleRenderer.getClock().isPaused()) {
         overlayVisibility = 0.f;
       } else {
-        auto p = reactionParticleRenderer.getClock().getPeriod();
+        auto p = reactionParticleRenderer.getClock().getPeriod() - 1000.f;
         auto t = reactionParticleRenderer.getClock().getTime();
-        overlayVisibility = std::min((p - t) / 2000.f, 1.f);
+        overlayVisibility = std::min(std::max((p - t) / 4000.f, 0.f), 1.f);
       }
     }
     glUniform1f(overlayComposePilpeline_overlayVisibility_location, overlayVisibility);

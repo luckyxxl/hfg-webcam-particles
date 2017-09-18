@@ -50,6 +50,12 @@ public:
       }
   }
 
+  size_t getInstanceCount() const {
+    size_t result = 0u;
+    for(auto &t : tracks) result += t.size();
+    return result;
+  }
+
 private:
   EffectRegistry *effectRegistry;
 
