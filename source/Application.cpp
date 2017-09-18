@@ -15,6 +15,8 @@
 #include "graphics/Window.hpp"
 #include "sound/Renderer.hpp"
 
+#include <stb_image_write.h>
+
 bool Application::create(Resources *resources, graphics::Window *window,
                          sound::Renderer *soundRenderer) {
   this->window = window;
@@ -187,6 +189,14 @@ bool Application::handleEvents() {
       soundRenderer->play(&whooshSamples[4]);
       break;
       */
+      case SDL_SCANCODE_F1:
+      // screenshot
+      {
+        std::vector<uint8_t> pixels(screen_width * screen_height * 3);
+        glReadPixels(0, 0, screen_width, screen_height, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+        stbi_write_png("screenshot.png", screen_width, screen_height, 3, pixels.data(), 0);
+      }
+      break;
       default:
         break;
       }
