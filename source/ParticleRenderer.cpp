@@ -4,6 +4,21 @@
 #include "Timeline.hpp"
 #include "effects/AccumulationEffect.hpp"
 
+static const char *vignetteFunction = R"glsl(
+  float vignette(vec2 screenCoord) {
+    screenCoord = screenCoord * vec2(2) - vec2(1);
+    float x = length(screenCoord);
+
+    const float blendStart = 0.8;
+    const float blendEnd = 1.0;
+
+    // linear ramp from blend start to blend end
+    float l = clamp((x - blendStart) * (1.0 / (blendEnd - blendStart)), 0.0, 1.0);
+
+    return 1.0 - l*l;
+  }
+)glsl";
+
 void ParticleRenderer::GlobalState::create(sound::Renderer *soundRenderer,
                                            const SampleLibrary *sampleLibrary,
                                            std::default_random_engine *random,
@@ -25,15 +40,18 @@ void ParticleRenderer::GlobalState::create(sound::Renderer *soundRenderer,
     void main() {
       gl_Position = vec4(position, 0, 1);
     }
-  )glsl", R"glsl(
+  )glsl", TEMPLATE(R"glsl(
     #version 330 core
     uniform sampler2D resultTexture;
     out vec4 frag_color;
+    ${vignetteFunction}
     void main() {
       vec3 color = texelFetch(resultTexture, ivec2(gl_FragCoord.xy), 0).rgb;
       frag_color = vec4(color, 1);
+      frag_color *= vignette(vec2(gl_FragCoord.xy) / vec2(textureSize(resultTexture, 0)));
     }
-  )glsl", graphics::Pipeline::BlendMode::None);
+  )glsl").compile({{"vignetteFunction", vignetteFunction}}).c_str(),
+  graphics::Pipeline::BlendMode::None);
   resultGraphicsPipeline_resultTexture_location =
       resultGraphicsPipeline.getUniformLocation("resultTexture");
 }
@@ -129,6 +147,10 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
   uniforms.emplace_back("globalTime", GLSLType::Float,
                         [](const RenderProps &props) {
                           return UniformValue(props.state.clock.getTime());
+                        });
+  uniforms.emplace_back("screenSize", GLSLType::Vec2,
+                        [](const RenderProps &props) {
+                          return UniformValue(glm::vec2(props.screen_width, props.screen_height));
                         });
 
   accUniforms.emplace_back("particleTexture", GLSLType::Sampler2D,
@@ -310,6 +332,11 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
   fragmentShader.appendMainBody(R"glsl(
     frag_color = vec4(color * v, 1);
   )glsl");
+
+  if(!accumulationActive) {
+    fragmentShader.appendFunction(vignetteFunction);
+    fragmentShader.appendMainBody("frag_color *= vignette(vec2(gl_FragCoord.xy) / screenSize);");
+  }
 
   accShader.appendMainBody(R"glsl(
     if (activeAgents > 0) {
