@@ -264,10 +264,10 @@ void Application::update(float dt) {
         glm::vec2 faceMin = rectTl / glm::vec2(imageProvider.width(), imageProvider.height());
         glm::vec2 faceMax = rectBr / glm::vec2(imageProvider.width(), imageProvider.height());
 
-        glm::vec2 targetSize = glm::vec2(std::uniform_real_distribution<float>(.2f, .4f)(random),
-                                          std::uniform_real_distribution<float>(.2f, .4f)(random));
-        glm::vec2 targetMin = glm::vec2(std::uniform_real_distribution<float>(0.f, 1.f - targetSize.x)(random),
-                                          std::uniform_real_distribution<float>(0.f, 1.f - targetSize.y)(random));
+        glm::vec2 targetSize = glm::vec2(std::uniform_real_distribution<float>(.1f, .3f)(random),
+                                          std::uniform_real_distribution<float>(.1f, .3f)(random));
+        glm::vec2 targetMin = glm::vec2(std::uniform_real_distribution<float>(0.2f, 0.8f - targetSize.x)(random),
+                                          std::uniform_real_distribution<float>(0.2f, 0.8f - targetSize.y)(random));
         glm::vec2 targetMax = targetMin + targetSize;
 
         faceBlitter.blit(webcamTexture, faceMin, faceMax, overlayFramebuffer, targetMin, targetMax);
