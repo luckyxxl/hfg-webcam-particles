@@ -1,4 +1,6 @@
 language: cpp
 os: osx
+before_install:
+  - brew install sdl2 opencv3
 script:
   - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make
