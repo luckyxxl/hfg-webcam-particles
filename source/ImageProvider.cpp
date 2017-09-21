@@ -1,16 +1,10 @@
+#include "main.hpp"
+
 #include "ImageProvider.hpp"
 #include "Resources.hpp"
-#include <SDL.h>
-#include <iostream>
-
-#include <opencv2/imgproc/imgproc.hpp>
 
 static const char *face_cascade_xml = "haarcascade_frontalface_alt.xml";
 static const char *eyes_cascade_xml = "haarcascade_eye_tree_eyeglasses.xml";
-
-void ImageData::resize(size_t width, size_t height) {
-  webcam_pixels = cv::Mat::zeros(height, width, CV_8UC3);
-}
 
 static cv::Size getFrameSize(cv::VideoCapture &capture) {
 #if CV_VERSION_EPOCH < 3
@@ -35,7 +29,7 @@ bool ImageProvider::start() {
     webcam_size = getFrameSize(capture);
     if (webcam_size.width > 0 && webcam_size.height > 0) {
       for(size_t i=0u; i<data.size; ++i) {
-        data.getBuffer(i).resize(webcam_size.width, webcam_size.height);
+        data.getBuffer(i).webcam_pixels = cv::Mat::zeros(webcam_size.height, webcam_size.width, CV_8UC3);
       }
 
       webcam_thread = std::thread([this] { this->webcamThreadFunc(); });

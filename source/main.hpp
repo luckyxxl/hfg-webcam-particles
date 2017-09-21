@@ -23,7 +23,12 @@ using json = nlohmann::json;
 #define GL_GLEXT_PROTOTYPES
 #include <SDL_opengl.h>
 
-#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#if CV_VERSION_EPOCH < 3
+#include <opencv2/highgui/highgui.hpp>
+#else
+#include <opencv2/videoio.hpp>
+#endif
+#include <opencv2/objdetect/objdetect.hpp>
 
 constexpr auto PI = 3.14159265f;

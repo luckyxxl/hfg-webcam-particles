@@ -1,34 +1,13 @@
 #pragma once
 
-#include <atomic>
-#include <cstdint>
-#include <future>
-#include <opencv2/objdetect/objdetect.hpp>
-#if CV_VERSION_EPOCH < 3
-#include <opencv2/highgui/highgui.hpp>
-#else
-#include <opencv2/videoio.hpp>
-#endif
-#include <thread>
-#include <vector>
-
 #include "ThreadSyncTripleBuffer.hpp"
-
-class Resources;
 
 struct ImageData {
   cv::Mat webcam_pixels;
   std::vector<cv::Rect> faces;
-
-  ImageData() = default;
-  ImageData(const ImageData &) = default;
-  ImageData(ImageData &&) = default;
-  ImageData &operator=(const ImageData &) = default;
-  ImageData &operator=(ImageData &&) = default;
-
-  void resize(size_t width, size_t height);
-  bool empty() { return webcam_pixels.empty(); }
 };
+
+class Resources;
 
 class ImageProvider {
 public:
