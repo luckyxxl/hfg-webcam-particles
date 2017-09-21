@@ -52,7 +52,6 @@ set(SOURCE_FILES
   source/sound/SampleBuffer.cpp
   source/Application.cpp
   source/Application.hpp
-  source/AsyncMostRecentDataStream.hpp
   source/FaceBlitter.cpp
   source/FaceBlitter.hpp
   source/ImageProvider.cpp
@@ -71,6 +70,7 @@ set(SOURCE_FILES
   source/SoundPlaylist.cpp
   source/SoundPlaylist.hpp
   source/Template.hpp
+  source/ThreadSyncTripleBuffer.hpp
   source/Timeline.cpp
   source/Timeline.hpp
 )

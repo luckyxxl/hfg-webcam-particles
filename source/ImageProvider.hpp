@@ -1,6 +1,5 @@
 #pragma once
 
-#include "AsyncMostRecentDataStream.hpp"
 #include <atomic>
 #include <cstdint>
 #include <future>
@@ -12,6 +11,8 @@
 #endif
 #include <thread>
 #include <vector>
+
+#include "ThreadSyncTripleBuffer.hpp"
 
 class Resources;
 
@@ -29,30 +30,28 @@ struct ImageData {
   bool empty() { return webcam_pixels.empty(); }
 };
 
-class ImageProvider
-    : public AsyncMostRecentDataStream<ImageProvider, ImageData> {
-  friend class AsyncMostRecentDataStream<ImageProvider, ImageData>;
-
+class ImageProvider {
 public:
-  ImageProvider();
-  bool create(Resources &resources) {
-    this->resources = &resources;
-    return true;
-  }
+  bool create(Resources *resources);
+  void destroy() {}
+
+  bool start();
+  void stop();
 
   size_t width() const { return webcam_size.width; }
   size_t height() const { return webcam_size.height; }
   size_t size() const { return width() * height(); }
+  ImageData *consume() { return data.startCopyNew(); }
 
 private:
-  bool onBeforeStart();
-  void onAfterStop();
-  void produce(ImageData &assigned);
-
-private:
-  Resources *resources;
   cv::VideoCapture capture;
   cv::Size webcam_size;
+  ThreadSyncTripleBuffer<ImageData> data;
   cv::CascadeClassifier face_cascade;
   cv::CascadeClassifier eyes_cascade;
+
+  std::atomic<bool> kill_threads{false};
+
+  void webcamThreadFunc();
+  std::thread webcam_thread;
 };
