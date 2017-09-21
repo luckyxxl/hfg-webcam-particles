@@ -251,11 +251,11 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
 
     const auto timeBegin = instanceUniforms.addUniform("timeBegin",
       GLSLType::Float, [&i](const RenderProps &props) {
-        return UniformValue(i.timeBegin);
+        return UniformValue(i.enabled ? i.timeBegin : -1.f);
       });
     const auto timeEnd = instanceUniforms.addUniform("timeEnd",
       GLSLType::Float, [&i](const RenderProps &props) {
-        return UniformValue(i.timeEnd);
+        return UniformValue(i.enabled ? i.timeEnd : -2.f);
       });
 
     vertexShader.appendMainBody(TEMPLATE("if(${timeBegin} <= globalTime && "
@@ -271,11 +271,11 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
 
       const auto accTimeBegin = accInstanceUniforms.addUniform("timeBegin",
         GLSLType::Float, [&i](const RenderProps &props) {
-          return UniformValue(i.timeBegin);
+          return UniformValue(i.enabled ? i.timeBegin : -1.f);
         });
       const auto accTimeEnd = accInstanceUniforms.addUniform("timeEnd",
         GLSLType::Float, [&i](const RenderProps &props) {
-          return UniformValue(i.timeEnd);
+          return UniformValue(i.enabled ? i.timeEnd : -2.f);
         });
 
       accShader.appendMainBody(TEMPLATE(R"glsl(
@@ -404,11 +404,12 @@ void ParticleRenderer::refreshPeriod() {
 void ParticleRenderer::enableSound(GlobalState &globalState) {
   soundPlaylist.clear();
 
+  EffectSoundRegistrationData registrationData(soundPlaylist,
+                                               globalState.sampleLibrary,
+                                               *globalState.random);
+
   timeline->forEachInstance([&](const IEffect &i) {
-    EffectSoundRegistrationData registrationData(soundPlaylist,
-                                                 globalState.sampleLibrary,
-                                                 *globalState.random);
-    i.registerEffectSound(registrationData);
+    if(i.enabled) i.registerEffectSound(registrationData);
   });
 }
 

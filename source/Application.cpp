@@ -228,7 +228,7 @@ static void removeEmptySpace(Timeline *timeline) {
   std::vector<Interval> intervals;
   intervals.reserve(instanceCount);
   timeline->forEachInstance([&](const IEffect &i) {
-    if(i.isAccumulationEffect()) return;
+    if(!i.enabled || i.isAccumulationEffect()) return;
 
     intervals.emplace_back(i.timeBegin, i.timeEnd);
   });
@@ -274,6 +274,17 @@ static void randomizeTimeline(Timeline *timeline,
       i.randomizeConfig(random);
     }
   });
+
+  {
+    size_t enabledCount;
+    do {
+      enabledCount = 0u;
+      timeline->forEachInstance([&](IEffect &i) {
+        i.enabled = std::bernoulli_distribution(.95)(random);
+        if(i.enabled) ++enabledCount;
+      });
+    } while(enabledCount < 2u);
+  }
 
   removeEmptySpace(timeline);
 

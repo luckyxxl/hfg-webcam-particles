@@ -32,8 +32,8 @@ public:
       return fixedPeriod;
     } else {
       auto period = 0.f;
-      forEachInstance([&](const IEffect &e) {
-        period = std::max(period, e.getTimeEnd());
+      forEachInstance([&](const IEffect &i) {
+        if(i.enabled) period = std::max(period, i.getTimeEnd());
       });
       return period;
     }

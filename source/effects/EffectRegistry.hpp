@@ -64,6 +64,7 @@ public:
   float timeBegin = 0.f;
   float timeEnd = 1000.f;
   unsigned repetitions = 1u;
+  bool enabled = true;
 
   float getPeriod() const { return (timeEnd - timeBegin) / repetitions; }
 };
