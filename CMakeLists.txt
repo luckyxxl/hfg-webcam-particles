@@ -52,6 +52,8 @@ set(SOURCE_FILES
   source/sound/SampleBuffer.cpp
   source/Application.cpp
   source/Application.hpp
+  source/DebugImageProvider.cpp
+  source/DebugImageProvider.hpp
   source/FaceBlitter.cpp
   source/FaceBlitter.hpp
   source/ImageProvider.cpp

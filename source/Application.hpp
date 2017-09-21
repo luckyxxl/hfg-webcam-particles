@@ -4,6 +4,7 @@
 #include "effects/EffectRegistry.hpp"
 #include "SampleLibrary.hpp"
 #include "ImageProvider.hpp"
+#include "DebugImageProvider.hpp"
 #include "FaceBlitter.hpp"
 
 class Resources;
@@ -35,7 +36,8 @@ private:
 
   uint32_t screen_width, screen_height;
 
-  ImageProvider imageProvider;
+  using ImageProvider_t = DebugImageProvider;
+  ImageProvider_t imageProvider;
 
   graphics::ScreenRectBuffer screenRectBuffer;
 

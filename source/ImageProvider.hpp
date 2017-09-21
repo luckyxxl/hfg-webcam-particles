@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ThreadSyncTripleBuffer.hpp"
+#include "Resources.hpp"
 
 struct ImageData {
   cv::Mat webcam_pixels;
