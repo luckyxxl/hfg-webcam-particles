@@ -11,6 +11,7 @@
 #include "effects/ParticleSpacingEffect.hpp"
 #include "effects/SmearEffect.hpp"
 #include "effects/SmoothTrailsEffect.hpp"
+#include "effects/SparkleEffect.hpp"
 #include "effects/StandingWaveEffect.hpp"
 #include "effects/TrailsEffect.hpp"
 #include "effects/WaveEffect.hpp"
@@ -33,6 +34,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   effectRegistry.registerEffect<ParticleSpacingEffect>();
   effectRegistry.registerEffect<SmearEffect>();
   effectRegistry.registerEffect<SmoothTrailsEffect>();
+  effectRegistry.registerEffect<SparkleEffect>();
   effectRegistry.registerEffect<StandingWaveEffect>();
   effectRegistry.registerEffect<TrailsEffect>();
   effectRegistry.registerEffect<WaveEffect>();
@@ -77,11 +79,17 @@ bool Application::create(Resources *resources, graphics::Window *window,
   {
     auto timeline = std::make_unique<Timeline>(&effectRegistry);
 
+/*
     auto hueDisplace = timeline->emplaceEffectInstance<HueDisplaceEffect>();
     hueDisplace->timeBegin = 0.f;
     hueDisplace->timeEnd = 4000.f;
     hueDisplace->distance = .01f;
     hueDisplace->scaleByForegroundMask = 1.f;
+*/
+
+    auto test = timeline->emplaceEffectInstance<SparkleEffect>();
+    test->timeBegin = 0.f;
+    test->timeEnd = 4000.f;
 
     standbyParticleRenderer.setTimeline(particleRendererGlobalState, std::move(timeline));
   }

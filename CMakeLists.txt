@@ -32,6 +32,8 @@ set(SOURCE_FILES
   source/effects/SmearEffect.hpp
   source/effects/SmoothTrailsEffect.cpp
   source/effects/SmoothTrailsEffect.hpp
+  source/effects/SparkleEffect.cpp
+  source/effects/SparkleEffect.hpp
   source/effects/StandingWaveEffect.cpp
   source/effects/StandingWaveEffect.hpp
   source/effects/TrailsEffect.cpp
