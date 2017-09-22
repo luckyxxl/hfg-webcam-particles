@@ -6,7 +6,9 @@
 #include "effects/ConvergeCircleEffect.hpp"
 #include "effects/ConvergePointEffect.hpp"
 #include "effects/HueDisplaceEffect.hpp"
+#include "effects/ParticleDisplaceEffect.hpp"
 #include "effects/ParticleSizeByHueEffect.hpp"
+#include "effects/ParticleSpacingEffect.hpp"
 #include "effects/SmearEffect.hpp"
 #include "effects/SmoothTrailsEffect.hpp"
 #include "effects/StandingWaveEffect.hpp"
@@ -26,7 +28,9 @@ bool Application::create(Resources *resources, graphics::Window *window,
   effectRegistry.registerEffect<ConvergeCircleEffect>();
   effectRegistry.registerEffect<ConvergePointEffect>();
   effectRegistry.registerEffect<HueDisplaceEffect>();
+  effectRegistry.registerEffect<ParticleDisplaceEffect>();
   effectRegistry.registerEffect<ParticleSizeByHueEffect>();
+  effectRegistry.registerEffect<ParticleSpacingEffect>();
   effectRegistry.registerEffect<SmearEffect>();
   effectRegistry.registerEffect<SmoothTrailsEffect>();
   effectRegistry.registerEffect<StandingWaveEffect>();
@@ -87,7 +91,9 @@ bool Application::create(Resources *resources, graphics::Window *window,
 
     timeline->emplaceEffectInstance<ConvergeCircleEffect>();
     timeline->emplaceEffectInstance<ConvergePointEffect>();
+    timeline->emplaceEffectInstance<ParticleDisplaceEffect>();
     timeline->emplaceEffectInstance<HueDisplaceEffect>();
+    timeline->emplaceEffectInstance<ParticleSpacingEffect>();
     timeline->emplaceEffectInstance<StandingWaveEffect>();
     timeline->emplaceEffectInstance<WaveEffect>();
 
