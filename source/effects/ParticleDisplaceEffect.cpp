@@ -83,7 +83,7 @@ void ParticleDisplaceEffect::registerEffect(EffectRegistrationData &data) const 
                       [this](const RenderProps &props) {
                         // starts at 1, goes down to 0
                         const auto time = glm::fract((props.state.clock.getTime() - timeBegin) / getPeriod());
-                        return UniformValue(glm::min(1.f, (1.f - time) / (easeInTime / getPeriod())));
+                        return UniformValue(glm::min(1.f, (1.f - time) / (easeOutTime / getPeriod())));
                       }),
           })
           .c_str());
