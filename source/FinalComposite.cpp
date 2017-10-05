@@ -29,7 +29,12 @@ void FinalComposite::create(const graphics::ScreenRectBuffer *rectangle) {
     out vec4 frag_color;
 
     float vignette(vec2 screenCoord) {
-      float x = length(screenCoord);
+      float a = atan(screenCoord.y, screenCoord.x);
+
+      // https://en.wikipedia.org/wiki/Squircle
+      // https://thatsmaths.com/2016/07/14/squircles/  (Eq. 3)
+      float s = sin(2 * a);
+      float x = length(screenCoord) - s * s * .1;
 
       const float blendStart = 0.8;
       const float blendEnd = 1.0;
