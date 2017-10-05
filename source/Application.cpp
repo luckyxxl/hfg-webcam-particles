@@ -111,7 +111,10 @@ bool Application::create(Resources *resources, graphics::Window *window,
   webcamTexture.create(imageProvider.width(), imageProvider.height());
   backgroundTexture.create(imageProvider.width(), imageProvider.height());
   overlayFramebuffer.create(imageProvider.width(), imageProvider.height());
-  particleFramebuffer.create(imageProvider.width(), imageProvider.height());
+  particleSourceFramebuffer.create(imageProvider.width(), imageProvider.height());
+  particleOutputFramebuffer.create(1u, 1u);
+
+  finalComposite.create(&screenRectBuffer);
 
   // prevent undefined images at startup
   {
@@ -125,7 +128,10 @@ bool Application::create(Resources *resources, graphics::Window *window,
 }
 
 void Application::destroy() {
-  particleFramebuffer.destroy();
+  finalComposite.destroy();
+
+  particleOutputFramebuffer.destroy();
+  particleSourceFramebuffer.destroy();
   overlayFramebuffer.destroy();
   backgroundTexture.destroy();
   webcamTexture.destroy();
@@ -155,7 +161,9 @@ void Application::reshape(uint32_t width, uint32_t height) {
 
   glViewport(0, 0, width, height);
 
-  particleRendererGlobalState.reshape(width, height);
+  particleOutputFramebuffer.resize(width, height);
+  particleRendererGlobalState.reshape(particleOutputFramebuffer.getWidth(),
+    particleOutputFramebuffer.getHeight());
 }
 
 bool Application::handleEvents() {
@@ -403,10 +411,10 @@ void Application::update(float dt) {
 }
 
 void Application::render() {
-  // compose webcam and overlay into particleFramebuffer
+  // compose webcam and overlay into particleSourceFramebuffer
   {
-    particleFramebuffer.bind();
-    glViewport(0, 0, particleFramebuffer.getWidth(), particleFramebuffer.getHeight());
+    particleSourceFramebuffer.bind();
+    glViewport(0, 0, particleSourceFramebuffer.getWidth(), particleSourceFramebuffer.getHeight());
 
     overlayComposePilpeline.bind();
     webcamTexture.bind(0);
@@ -429,20 +437,21 @@ void Application::render() {
     screenRectBuffer.draw();
   }
 
-  RendererParameters parameters(&particleFramebuffer.getTexture(), &backgroundTexture,
-                                screen_width, screen_height,
-                                imageProvider.width(), imageProvider.height());
+  RendererParameters parameters(&particleSourceFramebuffer.getTexture(), &backgroundTexture,
+                                &particleOutputFramebuffer);
 
   if (reactionState == ReactionState::RenderReactionTimeline) {
 #if 0
     if(reactionParticleRenderer.getClock().getTime() < 100) {
-      particleFramebuffer.getTexture().dbgSaveToFile("comp.bmp");
+      particleSourceFramebuffer.getTexture().dbgSaveToFile("comp.bmp");
     }
 #endif
     reactionParticleRenderer.render(particleRendererGlobalState, parameters);
   } else {
     standbyParticleRenderer.render(particleRendererGlobalState, parameters);
   }
+
+  finalComposite.draw(particleOutputFramebuffer.getTexture(), screen_width, screen_height);
 
   {
     GLenum error = glGetError();

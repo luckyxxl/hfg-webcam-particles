@@ -58,6 +58,8 @@ set(SOURCE_FILES
   source/Application.hpp
   source/FaceBlitter.cpp
   source/FaceBlitter.hpp
+  source/FinalComposite.cpp
+  source/FinalComposite.hpp
   source/ImageProvider.cpp
   source/ImageProvider.hpp
   source/ParticleRenderer.cpp

@@ -6,16 +6,18 @@
 struct RendererParameters {
   const graphics::Texture *particleTexture, *backgroundTexture;
 
+  graphics::Framebuffer *outputFramebuffer;
+
   const uint32_t screen_width, screen_height;
   const uint32_t webcam_width, webcam_height;
 
   RendererParameters(graphics::Texture *particleTexture,
               graphics::Texture *backgroundTexture,
-              const uint32_t &screen_width, const uint32_t &screen_height,
-              const uint32_t &webcam_width, const uint32_t &webcam_height)
+              graphics::Framebuffer *outputFramebuffer)
       : particleTexture(particleTexture), backgroundTexture(backgroundTexture),
-        screen_width(screen_width), screen_height(screen_height),
-        webcam_width(webcam_width), webcam_height(webcam_height) {}
+        outputFramebuffer(outputFramebuffer),
+        screen_width(outputFramebuffer->getWidth()), screen_height(outputFramebuffer->getHeight()),
+        webcam_width(particleTexture->getWidth()), webcam_height(particleTexture->getHeight()) {}
 };
 
 class Clock {

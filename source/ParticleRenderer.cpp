@@ -4,21 +4,6 @@
 #include "Timeline.hpp"
 #include "effects/AccumulationEffect.hpp"
 
-static const char *vignetteFunction = R"glsl(
-  float vignette(vec2 screenCoord) {
-    screenCoord = screenCoord * vec2(2) - vec2(1);
-    float x = length(screenCoord);
-
-    const float blendStart = 0.8;
-    const float blendEnd = 1.0;
-
-    // linear ramp from blend start to blend end
-    float l = clamp((x - blendStart) * (1.0 / (blendEnd - blendStart)), 0.0, 1.0);
-
-    return 1.0 - l*l;
-  }
-)glsl";
-
 void ParticleRenderer::GlobalState::create(sound::Renderer *soundRenderer,
                                            const SampleLibrary *sampleLibrary,
                                            std::default_random_engine *random,
@@ -40,17 +25,15 @@ void ParticleRenderer::GlobalState::create(sound::Renderer *soundRenderer,
     void main() {
       gl_Position = vec4(position, 0, 1);
     }
-  )glsl", TEMPLATE(R"glsl(
+  )glsl", R"glsl(
     #version 330 core
     uniform sampler2D resultTexture;
     out vec4 frag_color;
-    ${vignetteFunction}
     void main() {
       vec3 color = texelFetch(resultTexture, ivec2(gl_FragCoord.xy), 0).rgb;
       frag_color = vec4(color, 1);
-      frag_color *= vignette(vec2(gl_FragCoord.xy) / vec2(textureSize(resultTexture, 0)));
     }
-  )glsl").compile({{"vignetteFunction", vignetteFunction}}).c_str(),
+  )glsl",
   graphics::Pipeline::BlendMode::None);
   resultGraphicsPipeline_resultTexture_location =
       resultGraphicsPipeline.getUniformLocation("resultTexture");
@@ -332,11 +315,6 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
     frag_color = vec4(color * v, 1);
   )glsl");
 
-  if(!accumulationActive) {
-    fragmentShader.appendFunction(vignetteFunction);
-    fragmentShader.appendMainBody("frag_color *= vignette(vec2(gl_FragCoord.xy) / screenSize);");
-  }
-
   accShader.appendMainBody(R"glsl(
     if (activeAgents > 0) {
       accumulationResult /= float(activeAgents);
@@ -426,6 +404,15 @@ void ParticleRenderer::update(GlobalState &globalState, float dt) {
 }
 
 void ParticleRenderer::render(GlobalState &globalState, const RendererParameters &parameters) {
+  assert(parameters.screen_width == parameters.outputFramebuffer->getWidth());
+  assert(parameters.screen_height == parameters.outputFramebuffer->getHeight());
+  assert(parameters.screen_width == globalState.particleFramebuffer.getWidth());
+  assert(parameters.screen_height == globalState.particleFramebuffer.getHeight());
+  assert(parameters.screen_width == globalState.accumulationFramebuffer.getWidth());
+  assert(parameters.screen_height == globalState.accumulationFramebuffer.getHeight());
+  assert(parameters.screen_width == globalState.resultFramebuffer.getWidth());
+  assert(parameters.screen_height == globalState.resultFramebuffer.getHeight());
+
   glViewport(0, 0, parameters.screen_width, parameters.screen_height);
 
   RenderProps props(parameters, state, *globalState.random);
@@ -458,7 +445,7 @@ void ParticleRenderer::render(GlobalState &globalState, const RendererParameters
     loadUniforms(accUniforms, props);
     globalState.screenRectBuffer->draw();
 
-    graphics::Framebuffer::unbind();
+    parameters.outputFramebuffer->bind();
     globalState.resultGraphicsPipeline.bind();
     globalState.resultFramebuffer.getTexture().bind(0);
     glUniform1i(globalState.resultGraphicsPipeline_resultTexture_location, 0);
@@ -467,7 +454,7 @@ void ParticleRenderer::render(GlobalState &globalState, const RendererParameters
     graphics::Texture::unbind(0);
     graphics::Texture::unbind(1);
   } else {
-    graphics::Framebuffer::unbind();
+    parameters.outputFramebuffer->bind();
     glClear(GL_COLOR_BUFFER_BIT);
     graphicsPipeline.bind();
     loadUniforms(uniforms, props);

@@ -5,6 +5,7 @@
 #include "SampleLibrary.hpp"
 #include "ImageProvider.hpp"
 #include "FaceBlitter.hpp"
+#include "FinalComposite.hpp"
 
 class Resources;
 namespace sound {
@@ -68,5 +69,9 @@ private:
 
   graphics::Framebuffer overlayFramebuffer;
 
-  graphics::Framebuffer particleFramebuffer;
+  graphics::Framebuffer particleSourceFramebuffer;
+
+  graphics::Framebuffer particleOutputFramebuffer;
+
+  FinalComposite finalComposite;
 };
