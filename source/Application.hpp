@@ -67,8 +67,6 @@ private:
   bool backgroundTextureIsSet = false;
   float lastBackgroundUpdateTime;
 
-  graphics::Framebuffer overlayFramebuffer;
-
   graphics::Framebuffer particleSourceFramebuffer;
 
   graphics::Framebuffer particleOutputFramebuffer;

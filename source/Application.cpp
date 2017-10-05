@@ -50,7 +50,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
 
   screenRectBuffer.create();
 
-  faceBlitter.create(&screenRectBuffer);
+  faceBlitter.create(&screenRectBuffer, imageProvider.width(), imageProvider.height());
 
   overlayComposePilpeline.create(R"glsl(
     #version 330 core
@@ -110,7 +110,6 @@ bool Application::create(Resources *resources, graphics::Window *window,
 
   webcamTexture.create(imageProvider.width(), imageProvider.height());
   backgroundTexture.create(imageProvider.width(), imageProvider.height());
-  overlayFramebuffer.create(imageProvider.width(), imageProvider.height());
   particleSourceFramebuffer.create(imageProvider.width(), imageProvider.height());
   particleOutputFramebuffer.create(1u, 1u);
 
@@ -122,8 +121,6 @@ bool Application::create(Resources *resources, graphics::Window *window,
     webcamTexture.setImage(imageProvider.width(), imageProvider.height(), pixels.data());
   }
 
-  overlayFramebuffer.clear();
-
   return true;
 }
 
@@ -132,7 +129,6 @@ void Application::destroy() {
 
   particleOutputFramebuffer.destroy();
   particleSourceFramebuffer.destroy();
-  overlayFramebuffer.destroy();
   backgroundTexture.destroy();
   webcamTexture.destroy();
 
@@ -360,7 +356,7 @@ void Application::update(float dt) {
         glm::vec2 targetMin = targetCenter - targetSize / 2.f;
         glm::vec2 targetMax = targetCenter + targetSize / 2.f;
 
-        faceBlitter.blit(webcamTexture, faceMin, faceMax, overlayFramebuffer, targetMin, targetMax, backgroundTexture);
+        faceBlitter.blit(webcamTexture, faceMin, faceMax, targetMin, targetMax, backgroundTexture);
       }
 
       standbyBlitTimeout = std::normal_distribution<float>(250.f, 100.f)(random);
@@ -398,7 +394,7 @@ void Application::update(float dt) {
 
     std::cout << "end reaction\n";
 
-    overlayFramebuffer.clear();
+    faceBlitter.clear();
 
     standbyParticleRenderer.getClock().enableLooping();
     standbyParticleRenderer.getClock().play();
@@ -406,11 +402,15 @@ void Application::update(float dt) {
     reactionState = ReactionState::Inactive;
   }
 
+  faceBlitter.update(dt);
+
   standbyParticleRenderer.update(particleRendererGlobalState, dt);
   reactionParticleRenderer.update(particleRendererGlobalState, dt);
 }
 
 void Application::render() {
+  faceBlitter.draw();
+
   // compose webcam and overlay into particleSourceFramebuffer
   {
     particleSourceFramebuffer.bind();
@@ -419,7 +419,7 @@ void Application::render() {
     overlayComposePilpeline.bind();
     webcamTexture.bind(0);
     glUniform1i(overlayComposePilpeline_webcam_location, 0);
-    overlayFramebuffer.getTexture().bind(1);
+    faceBlitter.getResultTexture().bind(1);
     glUniform1i(overlayComposePilpeline_overlay_location, 1);
 
     float overlayVisibility = 1.f;

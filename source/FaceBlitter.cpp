@@ -2,8 +2,13 @@
 
 #include "FaceBlitter.hpp"
 
-void FaceBlitter::create(const graphics::ScreenRectBuffer *rectangle) {
+constexpr float FADE_TIME = 1000.f;
+
+void FaceBlitter::create(const graphics::ScreenRectBuffer *rectangle,
+    uint32_t webcam_width, uint32_t webcam_height) {
   this->rectangle = rectangle;
+
+  blitOperations.reserve(8u);
 
   static const char *vertexShaderSource = R"glsl(
     #version 330 core
@@ -25,7 +30,7 @@ void FaceBlitter::create(const graphics::ScreenRectBuffer *rectangle) {
     }
   )glsl";
 
-  static const char *fragmentShaderSource = R"glsl(
+  static const char *blitToBufferPipeline_fragmentShaderSource = R"glsl(
     #version 330 core
     uniform sampler2D source;
     uniform sampler2D background;
@@ -64,42 +69,185 @@ void FaceBlitter::create(const graphics::ScreenRectBuffer *rectangle) {
     }
   )glsl";
 
-  pipeline.create(vertexShaderSource, fragmentShaderSource, graphics::Pipeline::BlendMode::Normal);
+  static const char *blitToResultPipeline_fragmentShaderSource = R"glsl(
+    #version 330 core
+    uniform sampler2D source;
+    uniform float visibility;
 
-  sourceCenter_location = pipeline.getUniformLocation("sourceCenter");
-  sourceExtend_location = pipeline.getUniformLocation("sourceExtend");
-  targetCenter_location = pipeline.getUniformLocation("targetCenter");
-  targetExtend_location = pipeline.getUniformLocation("targetExtend");
-  source_location = pipeline.getUniformLocation("source");
-  background_location = pipeline.getUniformLocation("background");
+    in vec2 fragPosition;
+    in vec2 sourceTexcoord;
+
+    out vec4 frag_color;
+
+    void main() {
+      vec4 color = texture(source, sourceTexcoord);
+      frag_color = vec4(color.rgb, color.a * visibility);
+    }
+  )glsl";
+
+  blitToBufferPipeline.create(vertexShaderSource, blitToBufferPipeline_fragmentShaderSource, graphics::Pipeline::BlendMode::None);
+
+  blitToBufferPipeline_sourceCenter_location = blitToBufferPipeline.getUniformLocation("sourceCenter");
+  blitToBufferPipeline_sourceExtend_location = blitToBufferPipeline.getUniformLocation("sourceExtend");
+  blitToBufferPipeline_targetCenter_location = blitToBufferPipeline.getUniformLocation("targetCenter");
+  blitToBufferPipeline_targetExtend_location = blitToBufferPipeline.getUniformLocation("targetExtend");
+  blitToBufferPipeline_source_location = blitToBufferPipeline.getUniformLocation("source");
+  blitToBufferPipeline_background_location = blitToBufferPipeline.getUniformLocation("background");
+
+  blitToResultPipeline.create(vertexShaderSource, blitToResultPipeline_fragmentShaderSource, graphics::Pipeline::BlendMode::Normal);
+
+  blitToResultPipeline_sourceCenter_location = blitToResultPipeline.getUniformLocation("sourceCenter");
+  blitToResultPipeline_sourceExtend_location = blitToResultPipeline.getUniformLocation("sourceExtend");
+  blitToResultPipeline_targetCenter_location = blitToResultPipeline.getUniformLocation("targetCenter");
+  blitToResultPipeline_targetExtend_location = blitToResultPipeline.getUniformLocation("targetExtend");
+  blitToResultPipeline_source_location = blitToResultPipeline.getUniformLocation("source");
+  blitToResultPipeline_visibility_location = blitToResultPipeline.getUniformLocation("visibility");
+
+  facesBuffer.create(webcam_width, webcam_height);
+  overlayFramebuffer.create(webcam_width, webcam_height);
+  resultFramebuffer.create(webcam_width, webcam_height);
+
+  clear();
 }
 
 void FaceBlitter::destroy() {
-  pipeline.destroy();
+  resultFramebuffer.destroy();
+  overlayFramebuffer.destroy();
+  facesBuffer.destroy();
+  blitToResultPipeline.destroy();
+  blitToBufferPipeline.destroy();
 }
 
 void FaceBlitter::blit(graphics::Texture &source, glm::vec2 sourceMin, glm::vec2 sourceMax,
-    graphics::Framebuffer &target, glm::vec2 targetMin, glm::vec2 targetMax,
-    graphics::Texture &background) {
-  target.bind();
-  glViewport(0, 0, target.getWidth(), target.getHeight());
+    glm::vec2 targetMin, glm::vec2 targetMax, graphics::Texture &background) {
+  const glm::vec2 sourceCenter = (sourceMin + sourceMax) / 2.f;
+  const glm::vec2 sourceSize = sourceMax - sourceMin;
+  const glm::vec2 sourceExtend = sourceSize / 2.f;
+  const glm::vec2 targetCenter = (targetMin + targetMax) / 2.f;
+  const glm::vec2 targetSize = targetMax - targetMin;
+  const glm::vec2 targetExtend = targetSize / 2.f;
 
-  pipeline.bind();
+  if(nextBufferOrigin.x + targetSize.x > 1.f) {
+    nextBufferOrigin.x = 0.f;
+    nextBufferOrigin.y += currentBufferRowYSize;
+    currentBufferRowYSize = 0.f;
+  }
+  if(nextBufferOrigin.y + targetSize.y > 1.f) {
+    nextBufferOrigin.x = 0.f;
+    nextBufferOrigin.y = 0.f;
+    currentBufferRowYSize = 0.f;
+  }
 
-  glm::vec2 sourceCenter = (sourceMin + sourceMax) / 2.f;
-  glm::vec2 sourceExtend = (sourceMax - sourceMin) / 2.f;
-  glm::vec2 targetCenter = (targetMin + targetMax) / 2.f;
-  glm::vec2 targetExtend = (targetMax - targetMin) / 2.f;
+  assert(nextBufferOrigin.x + targetSize.x <= 1.f);
+  assert(nextBufferOrigin.y + targetSize.y <= 1.f);
 
-  glUniform2fv(sourceCenter_location, 1, &sourceCenter[0]);
-  glUniform2fv(sourceExtend_location, 1, &sourceExtend[0]);
-  glUniform2fv(targetCenter_location, 1, &targetCenter[0]);
-  glUniform2fv(targetExtend_location, 1, &targetExtend[0]);
+  const glm::vec2 bufferCenter = nextBufferOrigin + targetExtend;
+
+  nextBufferOrigin.x += targetSize.x;
+  currentBufferRowYSize = glm::max(currentBufferRowYSize, targetSize.y);
+
+  {
+    BlitOperation blitOperation;
+    blitOperation.bufferCenter = bufferCenter;
+    blitOperation.targetCenter = targetCenter;
+    blitOperation.extend = targetExtend;
+    blitOperation.time = 0.f;
+    blitOperations.push_back(blitOperation);
+  }
+
+  facesBuffer.bind();
+  glViewport(0, 0, facesBuffer.getWidth(), facesBuffer.getHeight());
+
+  blitToBufferPipeline.bind();
+
+  glUniform2fv(blitToBufferPipeline_sourceCenter_location, 1, &sourceCenter[0]);
+  glUniform2fv(blitToBufferPipeline_sourceExtend_location, 1, &sourceExtend[0]);
+  glUniform2fv(blitToBufferPipeline_targetCenter_location, 1, &bufferCenter[0]);
+  glUniform2fv(blitToBufferPipeline_targetExtend_location, 1, &targetExtend[0]);
 
   source.bind(0);
-  glUniform1i(source_location, 0);
+  glUniform1i(blitToBufferPipeline_source_location, 0);
   background.bind(1);
-  glUniform1i(background_location, 1);
+  glUniform1i(blitToBufferPipeline_background_location, 1);
 
   rectangle->draw();
+}
+
+void FaceBlitter::update(float dt) {
+  for(auto &op : blitOperations) {
+    op.time += dt;
+  }
+}
+
+void FaceBlitter::draw() {
+  assert(std::is_sorted(blitOperations.begin(), blitOperations.end(),
+    [](const BlitOperation &a, const BlitOperation &b) { return a.time >= b.time; }));
+
+  if(blitOperations.empty()) return;
+
+  glViewport(0, 0, overlayFramebuffer.getWidth(), overlayFramebuffer.getHeight());
+  assert(resultFramebuffer.getWidth() == overlayFramebuffer.getWidth());
+  assert(resultFramebuffer.getHeight() == overlayFramebuffer.getHeight());
+
+  blitToResultPipeline.bind();
+
+  glUniform1i(blitToResultPipeline_source_location, 0);
+  glUniform1f(blitToResultPipeline_visibility_location, 1.f);
+
+  if(blitOperations.front().time >= FADE_TIME) {
+    overlayFramebuffer.bind();
+
+    facesBuffer.getTexture().bind(0);
+
+    do {
+      const auto &op = blitOperations.front();
+
+      glUniform2fv(blitToResultPipeline_sourceCenter_location, 1, &op.bufferCenter[0]);
+      glUniform2fv(blitToResultPipeline_sourceExtend_location, 1, &op.extend[0]);
+      glUniform2fv(blitToResultPipeline_targetCenter_location, 1, &op.targetCenter[0]);
+      glUniform2fv(blitToResultPipeline_targetExtend_location, 1, &op.extend[0]);
+      rectangle->draw();
+
+      blitOperations.erase(blitOperations.begin());
+    } while(!blitOperations.empty() && blitOperations.front().time >= FADE_TIME);
+  }
+
+  resultFramebuffer.bind();
+
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  glDisable(GL_BLEND); // temporary disable blending because we want to simply copy the overlayFB
+
+  glUniform2f(blitToResultPipeline_sourceCenter_location, .5f, .5f);
+  glUniform2f(blitToResultPipeline_sourceExtend_location, .5f, .5f);
+  glUniform2f(blitToResultPipeline_targetCenter_location, .5f, .5f);
+  glUniform2f(blitToResultPipeline_targetExtend_location, .5f, .5f);
+  overlayFramebuffer.getTexture().bind(0);
+  rectangle->draw();
+
+  glEnable(GL_BLEND);
+
+  if(!blitOperations.empty()) {
+    facesBuffer.getTexture().bind(0);
+
+    for(const auto &op : blitOperations) {
+      glUniform2fv(blitToResultPipeline_sourceCenter_location, 1, &op.bufferCenter[0]);
+      glUniform2fv(blitToResultPipeline_sourceExtend_location, 1, &op.extend[0]);
+      glUniform2fv(blitToResultPipeline_targetCenter_location, 1, &op.targetCenter[0]);
+      glUniform2fv(blitToResultPipeline_targetExtend_location, 1, &op.extend[0]);
+      glUniform1f(blitToResultPipeline_visibility_location, op.time / FADE_TIME);
+      rectangle->draw();
+    }
+  }
+}
+
+void FaceBlitter::clear() {
+  blitOperations.clear();
+
+  facesBuffer.clear(); // not neccessary
+  nextBufferOrigin = glm::vec2(0.f, 0.f);
+  currentBufferRowYSize = 0.f;
+
+  overlayFramebuffer.clear();
+  resultFramebuffer.clear();
 }
