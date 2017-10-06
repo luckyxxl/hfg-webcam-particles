@@ -32,7 +32,7 @@ void HueDisplaceEffect::randomizeConfig(std::default_random_engine &random) {
   scaleByValue = std::uniform_real_distribution<float>()(random);
   scaleByForegroundMask = 0.f;
   randomDirectionOffset = std::bernoulli_distribution()(random);
-  rotate = std::uniform_real_distribution<float>()(random);
+  rotate = std::uniform_real_distribution<float>(-1.f, 1.f)(random);
 }
 
 void HueDisplaceEffect::registerEffect(EffectRegistrationData &data) const {

@@ -21,7 +21,7 @@ void ConvergeCircleEffect::saveConfig(json &json) const {
 }
 
 void ConvergeCircleEffect::randomizeConfig(std::default_random_engine &random) {
-  rotationSpeed = std::uniform_real_distribution<float>()(random);
+  rotationSpeed = std::uniform_real_distribution<float>(-1.f, 1.f)(random);
 }
 
 void ConvergeCircleEffect::registerEffect(EffectRegistrationData &data) const {
