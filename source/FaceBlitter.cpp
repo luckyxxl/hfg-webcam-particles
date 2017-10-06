@@ -10,7 +10,7 @@ void FaceBlitter::create(const graphics::ScreenRectBuffer *rectangle,
 
   blitOperations.reserve(8u);
 
-  static const char *vertexShaderSource = R"glsl(
+  static const char *blitToBufferPipeline_vertexShaderSource = R"glsl(
     #version 330 core
     uniform vec2 sourceCenter;
     uniform vec2 sourceExtend;
@@ -23,10 +23,11 @@ void FaceBlitter::create(const graphics::ScreenRectBuffer *rectangle,
     out vec2 sourceTexcoord;
 
     void main() {
-      fragPosition = position;
-      sourceTexcoord = sourceCenter + position * sourceExtend;
-      vec2 p = targetCenter + position * targetExtend;
-      gl_Position = vec4(mix(vec2(-1.f), vec2(1.f), p), 0.0, 1.0);
+      // transparently (both in terms of visibility and parameters) enlarge rectangle by .01
+      fragPosition = position * 1.005;
+      sourceTexcoord = sourceCenter + position * (sourceExtend + 0.005);
+      vec2 p = targetCenter + position * (targetExtend + 0.005);
+      gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
     }
   )glsl";
 
@@ -69,12 +70,29 @@ void FaceBlitter::create(const graphics::ScreenRectBuffer *rectangle,
     }
   )glsl";
 
+  static const char *blitToResultPipeline_vertexShaderSource = R"glsl(
+    #version 330 core
+    uniform vec2 sourceCenter;
+    uniform vec2 sourceExtend;
+    uniform vec2 targetCenter;
+    uniform vec2 targetExtend;
+
+    layout(location=0) in vec2 position;
+
+    out vec2 sourceTexcoord;
+
+    void main() {
+      sourceTexcoord = sourceCenter + position * sourceExtend;
+      vec2 p = targetCenter + position * targetExtend;
+      gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+    }
+  )glsl";
+
   static const char *blitToResultPipeline_fragmentShaderSource = R"glsl(
     #version 330 core
     uniform sampler2D source;
     uniform float visibility;
 
-    in vec2 fragPosition;
     in vec2 sourceTexcoord;
 
     out vec4 frag_color;
@@ -85,7 +103,8 @@ void FaceBlitter::create(const graphics::ScreenRectBuffer *rectangle,
     }
   )glsl";
 
-  blitToBufferPipeline.create(vertexShaderSource, blitToBufferPipeline_fragmentShaderSource, graphics::Pipeline::BlendMode::None);
+  blitToBufferPipeline.create(blitToBufferPipeline_vertexShaderSource,
+    blitToBufferPipeline_fragmentShaderSource, graphics::Pipeline::BlendMode::None);
 
   blitToBufferPipeline_sourceCenter_location = blitToBufferPipeline.getUniformLocation("sourceCenter");
   blitToBufferPipeline_sourceExtend_location = blitToBufferPipeline.getUniformLocation("sourceExtend");
@@ -94,7 +113,8 @@ void FaceBlitter::create(const graphics::ScreenRectBuffer *rectangle,
   blitToBufferPipeline_source_location = blitToBufferPipeline.getUniformLocation("source");
   blitToBufferPipeline_background_location = blitToBufferPipeline.getUniformLocation("background");
 
-  blitToResultPipeline.create(vertexShaderSource, blitToResultPipeline_fragmentShaderSource, graphics::Pipeline::BlendMode::Normal);
+  blitToResultPipeline.create(blitToResultPipeline_vertexShaderSource,
+    blitToResultPipeline_fragmentShaderSource, graphics::Pipeline::BlendMode::Normal);
 
   blitToResultPipeline_sourceCenter_location = blitToResultPipeline.getUniformLocation("sourceCenter");
   blitToResultPipeline_sourceExtend_location = blitToResultPipeline.getUniformLocation("sourceExtend");
@@ -127,24 +147,28 @@ void FaceBlitter::blit(graphics::Texture &source, glm::vec2 sourceMin, glm::vec2
   const glm::vec2 targetSize = targetMax - targetMin;
   const glm::vec2 targetExtend = targetSize / 2.f;
 
-  if(nextBufferOrigin.x + targetSize.x > 1.f) {
+  // the rectangle is enlarged by .01 in the vertex shader
+  const glm::vec2 bufferSize = targetSize + .01f;
+
+  if(nextBufferOrigin.x + bufferSize.x > 1.f) {
     nextBufferOrigin.x = 0.f;
     nextBufferOrigin.y += currentBufferRowYSize;
     currentBufferRowYSize = 0.f;
   }
-  if(nextBufferOrigin.y + targetSize.y > 1.f) {
+  if(nextBufferOrigin.y + bufferSize.y > 1.f) {
     nextBufferOrigin.x = 0.f;
     nextBufferOrigin.y = 0.f;
     currentBufferRowYSize = 0.f;
   }
 
-  assert(nextBufferOrigin.x + targetSize.x <= 1.f);
-  assert(nextBufferOrigin.y + targetSize.y <= 1.f);
+  assert(nextBufferOrigin.x + bufferSize.x <= 1.f);
+  assert(nextBufferOrigin.y + bufferSize.y <= 1.f);
 
-  const glm::vec2 bufferCenter = nextBufferOrigin + targetExtend;
+  // the rectangle is enlarged by .01 in the vertex shader
+  const glm::vec2 bufferCenter = nextBufferOrigin + targetExtend + .005f;
 
-  nextBufferOrigin.x += targetSize.x;
-  currentBufferRowYSize = glm::max(currentBufferRowYSize, targetSize.y);
+  nextBufferOrigin.x += bufferSize.x;
+  currentBufferRowYSize = glm::max(currentBufferRowYSize, bufferSize.y);
 
   {
     BlitOperation blitOperation;
@@ -214,8 +238,6 @@ void FaceBlitter::draw() {
 
   resultFramebuffer.bind();
 
-  glClear(GL_COLOR_BUFFER_BIT);
-
   glDisable(GL_BLEND); // temporary disable blending because we want to simply copy the overlayFB
 
   glUniform2f(blitToResultPipeline_sourceCenter_location, .5f, .5f);
@@ -244,7 +266,6 @@ void FaceBlitter::draw() {
 void FaceBlitter::clear() {
   blitOperations.clear();
 
-  facesBuffer.clear(); // not neccessary
   nextBufferOrigin = glm::vec2(0.f, 0.f);
   currentBufferRowYSize = 0.f;
 
