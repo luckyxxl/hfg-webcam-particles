@@ -45,7 +45,7 @@ void FaceBlitter::create(const graphics::ScreenRectBuffer *rectangle,
 
     float vignette(float x) {
       const float blendStart = 0.5;
-      const float blendEnd = 1.0;
+      const float blendEnd = 0.9;
 
       // linear ramp from blend start to blend end
       float l = clamp((x - blendStart) * (1.0 / (blendEnd - blendStart)), 0.0, 1.0);
