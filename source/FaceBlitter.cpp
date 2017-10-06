@@ -23,10 +23,10 @@ void FaceBlitter::create(const graphics::ScreenRectBuffer *rectangle,
     out vec2 sourceTexcoord;
 
     void main() {
-      // transparently (both in terms of visibility and parameters) enlarge rectangle by .01
+      // the rectangle is enlarged by 0.01 to get a larger transparent area
       fragPosition = position * 1.005;
-      sourceTexcoord = sourceCenter + position * (sourceExtend + 0.005);
-      vec2 p = targetCenter + position * (targetExtend + 0.005);
+      sourceTexcoord = sourceCenter + position * sourceExtend;
+      vec2 p = targetCenter + position * targetExtend;
       gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
     }
   )glsl";
@@ -147,8 +147,9 @@ void FaceBlitter::blit(graphics::Texture &source, glm::vec2 sourceMin, glm::vec2
   const glm::vec2 targetSize = targetMax - targetMin;
   const glm::vec2 targetExtend = targetSize / 2.f;
 
-  // the rectangle is enlarged by .01 in the vertex shader
+  // enlarge rectangle a little for extra transparent space (keep in sync with vertex shader above)
   const glm::vec2 bufferSize = targetSize + .01f;
+  const glm::vec2 enlargedSourceExtend = sourceExtend + .005f;
 
   if(nextBufferOrigin.x + bufferSize.x > 1.f) {
     nextBufferOrigin.x = 0.f;
@@ -164,8 +165,9 @@ void FaceBlitter::blit(graphics::Texture &source, glm::vec2 sourceMin, glm::vec2
   assert(nextBufferOrigin.x + bufferSize.x <= 1.f);
   assert(nextBufferOrigin.y + bufferSize.y <= 1.f);
 
-  // the rectangle is enlarged by .01 in the vertex shader
+  // enlarge rectangle a little for extra transparent space (keep in sync with vertex shader above)
   const glm::vec2 bufferCenter = nextBufferOrigin + targetExtend + .005f;
+  const glm::vec2 bufferExtend = bufferSize / 2.f;
 
   nextBufferOrigin.x += bufferSize.x;
   currentBufferRowYSize = glm::max(currentBufferRowYSize, bufferSize.y);
@@ -185,9 +187,9 @@ void FaceBlitter::blit(graphics::Texture &source, glm::vec2 sourceMin, glm::vec2
   blitToBufferPipeline.bind();
 
   glUniform2fv(blitToBufferPipeline_sourceCenter_location, 1, &sourceCenter[0]);
-  glUniform2fv(blitToBufferPipeline_sourceExtend_location, 1, &sourceExtend[0]);
+  glUniform2fv(blitToBufferPipeline_sourceExtend_location, 1, &enlargedSourceExtend[0]);
   glUniform2fv(blitToBufferPipeline_targetCenter_location, 1, &bufferCenter[0]);
-  glUniform2fv(blitToBufferPipeline_targetExtend_location, 1, &targetExtend[0]);
+  glUniform2fv(blitToBufferPipeline_targetExtend_location, 1, &bufferExtend[0]);
 
   source.bind(0);
   glUniform1i(blitToBufferPipeline_source_location, 0);
