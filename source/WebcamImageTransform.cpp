@@ -11,10 +11,12 @@ void WebcamImageTransform::create(const graphics::ScreenRectBuffer *rectangle,
   this->output_width = output_width;
   this->output_height = output_height;
 
+  const auto overscan = ((float)input_width / input_height) / ((float)output_width / output_height);
+
   // column-major!!!
   transform = glm::mat3(-1.f, 0.f, 0.f,
-                        0.f, -1.f, 0.f,
-                        1.f, 1.f, 1.f);
+                        0.f, -1.f * overscan, 0.f,
+                        1.f, .9f, 1.f);
 
   static const char *vertexShaderSource = R"glsl(
     #version 330 core
