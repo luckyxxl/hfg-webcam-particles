@@ -239,7 +239,9 @@ static void removeEmptySpace(Timeline *timeline) {
   std::vector<Interval> intervals;
   intervals.reserve(instanceCount);
   timeline->forEachInstance([&](const IEffect &i) {
-    if(!i.enabled || i.isAccumulationEffect()) return;
+    if(!i.enabled || i.isAccumulationEffect()
+        || !strcmp(i.getName(), "ParticleDisplaceEffect")
+        || !strcmp(i.getName(), "ParticleSpacingEffect")) return;
 
     intervals.emplace_back(i.timeBegin, i.timeEnd);
   });
