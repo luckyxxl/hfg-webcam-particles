@@ -11,9 +11,10 @@ public:
     void create(sound::Renderer *soundRenderer,
                 const SampleLibrary *sampleLibrary,
                 std::default_random_engine *random,
-                const graphics::ScreenRectBuffer *screenRectBuffer);
+                const graphics::ScreenRectBuffer *screenRectBuffer,
+                uint32_t width, uint32_t height);
     void destroy();
-    void reshape(uint32_t width, uint32_t height);
+    void resize(uint32_t width, uint32_t height);
 
   private:
     sound::Renderer *soundRenderer;

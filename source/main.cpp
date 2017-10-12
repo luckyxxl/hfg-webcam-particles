@@ -42,11 +42,6 @@ int main(int argc, const char *argv[]) {
     goto quit;
   }
 
-  {
-    const auto size = window->getSize();
-    application->reshape(std::get<0>(size), std::get<1>(size));
-  }
-
   for (;;) {
     if (!application->handleEvents())
       break;

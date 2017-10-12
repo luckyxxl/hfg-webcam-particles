@@ -25,6 +25,12 @@ bool Application::create(Resources *resources, graphics::Window *window,
   this->window = window;
   this->soundRenderer = soundRenderer;
 
+  {
+    const auto windowSize = window->getSize();
+    screen_width = std::get<0>(windowSize);
+    screen_height = std::get<1>(windowSize);
+  }
+
   effectRegistry.registerEffect<ConvergeCircleEffect>();
   effectRegistry.registerEffect<ConvergePointEffect>();
   effectRegistry.registerEffect<HueDisplaceEffect>();
@@ -72,7 +78,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   overlayComposePilpeline_overlay_location = overlayComposePilpeline.getUniformLocation("overlay");
   overlayComposePilpeline_overlayVisibility_location = overlayComposePilpeline.getUniformLocation("overlayVisibility");
 
-  particleRendererGlobalState.create(soundRenderer, &sampleLibrary, &random, &screenRectBuffer);
+  particleRendererGlobalState.create(soundRenderer, &sampleLibrary, &random, &screenRectBuffer, screen_width, screen_height);
 
   {
     auto timeline = std::make_unique<Timeline>(&effectRegistry);
@@ -111,7 +117,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   webcamTexture.create(imageProvider.width(), imageProvider.height());
   backgroundTexture.create(imageProvider.width(), imageProvider.height());
   particleSourceFramebuffer.create(imageProvider.width(), imageProvider.height());
-  particleOutputFramebuffer.create(1u, 1u);
+  particleOutputFramebuffer.create(screen_width, screen_height);
 
   finalComposite.create(&screenRectBuffer);
 
@@ -155,10 +161,8 @@ void Application::reshape(uint32_t width, uint32_t height) {
   screen_width = width;
   screen_height = height;
 
-  glViewport(0, 0, width, height);
-
   particleOutputFramebuffer.resize(width, height);
-  particleRendererGlobalState.reshape(particleOutputFramebuffer.getWidth(),
+  particleRendererGlobalState.resize(particleOutputFramebuffer.getWidth(),
     particleOutputFramebuffer.getHeight());
 }
 

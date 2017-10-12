@@ -7,7 +7,8 @@
 void ParticleRenderer::GlobalState::create(sound::Renderer *soundRenderer,
                                            const SampleLibrary *sampleLibrary,
                                            std::default_random_engine *random,
-                                           const graphics::ScreenRectBuffer *screenRectBuffer) {
+                                           const graphics::ScreenRectBuffer *screenRectBuffer,
+                                           uint32_t width, uint32_t height) {
   this->soundRenderer = soundRenderer;
   this->sampleLibrary = sampleLibrary;
   this->random = random;
@@ -15,9 +16,9 @@ void ParticleRenderer::GlobalState::create(sound::Renderer *soundRenderer,
 
   glGenVertexArrays(1, &dummyVao);
 
-  particleFramebuffer.create(1, 1);
-  accumulationFramebuffer.create(1, 1);
-  resultFramebuffer.create(1, 1);
+  particleFramebuffer.create(width, height);
+  accumulationFramebuffer.create(width, height);
+  resultFramebuffer.create(width, height);
 
   resultGraphicsPipeline.create(R"glsl(
     #version 330 core
@@ -49,7 +50,7 @@ void ParticleRenderer::GlobalState::destroy() {
   glDeleteVertexArrays(1, &dummyVao);
 }
 
-void ParticleRenderer::GlobalState::reshape(uint32_t width, uint32_t height) {
+void ParticleRenderer::GlobalState::resize(uint32_t width, uint32_t height) {
   particleFramebuffer.resize(width, height);
   accumulationFramebuffer.resize(width, height);
   resultFramebuffer.resize(width, height);
