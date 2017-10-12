@@ -78,6 +78,12 @@ void ImageProvider::webcamThreadFunc() {
     face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2,
                                   0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
 
+#if 0
+    for(const auto &f : faces) {
+      cv::rectangle(frame, f, cv::Scalar(0, 0, 255));
+    }
+#endif
+
     data.finishWrite();
   }
 }
