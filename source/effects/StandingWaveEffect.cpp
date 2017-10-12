@@ -45,8 +45,8 @@ void StandingWaveEffect::randomizeConfig(std::default_random_engine &random) {
   maxAmplitude = std::uniform_real_distribution<float>(0.f, .2f)(random);
   waveCount = std::uniform_int_distribution<uint32_t>(1, 30)(random);
   dimension = static_cast<Dimension>(std::uniform_int_distribution<int>(0, 1)(random));
-  timeInterpolation = static_cast<TimeInterpolation>(std::uniform_int_distribution<int>(0, 1)(random));
-  waveFunction = static_cast<WaveFunction>(std::uniform_int_distribution<int>(0, 1)(random));
+  timeInterpolation = TimeInterpolation::Sine;
+  waveFunction = WaveFunction::Sine;
 }
 
 void StandingWaveEffect::registerEffect(EffectRegistrationData &data) const {
