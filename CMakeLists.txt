@@ -79,6 +79,8 @@ set(SOURCE_FILES
   source/ThreadSyncTripleBuffer.hpp
   source/Timeline.cpp
   source/Timeline.hpp
+  source/WebcamImageTransform.cpp
+  source/WebcamImageTransform.hpp
 )
 set(EXECUTABLE_NAME "webcam-particles")
 

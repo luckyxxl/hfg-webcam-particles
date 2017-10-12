@@ -20,6 +20,8 @@
 
 #include <stb_image_write.h>
 
+constexpr uint32_t particles_width = 1920u, particles_height = 1080u;
+
 bool Application::create(Resources *resources, graphics::Window *window,
                          sound::Renderer *soundRenderer) {
   this->window = window;
@@ -56,7 +58,8 @@ bool Application::create(Resources *resources, graphics::Window *window,
 
   screenRectBuffer.create();
 
-  faceBlitter.create(&screenRectBuffer, imageProvider.width(), imageProvider.height());
+  webcamImageTransform.create(&screenRectBuffer, imageProvider.width(), imageProvider.height(), particles_width, particles_height);
+  faceBlitter.create(&screenRectBuffer, particles_width, particles_height);
 
   overlayComposePilpeline.create(R"glsl(
     #version 330 core
@@ -114,18 +117,17 @@ bool Application::create(Resources *resources, graphics::Window *window,
     reactionParticleRenderer.getClock().pause();
   }
 
-  webcamTexture.create(imageProvider.width(), imageProvider.height());
-  backgroundTexture.create(imageProvider.width(), imageProvider.height());
-  particleSourceFramebuffer.create(imageProvider.width(), imageProvider.height());
+  webcamInputTexture.create(imageProvider.width(), imageProvider.height());
+  webcamFramebuffer.create(particles_width, particles_height);
+  backgroundFramebuffer.create(particles_width, particles_height);
+  particleSourceFramebuffer.create(particles_width, particles_height);
   particleOutputFramebuffer.create(screen_width, screen_height);
 
   finalComposite.create(&screenRectBuffer);
 
   // prevent undefined images at startup
-  {
-    std::vector<uint8_t> pixels(imageProvider.width() * imageProvider.height() * 3, 0.f);
-    webcamTexture.setImage(imageProvider.width(), imageProvider.height(), pixels.data());
-  }
+  webcamFramebuffer.clear();
+  backgroundFramebuffer.clear();
 
   return true;
 }
@@ -135,8 +137,9 @@ void Application::destroy() {
 
   particleOutputFramebuffer.destroy();
   particleSourceFramebuffer.destroy();
-  backgroundTexture.destroy();
-  webcamTexture.destroy();
+  backgroundFramebuffer.destroy();
+  webcamFramebuffer.destroy();
+  webcamInputTexture.destroy();
 
   reactionParticleRenderer.reset();
   standbyParticleRenderer.reset();
@@ -146,6 +149,7 @@ void Application::destroy() {
   overlayComposePilpeline.destroy();
 
   faceBlitter.destroy();
+  webcamImageTransform.destroy();
 
   screenRectBuffer.destroy();
 
@@ -329,16 +333,18 @@ void Application::update(float dt) {
   if (imgDataP) {
     auto &imgData = *imgDataP;
 
-    webcamTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
-
     if (!imgData.faces.empty()) {
       lastBackgroundUpdateTime = 0.f;
     }
 
+    webcamInputTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
+
+    webcamImageTransform.draw(webcamInputTexture, webcamFramebuffer);
+
     if(!backgroundTextureIsSet || lastBackgroundUpdateTime >= 15000.f) {
       std::cout << "set background\n";
 
-      backgroundTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
+      webcamImageTransform.draw(webcamInputTexture, backgroundFramebuffer);
 
       backgroundTextureIsSet = true;
       lastBackgroundUpdateTime = 0.f;
@@ -353,8 +359,11 @@ void Application::update(float dt) {
 
         auto rectTl = glm::vec2(rect.tl().x, rect.tl().y);
         auto rectBr = glm::vec2(rect.br().x, rect.br().y);
-        glm::vec2 faceMin = rectTl / glm::vec2(imageProvider.width(), imageProvider.height());
-        glm::vec2 faceMax = rectBr / glm::vec2(imageProvider.width(), imageProvider.height());
+        glm::vec2 face1 = glm::vec2(webcamImageTransform.getTransform() * glm::vec3(rectTl / glm::vec2(imageProvider.width(), imageProvider.height()), 1.f));
+        glm::vec2 face2 = glm::vec2(webcamImageTransform.getTransform() * glm::vec3(rectBr / glm::vec2(imageProvider.width(), imageProvider.height()), 1.f));
+
+        glm::vec2 faceMin = glm::min(face1, face2);
+        glm::vec2 faceMax = glm::max(face1, face2);
 
         glm::vec2 targetSize = glm::vec2(std::uniform_real_distribution<float>(.1f, .3f)(random),
                                           std::uniform_real_distribution<float>(.1f, .3f)(random));
@@ -362,7 +371,7 @@ void Application::update(float dt) {
         glm::vec2 targetMin = targetCenter - targetSize / 2.f;
         glm::vec2 targetMax = targetCenter + targetSize / 2.f;
 
-        faceBlitter.blit(webcamTexture, faceMin, faceMax, targetMin, targetMax, backgroundTexture);
+        faceBlitter.blit(webcamFramebuffer.getTexture(), faceMin, faceMax, targetMin, targetMax, backgroundFramebuffer.getTexture());
       }
 
       standbyBlitTimeout = std::normal_distribution<float>(250.f, 100.f)(random);
@@ -423,7 +432,7 @@ void Application::render() {
     glViewport(0, 0, particleSourceFramebuffer.getWidth(), particleSourceFramebuffer.getHeight());
 
     overlayComposePilpeline.bind();
-    webcamTexture.bind(0);
+    webcamFramebuffer.getTexture().bind(0);
     glUniform1i(overlayComposePilpeline_webcam_location, 0);
     faceBlitter.getResultTexture().bind(1);
     glUniform1i(overlayComposePilpeline_overlay_location, 1);
@@ -443,7 +452,7 @@ void Application::render() {
     screenRectBuffer.draw();
   }
 
-  RendererParameters parameters(&particleSourceFramebuffer.getTexture(), &backgroundTexture,
+  RendererParameters parameters(&particleSourceFramebuffer.getTexture(), &backgroundFramebuffer.getTexture(),
                                 &particleOutputFramebuffer);
 
   if (reactionState == ReactionState::RenderReactionTimeline) {

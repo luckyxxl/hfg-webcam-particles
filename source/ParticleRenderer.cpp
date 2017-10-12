@@ -196,13 +196,12 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
     ivec2 pixelPosition = ivec2(gl_VertexID % particleTextureSize.x, gl_VertexID / particleTextureSize.x);
 
     vec2 texcoord = pixelPosition / vec2(particleTextureSize);
-    texcoord.y = 1 - texcoord.y;
 
-    vec3 rgb = texelFetch(particleTexture, pixelPosition, 0).bgr;
+    vec3 rgb = texelFetch(particleTexture, pixelPosition, 0).rgb;
 
     vec3 hsv = rgb2hsv(rgb);
 
-    vec3 backgroundDelta = rgb - texelFetch(backgroundTexture, pixelPosition, 0).bgr;
+    vec3 backgroundDelta = rgb - texelFetch(backgroundTexture, pixelPosition, 0).rgb;
     float backgroundDifference = dot(backgroundDelta, backgroundDelta);
     float foregroundMask = clamp((backgroundDifference - .2) * 100., 0., 1.);
 

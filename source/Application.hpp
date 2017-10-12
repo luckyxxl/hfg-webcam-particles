@@ -4,6 +4,7 @@
 #include "effects/EffectRegistry.hpp"
 #include "SampleLibrary.hpp"
 #include "ImageProvider.hpp"
+#include "WebcamImageTransform.hpp"
 #include "FaceBlitter.hpp"
 #include "FinalComposite.hpp"
 
@@ -40,6 +41,8 @@ private:
 
   graphics::ScreenRectBuffer screenRectBuffer;
 
+  WebcamImageTransform webcamImageTransform;
+
   FaceBlitter faceBlitter;
 
   graphics::Pipeline overlayComposePilpeline;
@@ -62,8 +65,9 @@ private:
   uint32_t standbyBlitCount = 0u;
   uint32_t standbyBlitTargetCount = 10u;
 
-  graphics::Texture webcamTexture;
-  graphics::Texture backgroundTexture;
+  graphics::Texture webcamInputTexture;
+  graphics::Framebuffer webcamFramebuffer;
+  graphics::Framebuffer backgroundFramebuffer;
   bool backgroundTextureIsSet = false;
   float lastBackgroundUpdateTime;
 
