@@ -68,8 +68,6 @@ private:
   graphics::Texture webcamInputTexture;
   graphics::Framebuffer webcamFramebuffer;
   graphics::Framebuffer backgroundFramebuffer;
-  bool backgroundTextureIsSet = false;
-  float lastBackgroundUpdateTime;
 
   graphics::Framebuffer particleSourceFramebuffer;
 

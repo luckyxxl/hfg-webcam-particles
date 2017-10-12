@@ -204,7 +204,7 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
 
     vec3 backgroundDelta = rgb - texelFetch(backgroundTexture, pixelPosition, 0).rgb;
     float backgroundDifference = dot(backgroundDelta, backgroundDelta);
-    float foregroundMask = clamp((backgroundDifference - .2) * 100., 0., 1.);
+    float foregroundMask = clamp((backgroundDifference - .1) * 50., 0., 1.);
 
     vec3 initialPosition = vec3(texcoord, 0);
     initialPosition.y *= invImageAspectRatio;

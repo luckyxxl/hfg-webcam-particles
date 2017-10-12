@@ -93,7 +93,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
     auto hueDisplace = timeline->emplaceEffectInstance<HueDisplaceEffect>();
     hueDisplace->timeBegin = 0.f;
     hueDisplace->timeEnd = 4000.f;
-    hueDisplace->distance = .01f;
+    hueDisplace->distance = .1f;
     hueDisplace->scaleByForegroundMask = 1.f;
 
     standbyParticleRenderer.setTimeline(particleRendererGlobalState, std::move(timeline));
@@ -327,8 +327,6 @@ static glm::vec2 sampleCircle(std::default_random_engine &random) {
 }
 
 void Application::update(float dt) {
-  lastBackgroundUpdateTime += dt;
-
   if(reactionState == ReactionState::Inactive || reactionState == ReactionState::FinishStandbyTimeline) {
     standbyBlitTimeout -= dt;
   }
@@ -337,22 +335,10 @@ void Application::update(float dt) {
   if (imgDataP) {
     auto &imgData = *imgDataP;
 
-    if (!imgData.faces.empty()) {
-      lastBackgroundUpdateTime = 0.f;
-    }
-
     webcamInputTexture.setImage(imgData.webcam_pixels.cols, imgData.webcam_pixels.rows, imgData.webcam_pixels.data);
 
+    std::swap(webcamFramebuffer, backgroundFramebuffer);
     webcamImageTransform.draw(webcamInputTexture, webcamFramebuffer);
-
-    if(!backgroundTextureIsSet || lastBackgroundUpdateTime >= 15000.f) {
-      std::cout << "set background\n";
-
-      webcamImageTransform.draw(webcamInputTexture, backgroundFramebuffer);
-
-      backgroundTextureIsSet = true;
-      lastBackgroundUpdateTime = 0.f;
-    }
 
     if (!imgData.faces.empty()
       && (reactionState == ReactionState::Inactive || reactionState == ReactionState::FinishStandbyTimeline)
