@@ -27,6 +27,10 @@ bool Application::create(Resources *resources, graphics::Window *window,
   this->window = window;
   this->soundRenderer = soundRenderer;
 
+#ifdef NDEBUG
+  random.seed(time(NULL));
+#endif
+
   {
     const auto windowSize = window->getSize();
     screen_width = std::get<0>(windowSize);
