@@ -312,7 +312,7 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
 
   // TODO: different overlap modes
   fragmentShader.appendMainBody(R"glsl(
-    frag_color = vec4(color * v, 1);
+    frag_color = vec4(color * v, v);
   )glsl");
 
   accShader.appendMainBody(R"glsl(
@@ -340,7 +340,7 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
 
   graphicsPipeline.create(vertexShaderSource.c_str(),
                           fragmentShaderSource.c_str(),
-                          graphics::Pipeline::BlendMode::Addition);
+                          graphics::Pipeline::BlendMode::Normal);
 
   graphicsPipeline_particleTexture_location =
       graphicsPipeline.getUniformLocation("particleTexture");
