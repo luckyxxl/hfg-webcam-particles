@@ -355,8 +355,8 @@ void Application::update(float dt) {
         glm::vec2 faceMin = glm::min(face1, face2);
         glm::vec2 faceMax = glm::max(face1, face2);
 
-        glm::vec2 targetSize = glm::vec2(std::uniform_real_distribution<float>(.1f, .3f)(random),
-                                          std::uniform_real_distribution<float>(.1f, .3f)(random));
+        glm::vec2 targetSize = glm::vec2(std::uniform_real_distribution<float>(.1f, .2f)(random),
+                                          std::uniform_real_distribution<float>(.1f, .2f)(random));
         glm::vec2 targetCenter = sampleCircle(random) * glm::vec2(.4f) + glm::vec2(.5f);
         glm::vec2 targetMin = targetCenter - targetSize / 2.f;
         glm::vec2 targetMax = targetCenter + targetSize / 2.f;
