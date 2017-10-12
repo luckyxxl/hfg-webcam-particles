@@ -322,7 +322,7 @@ static void randomizeTimeline(Timeline *timeline,
 
 static glm::vec2 sampleCircle(std::default_random_engine &random) {
   float a = std::uniform_real_distribution<float>(0.f, 2.f * PI)(random);
-  float r = std::sqrt(std::uniform_real_distribution<float>()(random));
+  float r = std::sqrt(std::uniform_real_distribution<float>(.5f, 1.f)(random));
   return glm::vec2(r * std::cos(a), r * std::sin(a));
 }
 
