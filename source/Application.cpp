@@ -270,8 +270,9 @@ static void removeEmptySpace(Timeline *timeline) {
       if(i.isAccumulationEffect()) return;
 
       if(interval->start() <= i.timeBegin) {
-        i.timeBegin += move;
-        i.timeEnd += move;
+        const auto instanceMove = std::min(move, i.timeBegin);
+        i.timeBegin += instanceMove;
+        i.timeEnd += instanceMove;
       }
     });
 
