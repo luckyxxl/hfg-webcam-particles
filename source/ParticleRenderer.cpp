@@ -125,7 +125,8 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
   uniforms.emplace_back("particleSize", GLSLType::Float,
                         [](const RenderProps &props) {
                           //TODO: particleScaling config
-                          return UniformValue(((float)props.screen_height / props.webcam_height) * 2 /* * particleScaling*/);
+                          //return UniformValue(((float)props.screen_height / props.webcam_height) * 2 /* * particleScaling*/);
+                          return UniformValue(((float)props.screen_width / props.webcam_width) * .75f);
                         });
   uniforms.emplace_back("globalTime", GLSLType::Float,
                         [](const RenderProps &props) {
@@ -213,7 +214,9 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
   )glsl");
 
   fragmentShader.appendMainBody(R"glsl(
-    float v = pow(max(1. - 2. * length(gl_PointCoord - vec2(.5)), 0.), 1.5);
+    //float v = pow(max(1. - 2. * length(gl_PointCoord - vec2(.5)), 0.), 1.5);
+    float v = length(gl_PointCoord - vec2(.5)) > .4 ? 0. : 1.;
+    //float v = 1.0;
   )glsl");
 
   accShader.appendMainBody(R"glsl(
