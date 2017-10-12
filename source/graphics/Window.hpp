@@ -4,7 +4,7 @@ namespace graphics {
 
 class Window {
 public:
-  bool create();
+  bool create(uint32_t width, uint32_t height, bool fullscreen);
   void destroy();
 
   void swap();

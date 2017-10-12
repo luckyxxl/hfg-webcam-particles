@@ -12,7 +12,7 @@ static void APIENTRY openglDebugMessageCallback(GLenum source, GLenum type, GLui
 }
 #endif
 
-bool Window::create() {
+bool Window::create(uint32_t width, uint32_t height, bool fullscreen) {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -21,9 +21,11 @@ bool Window::create() {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 #endif
 
+  auto flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+  if(fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+
   window = SDL_CreateWindow(windowTitle, SDL_WINDOWPOS_CENTERED,
-                            SDL_WINDOWPOS_CENTERED, 720 / 2, 1280 / 2,
-                            SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+                            SDL_WINDOWPOS_CENTERED, width, height, flags);
   if (!window) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not create window",
                              SDL_GetError(), nullptr);
@@ -49,6 +51,8 @@ bool Window::create() {
 #endif
 
   SDL_GL_SetSwapInterval(1);
+
+  if(fullscreen) SDL_ShowCursor(SDL_DISABLE);
 
   return true;
 }
@@ -93,6 +97,7 @@ bool Window::toggleFullscreen() {
                                              // SDL_WINDOW_FULLSCREEN, too
   bool isFullscreen = SDL_GetWindowFlags(window) & flag;
   bool success = !SDL_SetWindowFullscreen(window, isFullscreen ? 0 : flag);
+  SDL_ShowCursor(isFullscreen ? SDL_ENABLE : SDL_DISABLE);
   return success;
 }
 

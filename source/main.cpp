@@ -16,6 +16,12 @@ int main(int argc, const char *argv[]) {
   std::cout << "This is a debug build and could have inferior performance!\n";
 #endif
 
+#ifdef NDEBUG
+  const auto fullscreen = true;
+#else
+  const auto fullscreen = false;
+#endif
+
   resources = new Resources();
   if (!resources->create(argv[0])) {
     goto quit;
@@ -28,7 +34,7 @@ int main(int argc, const char *argv[]) {
   }
 
   window = new graphics::Window();
-  if (!window->create()) {
+  if (!window->create(1280, 720, fullscreen)) {
     goto quit;
   }
 
