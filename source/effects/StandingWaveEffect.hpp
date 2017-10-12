@@ -26,11 +26,11 @@ public:
     Y,
   } dimension = Dimension::X;
   enum class TimeInterpolation {
-    Sine,
     Linear,
+    Sine,
   } timeInterpolation = TimeInterpolation::Sine;
   enum class WaveFunction {
-    Sine,
     Triangle,
+    Sine,
   } waveFunction = WaveFunction::Sine;
 };
