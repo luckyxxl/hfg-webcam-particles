@@ -26,6 +26,8 @@ set(SOURCE_FILES
   source/effects/ParticleDisplaceEffect.hpp
   source/effects/ParticleSizeByHueEffect.cpp
   source/effects/ParticleSizeByHueEffect.hpp
+  source/effects/ParticleSizeModifyEffect.cpp
+  source/effects/ParticleSizeModifyEffect.hpp
   source/effects/ParticleSpacingEffect.cpp
   source/effects/ParticleSpacingEffect.hpp
   source/effects/SmearEffect.cpp

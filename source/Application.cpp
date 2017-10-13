@@ -8,6 +8,7 @@
 #include "effects/HueDisplaceEffect.hpp"
 #include "effects/ParticleDisplaceEffect.hpp"
 #include "effects/ParticleSizeByHueEffect.hpp"
+#include "effects/ParticleSizeModifyEffect.hpp"
 #include "effects/ParticleSpacingEffect.hpp"
 #include "effects/SmearEffect.hpp"
 #include "effects/SmoothTrailsEffect.hpp"
@@ -43,6 +44,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   effectRegistry.registerEffect<HueDisplaceEffect>();
   effectRegistry.registerEffect<ParticleDisplaceEffect>();
   effectRegistry.registerEffect<ParticleSizeByHueEffect>();
+  effectRegistry.registerEffect<ParticleSizeModifyEffect>();
   effectRegistry.registerEffect<ParticleSpacingEffect>();
   effectRegistry.registerEffect<SmearEffect>();
   effectRegistry.registerEffect<SmoothTrailsEffect>();
@@ -111,6 +113,14 @@ bool Application::create(Resources *resources, graphics::Window *window,
     timeline->emplaceEffectInstance<ParticleSpacingEffect>(randomTrackIndex);
     timeline->emplaceEffectInstance<StandingWaveEffect>(randomTrackIndex);
     timeline->emplaceEffectInstance<WaveEffect>(randomTrackIndex);
+
+#if 0
+    auto sizeModify = timeline->emplaceEffectInstance<ParticleSizeModifyEffect>();
+    sizeModify->scaling = .75f;
+    sizeModify->easeInTime = 1000.f;
+    sizeModify->easeOutTime = 1000.f;
+    sizeModify->easeFunc = ParticleSizeModifyEffect::EaseFunction::Linear;
+#endif
 
 #if 0
     auto accum = timeline->emplaceEffectInstance<TrailsEffect>();
