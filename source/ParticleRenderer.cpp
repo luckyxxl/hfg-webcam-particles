@@ -126,7 +126,7 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
                         [](const RenderProps &props) {
                           //TODO: particleScaling config
                           //return UniformValue(((float)props.screen_height / props.webcam_height) * 2 /* * particleScaling*/);
-                          return UniformValue(((float)props.screen_width / props.webcam_width) * .75f / 2.f);
+                          return UniformValue(((float)props.screen_width / props.webcam_width) * 1.f);
                         });
   uniforms.emplace_back("globalTime", GLSLType::Float,
                         [](const RenderProps &props) {
