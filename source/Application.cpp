@@ -285,8 +285,8 @@ static void removeEmptySpace(Timeline *timeline) {
 
 static void randomizeTimeline(Timeline *timeline,
                               std::default_random_engine &random) {
-  const auto period = std::uniform_real_distribution<float>(10000.f, 30000.f)(random);
-  const auto minLength = 3000.f;
+  const auto period = std::uniform_real_distribution<float>(15000.f, 30000.f)(random);
+  const auto minLength = 5000.f;
 
   timeline->forEachInstance([&](IEffect &i) {
     if(i.isAccumulationEffect()) {
