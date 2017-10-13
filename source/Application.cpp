@@ -352,8 +352,8 @@ void Application::update(float dt) {
 
         auto rectTl = glm::vec2(rect.tl().x, rect.tl().y);
         auto rectBr = glm::vec2(rect.br().x, rect.br().y);
-        glm::vec2 face1 = glm::vec2(webcamImageTransform.getTransform() * glm::vec3(rectTl / glm::vec2(imageProvider.width(), imageProvider.height()), 1.f));
-        glm::vec2 face2 = glm::vec2(webcamImageTransform.getTransform() * glm::vec3(rectBr / glm::vec2(imageProvider.width(), imageProvider.height()), 1.f));
+        glm::vec2 face1 = glm::vec2(webcamImageTransform.getInverseTransform() * glm::vec3(rectTl / glm::vec2(imageProvider.width(), imageProvider.height()), 1.f));
+        glm::vec2 face2 = glm::vec2(webcamImageTransform.getInverseTransform() * glm::vec3(rectBr / glm::vec2(imageProvider.width(), imageProvider.height()), 1.f));
 
         glm::vec2 faceMin = glm::min(face1, face2);
         glm::vec2 faceMax = glm::max(face1, face2);

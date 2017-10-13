@@ -17,6 +17,7 @@ void WebcamImageTransform::create(const graphics::ScreenRectBuffer *rectangle,
   transform = glm::mat3(-1.f, 0.f, 0.f,
                         0.f, -1.f * overscan, 0.f,
                         1.f, .9f, 1.f);
+  inverseTransform = glm::inverse(transform);
 
   static const char *vertexShaderSource = R"glsl(
     #version 330 core
@@ -27,7 +28,7 @@ void WebcamImageTransform::create(const graphics::ScreenRectBuffer *rectangle,
     out vec2 texcoord;
 
     void main() {
-      vec2 pixelTexcoord = position / 2. + .5;
+      vec2 pixelTexcoord = position * .5 + .5;
       texcoord = vec2(transform * vec3(pixelTexcoord, 1.));
       gl_Position = vec4(position, 0., 1.);
     }

@@ -14,7 +14,7 @@ void FinalComposite::create(const graphics::ScreenRectBuffer *rectangle) {
 
     void main() {
       screenCoord = position;
-      texcoord = position / 2. + .5;
+      texcoord = position * .5 + .5;
       gl_Position = vec4(position, 0., 1.);
     }
   )glsl";
