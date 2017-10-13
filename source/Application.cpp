@@ -110,10 +110,12 @@ bool Application::create(Resources *resources, graphics::Window *window,
     timeline->emplaceEffectInstance<StandingWaveEffect>();
     timeline->emplaceEffectInstance<WaveEffect>();
 
+#if 0
     auto accum = timeline->emplaceEffectInstance<TrailsEffect>();
     accum->fadeIn = 1000.f;
     accum->fadeOut = 1000.f;
     accum->strength = .8f;
+#endif
 
     reactionParticleRenderer.setTimeline(particleRendererGlobalState, std::move(timeline));
 
