@@ -247,6 +247,12 @@ bool Application::handleEvents() {
   return true;
 }
 
+static bool isEmptyEffect(const IEffect &i) {
+  return !i.enabled || i.isAccumulationEffect()
+          || !strcmp(i.getName(), "ParticleDisplaceEffect")
+          || !strcmp(i.getName(), "ParticleSpacingEffect");
+}
+
 static void removeEmptySpace(Timeline *timeline) {
   const auto instanceCount = timeline->getInstanceCount();
   if(instanceCount == 0u) return;
@@ -254,9 +260,7 @@ static void removeEmptySpace(Timeline *timeline) {
   std::vector<Interval> intervals;
   intervals.reserve(instanceCount);
   timeline->forEachInstance([&](const IEffect &i) {
-    if(!i.enabled || i.isAccumulationEffect()
-        || !strcmp(i.getName(), "ParticleDisplaceEffect")
-        || !strcmp(i.getName(), "ParticleSpacingEffect")) return;
+    if(isEmptyEffect(i)) return;
 
     intervals.emplace_back(i.timeBegin, i.timeEnd);
   });
@@ -273,9 +277,8 @@ static void removeEmptySpace(Timeline *timeline) {
       if(i.isAccumulationEffect()) return;
 
       if(interval->start() <= i.timeBegin) {
-        const auto instanceMove = std::min(move, i.timeBegin);
-        i.timeBegin += instanceMove;
-        i.timeEnd += instanceMove;
+        i.timeBegin += move;
+        i.timeEnd += move;
       }
     });
 
@@ -316,6 +319,18 @@ static void randomizeTimeline(Timeline *timeline,
   }
 
   removeEmptySpace(timeline);
+
+  float nonEmptyPeriod = 0.f;
+  timeline->forEachInstance([&](IEffect &i) {
+    if(!isEmptyEffect(i)) nonEmptyPeriod = std::max(nonEmptyPeriod, i.timeEnd);
+  });
+
+  timeline->forEachInstance([&](IEffect &i) {
+    if(isEmptyEffect(i)) {
+      if(i.timeBegin < 0.f) i.timeBegin = 0.f;
+      if(i.timeEnd > nonEmptyPeriod) i.timeEnd = nonEmptyPeriod;
+    }
+  });
 
   timeline->forEachInstance([&](IEffect &i) {
     if(i.isAccumulationEffect()) {
