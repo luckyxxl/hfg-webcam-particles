@@ -50,6 +50,13 @@ public:
       }
   }
 
+  template <class f_t> void forEachInstanceOnTrack(unsigned trackIndex, const f_t &f) const {
+    assert(trackIndex < tracks.size());
+    for (auto &item : tracks[trackIndex]) {
+      f(*item);
+    }
+  }
+
   size_t getInstanceCount() const {
     size_t result = 0u;
     for(auto &t : tracks) result += t.size();

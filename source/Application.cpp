@@ -21,6 +21,7 @@
 #include <stb_image_write.h>
 
 constexpr uint32_t particles_width = 320u*2u, particles_height = 200u*2u;
+constexpr auto randomTrackIndex = 1u; // all other effects are on the default track (0)
 
 bool Application::create(Resources *resources, graphics::Window *window,
                          sound::Renderer *soundRenderer) {
@@ -103,13 +104,13 @@ bool Application::create(Resources *resources, graphics::Window *window,
   {
     auto timeline = std::make_unique<Timeline>(&effectRegistry);
 
-    timeline->emplaceEffectInstance<ConvergeCircleEffect>();
-    timeline->emplaceEffectInstance<ConvergePointEffect>();
-    timeline->emplaceEffectInstance<ParticleDisplaceEffect>();
-    timeline->emplaceEffectInstance<HueDisplaceEffect>();
-    timeline->emplaceEffectInstance<ParticleSpacingEffect>();
-    timeline->emplaceEffectInstance<StandingWaveEffect>();
-    timeline->emplaceEffectInstance<WaveEffect>();
+    timeline->emplaceEffectInstance<ConvergeCircleEffect>(randomTrackIndex);
+    timeline->emplaceEffectInstance<ConvergePointEffect>(randomTrackIndex);
+    timeline->emplaceEffectInstance<ParticleDisplaceEffect>(randomTrackIndex);
+    timeline->emplaceEffectInstance<HueDisplaceEffect>(randomTrackIndex);
+    timeline->emplaceEffectInstance<ParticleSpacingEffect>(randomTrackIndex);
+    timeline->emplaceEffectInstance<StandingWaveEffect>(randomTrackIndex);
+    timeline->emplaceEffectInstance<WaveEffect>(randomTrackIndex);
 
 #if 0
     auto accum = timeline->emplaceEffectInstance<TrailsEffect>();
@@ -259,7 +260,7 @@ static void removeEmptySpace(Timeline *timeline) {
 
   std::vector<Interval> intervals;
   intervals.reserve(instanceCount);
-  timeline->forEachInstance([&](const IEffect &i) {
+  timeline->forEachInstanceOnTrack(randomTrackIndex, [&](const IEffect &i) {
     if(isEmptyEffect(i)) return;
 
     intervals.emplace_back(i.timeBegin, i.timeEnd);
@@ -273,9 +274,7 @@ static void removeEmptySpace(Timeline *timeline) {
   for(auto interval = emptyIntervals.begin(); interval != emptyIntervals.end(); ++interval) {
     const auto move = -interval->length();
 
-    timeline->forEachInstance([&](IEffect &i) {
-      if(i.isAccumulationEffect()) return;
-
+    timeline->forEachInstanceOnTrack(randomTrackIndex, [&](IEffect &i) {
       if(interval->start() <= i.timeBegin) {
         i.timeBegin += move;
         i.timeEnd += move;
@@ -294,24 +293,23 @@ static void randomizeTimeline(Timeline *timeline,
   const auto period = std::uniform_real_distribution<float>(15000.f, 30000.f)(random);
   const auto minLength = 5000.f;
 
-  timeline->forEachInstance([&](IEffect &i) {
-    if(i.isAccumulationEffect()) {
-      i.timeBegin = 0.f;
-      i.timeEnd = 0.f;
-    } else {
-      i.timeBegin = std::uniform_real_distribution<float>(0.f, period - minLength)
-                      (random);
-      i.timeEnd = i.timeBegin + std::uniform_real_distribution<float>(minLength,
-                                  period - i.timeBegin)(random);
-      i.randomizeConfig(random);
-    }
+  timeline->forEachInstanceOnTrack(0u, [](IEffect &i) {
+    i.timeBegin = 0.f;
+    i.timeEnd = 0.f;
+  });
+
+  timeline->forEachInstanceOnTrack(randomTrackIndex, [&](IEffect &i) {
+    i.timeBegin = std::uniform_real_distribution<float>(0.f, period - minLength)(random);
+    i.timeEnd = std::uniform_real_distribution<float>(minLength, period - i.timeBegin)(random)
+                + i.timeBegin;
+    i.randomizeConfig(random);
   });
 
   {
     size_t enabledCount;
     do {
       enabledCount = 0u;
-      timeline->forEachInstance([&](IEffect &i) {
+      timeline->forEachInstanceOnTrack(randomTrackIndex, [&](IEffect &i) {
         i.enabled = std::bernoulli_distribution(.95)(random);
         if(i.enabled) ++enabledCount;
       });
@@ -321,21 +319,19 @@ static void randomizeTimeline(Timeline *timeline,
   removeEmptySpace(timeline);
 
   float nonEmptyPeriod = 0.f;
-  timeline->forEachInstance([&](IEffect &i) {
+  timeline->forEachInstanceOnTrack(randomTrackIndex, [&](IEffect &i) {
     if(!isEmptyEffect(i)) nonEmptyPeriod = std::max(nonEmptyPeriod, i.timeEnd);
   });
 
-  timeline->forEachInstance([&](IEffect &i) {
+  timeline->forEachInstanceOnTrack(randomTrackIndex, [&](IEffect &i) {
     if(isEmptyEffect(i)) {
       if(i.timeBegin < 0.f) i.timeBegin = 0.f;
       if(i.timeEnd > nonEmptyPeriod) i.timeEnd = nonEmptyPeriod;
     }
   });
 
-  timeline->forEachInstance([&](IEffect &i) {
-    if(i.isAccumulationEffect()) {
-      i.timeEnd = timeline->getPeriod();
-    }
+  timeline->forEachInstanceOnTrack(0u, [&](IEffect &i) {
+    i.timeEnd = timeline->getPeriod();
   });
 }
 
