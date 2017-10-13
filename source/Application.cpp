@@ -20,7 +20,7 @@
 
 #include <stb_image_write.h>
 
-constexpr uint32_t particles_width = 320u, particles_height = 200u;
+constexpr uint32_t particles_width = 320u/2u, particles_height = 200u/2u;
 
 bool Application::create(Resources *resources, graphics::Window *window,
                          sound::Renderer *soundRenderer) {
