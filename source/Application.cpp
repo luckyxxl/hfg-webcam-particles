@@ -78,7 +78,8 @@ bool Application::create(Resources *resources, graphics::Window *window,
     void main() {
       vec4 w = texelFetch(webcam, ivec2(gl_FragCoord.xy), 0);
       vec4 o = texelFetch(overlay, ivec2(gl_FragCoord.xy), 0);
-      frag_color = vec4(mix(w.rgb, o.rgb, o.a * overlayVisibility), 0.0);
+      float a = o.a * overlayVisibility;
+      frag_color = vec4(mix(w.rgb, o.rgb, a), a);
     }
     )glsl", graphics::Pipeline::BlendMode::None);
   overlayComposePilpeline_webcam_location = overlayComposePilpeline.getUniformLocation("webcam");

@@ -198,13 +198,15 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
 
     vec2 texcoord = pixelPosition / vec2(particleTextureSize);
 
-    vec3 rgb = texelFetch(particleTexture, pixelPosition, 0).rgb;
+    vec4 rgba = texelFetch(particleTexture, pixelPosition, 0);
+    vec3 rgb = rgba.rgb;
 
     vec3 hsv = rgb2hsv(rgb);
 
     vec3 backgroundDelta = rgb - texelFetch(backgroundTexture, pixelPosition, 0).rgb;
     float backgroundDifference = dot(backgroundDelta, backgroundDelta);
     float foregroundMask = clamp((backgroundDifference - .1) * 50., 0., 1.);
+    foregroundMask *= max(1. - rgba.a * 10., 0.); // disable foreground mask for face splats
 
     vec3 initialPosition = vec3(texcoord, 0);
     initialPosition.y *= invImageAspectRatio;
