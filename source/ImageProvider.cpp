@@ -18,7 +18,11 @@ static cv::Size getFrameSize(cv::VideoCapture &capture) {
 }
 
 bool ImageProvider::create(Resources *resources) {
-  face_cascade.load(resources->resolve(face_cascade_xml));
+  if(!face_cascade.load(resources->resolve(face_cascade_xml))) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could load CascadeClassifier XML",
+                           "Could load face CascadeClassifier XML", NULL);
+    return false;
+  }
   (void)eyes_cascade_xml; // fix unused variable warning
   return true;
 }

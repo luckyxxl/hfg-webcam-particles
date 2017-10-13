@@ -27,7 +27,7 @@ private:
   cv::Size webcam_size;
   ThreadSyncTripleBuffer<ImageData> data;
   cv::CascadeClassifier face_cascade;
-  cv::CascadeClassifier eyes_cascade;
+  //cv::CascadeClassifier eyes_cascade;
 
   std::atomic<bool> kill_threads{false};
 
