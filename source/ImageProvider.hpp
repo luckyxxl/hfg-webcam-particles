@@ -5,6 +5,8 @@
 struct ImageData {
   cv::Mat webcam_pixels;
   std::vector<cv::Rect> faces;
+  std::vector<int> rejectLevels;
+  std::vector<double> levelWeights;
 };
 
 class Resources;

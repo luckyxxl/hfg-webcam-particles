@@ -60,6 +60,8 @@ void ImageProvider::webcamThreadFunc() {
 
     auto &frame = assigned->webcam_pixels;
     auto &faces = assigned->faces;
+    auto &rejectLevels = assigned->rejectLevels;
+    auto &levelWeights = assigned->levelWeights;
 
     if (!capture.isOpened()) {
       return;
@@ -79,13 +81,29 @@ void ImageProvider::webcamThreadFunc() {
 
     cv::cvtColor(frame, frame_gray, CV_BGR2GRAY);
     cv::equalizeHist(frame_gray, frame_gray);
-    face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2,
-                                  0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
+    face_cascade.detectMultiScale(frame_gray, faces, rejectLevels, levelWeights,
+                                  1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30), cv::Size(),
+                                  true);
 
 #if 0
     for(const auto &f : faces) {
       cv::rectangle(frame, f, cv::Scalar(0, 0, 255));
     }
+#endif
+
+#if 1
+    std::cout << faces.size() << " " << rejectLevels.size() << " " << levelWeights.size() << "\n";
+    for(size_t i=0u; i<faces.size(); ++i) {
+      std::cout << "detected face " << i+1 << ": rejectLevel=" << rejectLevels[i] << " levelWeight=" << levelWeights[i] << "\n";
+    }
+#endif
+
+    face_cascade.detectMultiScale(frame_gray, faces,
+                                  1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30), cv::Size());
+
+#if 1
+    if(!faces.empty())
+      std::cout << "ACTUALLY DETECTED " << faces.size() << "\n";
 #endif
 
     data.finishWrite();
