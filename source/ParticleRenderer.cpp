@@ -104,7 +104,7 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
                               2.f, 0.f, 0.f, 0.f,
                               0.f, 2.f*aspect, 0.f, 0.f,
                               0.f, 0.f, 0.f, 0.f,
-                              -1.f, (underscan * 2.f) - 1.f, 0.f, 1.f
+                              -1.f, underscan - 1.f, 0.f, 1.f
                           ));
                           // clang-format on
                         });
@@ -118,7 +118,7 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
                               .5f, 0.f, 0.f, 0.f,
                               0.f, .5f / aspect, 0.f, 0.f,
                               0.f, 0.f, 0.f, 0.f,
-                              .5f, (-.5f * ((underscan * 2.f) - 1.f)) / aspect, 0.f, 1.f
+                              .5f, (-.5f * (underscan - 1.f)) / aspect, 0.f, 1.f
                           ));
                           // clang-format on
                         });
