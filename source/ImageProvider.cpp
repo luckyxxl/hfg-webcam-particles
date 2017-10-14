@@ -30,7 +30,11 @@ bool ImageProvider::create(Resources *resources) {
 bool ImageProvider::start() {
   capture.open(0);
   if (capture.isOpened()) {
+    capture.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+    capture.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+    capture.set(CV_CAP_PROP_FPS, 30);
     webcam_size = getFrameSize(capture);
+    std::cout << "webcam resolution: " << webcam_size.width << "x" << webcam_size.height << "\n";
     if (webcam_size.width > 0 && webcam_size.height > 0) {
       for(size_t i=0u; i<data.size; ++i) {
         data.getBuffer(i).webcam_pixels = cv::Mat::zeros(webcam_size.height, webcam_size.width, CV_8UC3);

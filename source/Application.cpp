@@ -22,7 +22,7 @@
 
 #include <stb_image_write.h>
 
-constexpr uint32_t particles_width = 1280u, particles_height = 800u;
+constexpr uint32_t particles_width = 1280u, particles_height = 720u;
 constexpr auto randomTrackIndex = 1u; // all other effects are on the default track (0)
 
 bool Application::create(Resources *resources, graphics::Window *window,
