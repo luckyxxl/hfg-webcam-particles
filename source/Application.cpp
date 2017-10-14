@@ -121,14 +121,14 @@ bool Application::create(Resources *resources, graphics::Window *window,
     auto reduceCount = timeline->emplaceEffectInstance<ReduceParticleCountEffect>();
     reduceCount->amount = 256u;
     reduceCount->easeInTime = distTime;
-    reduceCount->easeOutTime = distTime;
+    reduceCount->easeOutTime = 3000.f;
     reduceCount->easeFunc = ReduceParticleCountEffect::EaseFunction::Linear;
     
 #if 1
     auto hueDisplace = timeline->emplaceEffectInstance<HueDisplaceEffect>(1u);
     hueDisplace->timeBegin = 0.f;
     hueDisplace->timeEnd = distTime * 2.f;
-    hueDisplace->distance = .2f;
+    hueDisplace->distance = .3f;
     hueDisplace->scaleByValue = 0.5f;
     hueDisplace->scaleByForegroundMask = 0.f;
     hueDisplace->randomDirectionOffset = true;
@@ -142,19 +142,8 @@ bool Application::create(Resources *resources, graphics::Window *window,
     auto sizeModify = timeline->emplaceEffectInstance<ParticleSizeModifyEffect>();
     sizeModify->scaling = 4.f;
     sizeModify->easeInTime = distTime;
-    sizeModify->easeOutTime = distTime;
+    sizeModify->easeOutTime = 3000.f;
     sizeModify->easeFunc = ParticleSizeModifyEffect::EaseFunction::Linear;
-    
-#if 0
-    auto hueDisplace2 = timeline->emplaceEffectInstance<HueDisplaceEffect>(1u);
-    hueDisplace2->timeBegin = distTime-20000.f;
-    hueDisplace2->timeEnd = distTime;
-    hueDisplace2->distance = -.2f;
-    hueDisplace2->scaleByValue = 0.2f;
-    hueDisplace2->scaleByForegroundMask = 0.f;
-    hueDisplace2->randomDirectionOffset = false;
-    hueDisplace2->rotate = -5.f;
-#endif
 
 #if 0
     auto accum = timeline->emplaceEffectInstance<TrailsEffect>();

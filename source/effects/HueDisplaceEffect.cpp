@@ -56,10 +56,9 @@ void HueDisplaceEffect::registerEffect(EffectRegistrationData &data) const {
                             (props.state.clock.getTime() - timeBegin) /
                             getPeriod() * 2 * PI * 10.f));
 #endif
-                        const float t = (props.state.clock.getTime() - timeBegin) /
-                            getPeriod();
-                        const float x = (pow(2.f*t-1.f, 2.f)+1.f)/2.f;
-                        return UniformValue(x * 2.f * PI);
+                        return UniformValue(sqrt(
+                            (props.state.clock.getTime() - timeBegin) /
+                            getPeriod() * 2 * PI * 10.f));
                       }),
               UNIFORM(data.uniforms, "directionOffset", GLSLType::Float,
                       [this](const RenderProps &props) {

@@ -95,10 +95,10 @@ target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_gl_LIBRARY} ${OpenCV_LIBS} ${S
 
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
-add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy "${OpenCV_DIR}/haarcascades/haarcascade_frontalface_alt.xml" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
-add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy "${OpenCV_DIR}/haarcascades/haarcascade_eye_tree_eyeglasses.xml" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
+#add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+#  COMMAND ${CMAKE_COMMAND} -E copy "${OpenCV_DIR}/haarcascades/haarcascade_frontalface_alt.xml" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
+#add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+#  COMMAND ${CMAKE_COMMAND} -E copy "${OpenCV_DIR}/haarcascades/haarcascade_eye_tree_eyeglasses.xml" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
 
 if(APPLE)
   set_target_properties(${EXECUTABLE_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
