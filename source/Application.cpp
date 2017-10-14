@@ -22,7 +22,7 @@
 
 #include <stb_image_write.h>
 
-constexpr uint32_t particles_width = 320u*2u, particles_height = 200u*2u;
+constexpr uint32_t particles_width = 1280u, particles_height = 800u;
 constexpr auto randomTrackIndex = 1u; // all other effects are on the default track (0)
 
 bool Application::create(Resources *resources, graphics::Window *window,
@@ -116,21 +116,17 @@ bool Application::create(Resources *resources, graphics::Window *window,
     timeline->emplaceEffectInstance<StandingWaveEffect>(randomTrackIndex);
     timeline->emplaceEffectInstance<WaveEffect>(randomTrackIndex);
 
-#if 0
-    auto sizeModify = timeline->emplaceEffectInstance<ParticleSizeModifyEffect>();
-    sizeModify->scaling = .75f;
-    sizeModify->easeInTime = 1000.f;
-    sizeModify->easeOutTime = 1000.f;
-    sizeModify->easeFunc = ParticleSizeModifyEffect::EaseFunction::Linear;
-#endif
-
-#if 0
     auto reduceCount = timeline->emplaceEffectInstance<ReduceParticleCountEffect>();
-    reduceCount->amount = 4u;
+    reduceCount->amount = 128u;
     reduceCount->easeInTime = 1000.f;
     reduceCount->easeOutTime = 1000.f;
     reduceCount->easeFunc = ReduceParticleCountEffect::EaseFunction::Linear;
-#endif
+
+    auto sizeModify = timeline->emplaceEffectInstance<ParticleSizeModifyEffect>();
+    sizeModify->scaling = 2.f;
+    sizeModify->easeInTime = 1000.f;
+    sizeModify->easeOutTime = 1000.f;
+    sizeModify->easeFunc = ParticleSizeModifyEffect::EaseFunction::Linear;
 
 #if 0
     auto accum = timeline->emplaceEffectInstance<TrailsEffect>();

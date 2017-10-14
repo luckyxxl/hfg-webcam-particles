@@ -51,7 +51,7 @@ void ReduceParticleCountEffect::registerEffect(EffectRegistrationData &data) con
       break;
     }
 
-    if((pixelPosition.x + pixelPosition.y) % ${amount} != 0) {
+    if((gl_VertexID - pixelPosition.y * 8) % ${amount} != 0) {
       visibility *= 1. - ease;
     }
   }
