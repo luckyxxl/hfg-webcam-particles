@@ -403,7 +403,7 @@ void Application::update(float dt) {
 
       if(standbyBlitCount == standbyBlitTargetCount) {
         standbyBlitCount = 0u;
-        standbyBlitTargetCount = std::uniform_int_distribution<uint32_t>(32u, 128u)(random);
+        standbyBlitTargetCount = std::uniform_int_distribution<uint32_t>(15u, 25u)(random);
 
         standbyParticleRenderer.getClock().disableLooping();
 
