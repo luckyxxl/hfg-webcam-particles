@@ -6,6 +6,7 @@
 #include "ImageProvider.hpp"
 #include "WebcamImageTransform.hpp"
 #include "FaceBlitter.hpp"
+#include "OverlayCompose.hpp"
 #include "FinalComposite.hpp"
 
 class Resources;
@@ -45,10 +46,7 @@ private:
 
   FaceBlitter faceBlitter;
 
-  graphics::Pipeline overlayComposePilpeline;
-  GLint overlayComposePilpeline_webcam_location;
-  GLint overlayComposePilpeline_overlay_location;
-  GLint overlayComposePilpeline_overlayVisibility_location;
+  OverlayCompose overlayCompose;
 
   ParticleRenderer::GlobalState particleRendererGlobalState;
 

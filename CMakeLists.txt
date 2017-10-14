@@ -71,6 +71,8 @@ set(SOURCE_FILES
   source/RendererState.hpp
   source/main.cpp
   source/main.hpp
+  source/OverlayCompose.cpp
+  source/OverlayCompose.hpp
   source/Resources.cpp
   source/Resources.hpp
   source/SampleLibrary.cpp

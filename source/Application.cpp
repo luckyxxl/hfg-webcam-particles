@@ -70,26 +70,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   webcamImageTransform.create(&screenRectBuffer, imageProvider.width(), imageProvider.height(), particles_width, particles_height);
   faceBlitter.create(&screenRectBuffer, particles_width, particles_height);
 
-  overlayComposePilpeline.create(R"glsl(
-    #version 330 core
-    layout(location=0) in vec2 position;
-    void main() { gl_Position = vec4(position, 0.0, 1.0); }
-    )glsl", R"glsl(
-    #version 330 core
-    uniform sampler2D webcam;
-    uniform sampler2D overlay;
-    uniform float overlayVisibility;
-    out vec4 frag_color;
-    void main() {
-      vec4 w = texelFetch(webcam, ivec2(gl_FragCoord.xy), 0);
-      vec4 o = texelFetch(overlay, ivec2(gl_FragCoord.xy), 0);
-      float a = o.a * overlayVisibility;
-      frag_color = vec4(mix(w.rgb, o.rgb, a), a);
-    }
-    )glsl", graphics::Pipeline::BlendMode::None);
-  overlayComposePilpeline_webcam_location = overlayComposePilpeline.getUniformLocation("webcam");
-  overlayComposePilpeline_overlay_location = overlayComposePilpeline.getUniformLocation("overlay");
-  overlayComposePilpeline_overlayVisibility_location = overlayComposePilpeline.getUniformLocation("overlayVisibility");
+  overlayCompose.create(&screenRectBuffer);
 
   particleRendererGlobalState.create(soundRenderer, &sampleLibrary, &random, &screenRectBuffer, screen_width, screen_height);
 
@@ -174,7 +155,7 @@ void Application::destroy() {
 
   particleRendererGlobalState.destroy();
 
-  overlayComposePilpeline.destroy();
+  overlayCompose.destroy();
 
   faceBlitter.destroy();
   webcamImageTransform.destroy();
@@ -453,15 +434,6 @@ void Application::render() {
 
   // compose webcam and overlay into particleSourceFramebuffer
   {
-    particleSourceFramebuffer.bind();
-    glViewport(0, 0, particleSourceFramebuffer.getWidth(), particleSourceFramebuffer.getHeight());
-
-    overlayComposePilpeline.bind();
-    webcamFramebuffer.getTexture().bind(0);
-    glUniform1i(overlayComposePilpeline_webcam_location, 0);
-    faceBlitter.getResultTexture().bind(1);
-    glUniform1i(overlayComposePilpeline_overlay_location, 1);
-
     float overlayVisibility = 1.f;
     if(reactionState == ReactionState::RenderReactionTimeline) {
       if(reactionParticleRenderer.getClock().isPaused()) {
@@ -472,9 +444,8 @@ void Application::render() {
         overlayVisibility = std::min(std::max((p - t) / 4000.f, 0.f), 1.f);
       }
     }
-    glUniform1f(overlayComposePilpeline_overlayVisibility_location, overlayVisibility);
 
-    screenRectBuffer.draw();
+    overlayCompose.draw(webcamFramebuffer.getTexture(), faceBlitter.getResultTexture(), overlayVisibility, particleSourceFramebuffer);
   }
 
   RendererParameters parameters(&particleSourceFramebuffer.getTexture(), &backgroundFramebuffer.getTexture(),
