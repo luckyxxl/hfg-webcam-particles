@@ -10,6 +10,7 @@
 #include "effects/ParticleSizeByHueEffect.hpp"
 #include "effects/ParticleSizeModifyEffect.hpp"
 #include "effects/ParticleSpacingEffect.hpp"
+#include "effects/ReduceParticleCountEffect.hpp"
 #include "effects/SmearEffect.hpp"
 #include "effects/SmoothTrailsEffect.hpp"
 #include "effects/StandingWaveEffect.hpp"
@@ -46,6 +47,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   effectRegistry.registerEffect<ParticleSizeByHueEffect>();
   effectRegistry.registerEffect<ParticleSizeModifyEffect>();
   effectRegistry.registerEffect<ParticleSpacingEffect>();
+  effectRegistry.registerEffect<ReduceParticleCountEffect>();
   effectRegistry.registerEffect<SmearEffect>();
   effectRegistry.registerEffect<SmoothTrailsEffect>();
   effectRegistry.registerEffect<StandingWaveEffect>();
@@ -121,6 +123,12 @@ bool Application::create(Resources *resources, graphics::Window *window,
     sizeModify->easeOutTime = 1000.f;
     sizeModify->easeFunc = ParticleSizeModifyEffect::EaseFunction::Linear;
 #endif
+
+    auto reduceCount = timeline->emplaceEffectInstance<ReduceParticleCountEffect>();
+    reduceCount->amount = 4u;
+    reduceCount->easeInTime = 1000.f;
+    reduceCount->easeOutTime = 1000.f;
+    reduceCount->easeFunc = ReduceParticleCountEffect::EaseFunction::Linear;
 
 #if 0
     auto accum = timeline->emplaceEffectInstance<TrailsEffect>();

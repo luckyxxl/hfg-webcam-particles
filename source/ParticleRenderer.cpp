@@ -151,6 +151,7 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
                            });
 
   vertexShader.appendOut("color", GLSLType::Vec3);
+  vertexShader.appendOut("visibility", GLSLType::Float);
 
   vertexShader.appendGlobal("PI", GLSLType::Float, std::to_string(PI));
 
@@ -185,6 +186,7 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
   )glsl");
 
   fragmentShader.appendIn("color", GLSLType::Vec3);
+  fragmentShader.appendIn("visibility", GLSLType::Float);
 
   fragmentShader.appendOut("frag_color", GLSLType::Vec4);
 
@@ -213,12 +215,16 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
     float pointSize = max(particleSize, 0.);
 
     vec3 position = initialPosition;
+
+    visibility = 1.;
   )glsl");
 
   fragmentShader.appendMainBody(R"glsl(
     //float v = pow(max(1. - 2. * length(gl_PointCoord - vec2(.5)), 0.), 1.5);
     float v = length(gl_PointCoord - vec2(.5)) > .4 ? 0. : 1.;
     //float v = 1.0;
+
+    v *= visibility;
   )glsl");
 
   accShader.appendMainBody(R"glsl(

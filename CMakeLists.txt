@@ -30,6 +30,8 @@ set(SOURCE_FILES
   source/effects/ParticleSizeModifyEffect.hpp
   source/effects/ParticleSpacingEffect.cpp
   source/effects/ParticleSpacingEffect.hpp
+  source/effects/ReduceParticleCountEffect.cpp
+  source/effects/ReduceParticleCountEffect.hpp
   source/effects/SmearEffect.cpp
   source/effects/SmearEffect.hpp
   source/effects/SmoothTrailsEffect.cpp
