@@ -18,6 +18,17 @@ bool SampleLibrary::create(std::default_random_engine &random,
   loadSample("FXStereo05");
   loadSample("sweep005");
   loadSample("up_sweep018");
+  loadSample("W10");
+  loadSample("W11");
+  loadSample("W12");
+  loadSample("W13");
+  loadSample("W14");
+  loadSample("W15");
+  loadSample("W16");
+  loadSample("W17");
+  loadSample("W18");
+  loadSample("W19");
+  loadSample("W20");
 
   //TODO: check that all samples are loaded correctly
   return true;
@@ -41,6 +52,17 @@ const sound::SampleBuffer *SampleLibrary::getRandomWhoosh() const {
     "FXStereo03",
     "FXStereo04",
     "FXStereo05",
+    "W10",
+    "W11",
+    "W12",
+    "W13",
+    "W14",
+    "W15",
+    "W16",
+    "W17",
+    "W18",
+    "W19",
+    "W20",
   };
   constexpr auto whooshSamplesSize = sizeof(whooshSamples) / sizeof(*whooshSamples);
 
