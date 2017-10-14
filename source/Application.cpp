@@ -23,7 +23,9 @@
 #include <stb_image_write.h>
 
 constexpr uint32_t particles_width = 1280u, particles_height = 720u;
-constexpr auto randomTrackIndex = 1u; // all other effects are on the default track (0)
+constexpr auto randomTrackIndex = 10u;
+
+constexpr auto distTime = 30000.f;
 
 bool Application::create(Resources *resources, graphics::Window *window,
                          sound::Renderer *soundRenderer) {
@@ -117,16 +119,42 @@ bool Application::create(Resources *resources, graphics::Window *window,
     timeline->emplaceEffectInstance<WaveEffect>(randomTrackIndex);
 
     auto reduceCount = timeline->emplaceEffectInstance<ReduceParticleCountEffect>();
-    reduceCount->amount = 128u;
-    reduceCount->easeInTime = 1000.f;
-    reduceCount->easeOutTime = 1000.f;
+    reduceCount->amount = 256u;
+    reduceCount->easeInTime = distTime;
+    reduceCount->easeOutTime = distTime;
     reduceCount->easeFunc = ReduceParticleCountEffect::EaseFunction::Linear;
+    
+#if 1
+    auto hueDisplace = timeline->emplaceEffectInstance<HueDisplaceEffect>(1u);
+    hueDisplace->timeBegin = 0.f;
+    hueDisplace->timeEnd = distTime * 2.f;
+    hueDisplace->distance = .2f;
+    hueDisplace->scaleByValue = 0.5f;
+    hueDisplace->scaleByForegroundMask = 0.f;
+    hueDisplace->randomDirectionOffset = true;
+    hueDisplace->rotate = .2f;
+#endif
+
+    auto converge = timeline->emplaceEffectInstance<ConvergePointEffect>(1u);
+    converge->timeBegin = 0.f;
+    converge->timeEnd = distTime * 2.f;
 
     auto sizeModify = timeline->emplaceEffectInstance<ParticleSizeModifyEffect>();
-    sizeModify->scaling = 2.f;
-    sizeModify->easeInTime = 1000.f;
-    sizeModify->easeOutTime = 1000.f;
+    sizeModify->scaling = 4.f;
+    sizeModify->easeInTime = distTime;
+    sizeModify->easeOutTime = distTime;
     sizeModify->easeFunc = ParticleSizeModifyEffect::EaseFunction::Linear;
+    
+#if 0
+    auto hueDisplace2 = timeline->emplaceEffectInstance<HueDisplaceEffect>(1u);
+    hueDisplace2->timeBegin = distTime-20000.f;
+    hueDisplace2->timeEnd = distTime;
+    hueDisplace2->distance = -.2f;
+    hueDisplace2->scaleByValue = 0.2f;
+    hueDisplace2->scaleByForegroundMask = 0.f;
+    hueDisplace2->randomDirectionOffset = false;
+    hueDisplace2->rotate = -5.f;
+#endif
 
 #if 0
     auto accum = timeline->emplaceEffectInstance<TrailsEffect>();
@@ -318,6 +346,7 @@ static void randomizeTimeline(Timeline *timeline,
     i.timeBegin = std::uniform_real_distribution<float>(0.f, period - minLength)(random);
     i.timeEnd = std::uniform_real_distribution<float>(minLength, period - i.timeBegin)(random)
                 + i.timeBegin;
+    i.repetitions = (rand() % 3 == 0) ? (rand() % 30 + 10) : 1;
     i.randomizeConfig(random);
   });
 
@@ -333,6 +362,11 @@ static void randomizeTimeline(Timeline *timeline,
   }
 
   removeEmptySpace(timeline);
+  
+  timeline->forEachInstanceOnTrack(randomTrackIndex, [&](IEffect &i) {
+    i.timeBegin += distTime - 10000.f;
+    i.timeEnd += distTime - 10000.f;
+  });
 
   float nonEmptyPeriod = 0.f;
   timeline->forEachInstanceOnTrack(randomTrackIndex, [&](IEffect &i) {
@@ -341,7 +375,7 @@ static void randomizeTimeline(Timeline *timeline,
 
   timeline->forEachInstanceOnTrack(randomTrackIndex, [&](IEffect &i) {
     if(isEmptyEffect(i)) {
-      if(i.timeBegin < 0.f) i.timeBegin = 0.f;
+      if(i.timeBegin < 0.f) i.timeBegin = distTime - 10000.f;
       if(i.timeEnd > nonEmptyPeriod) i.timeEnd = nonEmptyPeriod;
     }
   });
@@ -404,6 +438,7 @@ void Application::update(float dt) {
       if(standbyBlitCount == standbyBlitTargetCount) {
         standbyBlitCount = 0u;
         standbyBlitTargetCount = std::uniform_int_distribution<uint32_t>(15u, 25u)(random);
+        //standbyBlitTargetCount = 1u;
 
         standbyParticleRenderer.getClock().disableLooping();
 
