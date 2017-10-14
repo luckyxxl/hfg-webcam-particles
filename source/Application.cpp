@@ -124,11 +124,13 @@ bool Application::create(Resources *resources, graphics::Window *window,
     sizeModify->easeFunc = ParticleSizeModifyEffect::EaseFunction::Linear;
 #endif
 
+#if 0
     auto reduceCount = timeline->emplaceEffectInstance<ReduceParticleCountEffect>();
     reduceCount->amount = 4u;
     reduceCount->easeInTime = 1000.f;
     reduceCount->easeOutTime = 1000.f;
     reduceCount->easeFunc = ReduceParticleCountEffect::EaseFunction::Linear;
+#endif
 
 #if 0
     auto accum = timeline->emplaceEffectInstance<TrailsEffect>();
