@@ -221,7 +221,8 @@ void ParticleRenderer::setTimeline(GlobalState &globalState,
 
   fragmentShader.appendMainBody(R"glsl(
     //float v = pow(max(1. - 2. * length(gl_PointCoord - vec2(.5)), 0.), 1.5);
-    float v = length(gl_PointCoord - vec2(.5)) > .4 ? 0. : 1.;
+    //float v = length(gl_PointCoord - vec2(.5)) > .4 ? 0. : 1.;
+    float v = 1. - smoothstep(.4, .5, length(gl_PointCoord - vec2(.5)));
     //float v = 1.0;
 
     v *= visibility;
