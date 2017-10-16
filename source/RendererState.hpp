@@ -68,6 +68,13 @@ public:
   void disableLooping() { setLooping(false); }
   void enableLooping() { setLooping(true); }
 
+#if WITH_EDIT_TOOLS
+  // really just for debugging... really!
+  float *dbgGetTimeP() { return &time; }
+  float *dbgGetPeriodP() { return &period; }
+  bool *dbgGetPausedP() { return &paused; }
+#endif
+
 private:
   float time = 0.f;
   float delta = 0.f;

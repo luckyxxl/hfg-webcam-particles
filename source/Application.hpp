@@ -75,4 +75,8 @@ private:
   graphics::Framebuffer particleOutputFramebuffer;
 
   FinalComposite finalComposite;
+
+#if WITH_EDIT_TOOLS
+  bool paused = false;
+#endif
 };

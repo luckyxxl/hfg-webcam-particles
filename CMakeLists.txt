@@ -1,11 +1,17 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(hfg-webcam-particles LANGUAGES CXX)
+project(hfg-webcam-particles LANGUAGES C CXX)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+
+option(WITH_EDIT_TOOLS "Enable editing tools" OFF)
 
 find_package(OpenCV REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
+if(WITH_EDIT_TOOLS)
+  add_subdirectory(3rdparty/AntTweakBar)
+  target_include_directories(AntTweakBar PRIVATE ${SDL2_INCLUDE_DIR})
+endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -Wall -pthread")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DOPENGL_DEBUG")
@@ -104,6 +110,13 @@ add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE source 3rdparty ${SDL2_INCLUDE_DIR})
 target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_gl_LIBRARY} ${OpenCV_LIBS} ${SDL2_LIBRARY} m)
+
+if(WITH_EDIT_TOOLS)
+  target_compile_definitions(${EXECUTABLE_NAME} PRIVATE WITH_EDIT_TOOLS=1)
+  target_link_libraries(${EXECUTABLE_NAME} AntTweakBar X11)
+else()
+  target_compile_definitions(${EXECUTABLE_NAME} PRIVATE WITH_EDIT_TOOLS=0)
+endif()
 
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")

@@ -31,4 +31,8 @@ using json = nlohmann::json;
 #endif
 #include <opencv2/objdetect/objdetect.hpp>
 
+#if WITH_EDIT_TOOLS
+#include <AntTweakBar.h>
+#endif
+
 constexpr auto PI = 3.14159265f;

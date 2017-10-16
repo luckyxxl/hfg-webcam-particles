@@ -27,6 +27,14 @@ bool Application::create(Resources *resources, graphics::Window *window,
     screen_height = std::get<1>(windowSize);
   }
 
+#if WITH_EDIT_TOOLS
+  if(!TwInit(TW_OPENGL_CORE, NULL)) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not init AntTweakBar", "Could not init AntTweakBar", NULL);
+    return false;
+  }
+  TwWindowSize(screen_width, screen_height);
+#endif
+
   effectRegistry.registerEffect<ConvergeCircleEffect>();
   effectRegistry.registerEffect<ConvergePoint2Effect>();
   effectRegistry.registerEffect<ConvergePointEffect>();
@@ -96,6 +104,23 @@ bool Application::create(Resources *resources, graphics::Window *window,
   webcamFramebuffer.clear();
   backgroundFramebuffer.clear();
 
+#if WITH_EDIT_TOOLS
+  {
+    auto bar = TwNewBar("global");
+    TwDefine("global position='0 0' size='200 1000' refresh=0.1");
+
+    TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, &paused, "label=paused");
+
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, standbyParticleRenderer.getClock().dbgGetTimeP(), "group=standby label=time");
+    TwAddVarRO(bar, NULL, TW_TYPE_FLOAT, standbyParticleRenderer.getClock().dbgGetPeriodP(), "group=standby label=period");
+    //TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, standbyParticleRenderer.getClock().dbgGetPausedP(), "group=standby label=paused");
+
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, reactionParticleRenderer.getClock().dbgGetTimeP(), "group=reaction label=time");
+    TwAddVarRO(bar, NULL, TW_TYPE_FLOAT, reactionParticleRenderer.getClock().dbgGetPeriodP(), "group=reaction label=period");
+    //TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, reactionParticleRenderer.getClock().dbgGetPausedP(), "group=reaction label=paused");
+  }
+#endif
+
   return true;
 }
 
@@ -126,6 +151,10 @@ void Application::destroy() {
   soundRenderer->killAllVoices();
 
   sampleLibrary.destroy();
+
+#if WITH_EDIT_TOOLS
+  TwTerminate();
+#endif
 }
 
 void Application::reshape(uint32_t width, uint32_t height) {
@@ -140,6 +169,10 @@ void Application::reshape(uint32_t width, uint32_t height) {
 bool Application::handleEvents() {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
+#if WITH_EDIT_TOOLS
+    if(TwEventSDL(&event, SDL_MAJOR_VERSION, SDL_MINOR_VERSION)) continue;
+#endif
+
     switch (event.type) {
     case SDL_QUIT: {
       return false;
@@ -214,6 +247,10 @@ static glm::vec2 sampleCircle(std::default_random_engine &random) {
 }
 
 void Application::update(float dt) {
+#if WITH_EDIT_TOOLS
+  if(paused) return;
+#endif
+
   if(reactionState == ReactionState::Inactive || reactionState == ReactionState::FinishStandbyTimeline) {
     standbyBlitTimeout -= dt;
   }
@@ -340,4 +377,8 @@ void Application::render() {
     if (error != GL_NO_ERROR)
       printf("opengl error: %d\n", error);
   }
+
+#if WITH_EDIT_TOOLS
+  TwDraw();
+#endif
 }
