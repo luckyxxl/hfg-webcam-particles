@@ -42,9 +42,74 @@ void WebcamImageTransform::create(const graphics::ScreenRectBuffer *rectangle,
 
     out vec4 frag_color;
 
+    const float PI = 3.14159265;
+
+    vec3 rgb2hsv(vec3 rgb) {
+      float cmin = min(rgb.r, min(rgb.g, rgb.b));
+      float cmax = max(rgb.r, max(rgb.g, rgb.b));
+      float d = cmax - cmin;
+      float eps = 0.00001;
+      if (d < eps || cmax < eps) {
+        return vec3(0, 0, cmax);
+      }
+
+      float _h;
+      if (cmax == rgb.r) {
+        _h = (rgb.g - rgb.b) / d;
+        if (_h < 0.) {
+          _h += 6.;
+        }
+      } else if (cmax == rgb.g) {
+        _h = ((rgb.b - rgb.r) / d) + 2.;
+      } else {
+        _h = ((rgb.r - rgb.g) / d) + 4.;
+      }
+
+      return vec3(_h * 60. * (PI / 180.), d / cmax, cmax);
+    }
+
+    vec3 hsv2rgb(vec3 hsv) {
+      // rapidtables.com/convert/color/hsv-to-rgb.htm
+      float _h = hsv.x * 180. / PI;
+      float _c = hsv.y * hsv.z;
+      float _x = _c * (1. - abs(mod(_h / 60., 2.) - 1.));
+      float _m = hsv.z - _c;
+      vec3 _r;
+      if (/* 0. <= _h && */ _h < 60.) {
+        _r.r = _c;
+        _r.g = _x;
+        _r.b = 0.;
+      } else if (_h < 120.) {
+        _r.r = _x;
+        _r.g = _c;
+        _r.b = 0.;
+      } else if (_h < 180.) {
+        _r.r = 0.;
+        _r.g = _c;
+        _r.b = _x;
+      } else if (_h < 240.) {
+        _r.r = 0.;
+        _r.g = _x;
+        _r.b = _c;
+      } else if (_h < 300.) {
+        _r.r = _x;
+        _r.g = 0.;
+        _r.b = _c;
+      } else /* if (_h < 360.) */ {
+        _r.r = _c;
+        _r.g = 0.;
+        _r.b = _x;
+      }
+      return _r + vec3(_m);
+    }
+
     void main() {
-      vec3 c = texture(source, texcoord).bgr;
-      frag_color = vec4(c, 0.);
+      vec3 rgb = texture(source, texcoord).bgr;
+      rgb = 1.1 * rgb; // increase overall brightness
+      vec3 hsv = rgb2hsv(rgb);
+      hsv.y = hsv.y * 2.; // increase saturation
+      rgb = hsv2rgb(hsv);
+      frag_color = vec4(rgb, 0.);
     }
   )glsl";
 
