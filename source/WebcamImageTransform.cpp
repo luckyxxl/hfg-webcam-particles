@@ -105,7 +105,7 @@ void WebcamImageTransform::create(const graphics::ScreenRectBuffer *rectangle,
 
     void main() {
       vec3 rgb = texture(source, texcoord).bgr;
-      rgb = 1.1 * rgb; // increase overall brightness
+      rgb = 1.8 * rgb - vec3(.1); // increase overall brightness
       vec3 hsv = rgb2hsv(rgb);
       hsv.y = hsv.y * 2.; // increase saturation
       rgb = hsv2rgb(hsv);
