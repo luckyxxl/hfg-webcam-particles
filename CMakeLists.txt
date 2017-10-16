@@ -46,6 +46,8 @@ set(SOURCE_FILES
   source/effects/StandingWaveEffect.hpp
   source/effects/TrailsEffect.cpp
   source/effects/TrailsEffect.hpp
+  source/effects/VignetteEffect.cpp
+  source/effects/VignetteEffect.hpp
   source/effects/WaveEffect.cpp
   source/effects/WaveEffect.hpp
   source/graphics/Framebuffer.cpp

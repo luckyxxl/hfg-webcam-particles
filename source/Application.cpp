@@ -17,6 +17,7 @@
 #include "effects/SmoothTrailsEffect.hpp"
 #include "effects/StandingWaveEffect.hpp"
 #include "effects/TrailsEffect.hpp"
+#include "effects/VignetteEffect.hpp"
 #include "effects/WaveEffect.hpp"
 #include "graphics/Window.hpp"
 #include "sound/Renderer.hpp"
@@ -56,6 +57,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   effectRegistry.registerEffect<SmoothTrailsEffect>();
   effectRegistry.registerEffect<StandingWaveEffect>();
   effectRegistry.registerEffect<TrailsEffect>();
+  effectRegistry.registerEffect<VignetteEffect>();
   effectRegistry.registerEffect<WaveEffect>();
 
   if(!sampleLibrary.create(random, resources)) {
