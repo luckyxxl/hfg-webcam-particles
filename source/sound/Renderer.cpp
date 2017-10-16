@@ -11,7 +11,7 @@ bool Renderer::create() {
     desiredAudioSpec.freq = 48000;
     desiredAudioSpec.format = AUDIO_F32SYS;
     desiredAudioSpec.channels = 2;
-    desiredAudioSpec.samples = 1024;
+    desiredAudioSpec.samples = 2048;
     desiredAudioSpec.callback = sdlAudioCallback;
     desiredAudioSpec.userdata = this;
 
@@ -187,6 +187,11 @@ void Renderer::audioCallback(Uint8 *stream, int len) {
   }
 
     voice.cursor.store(cursorValue);
+  }
+
+  for(auto i=0; i<bufferLengthSamples*2; ++i) {
+    buffer[i] *= .5f;
+    if(buffer[i] > 1.f) std::cout << "clip\n";
   }
 
   // disable sound (for listening to smooth jazz while coding :) )
