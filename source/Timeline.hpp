@@ -51,7 +51,7 @@ public:
   }
 
   template <class f_t> void forEachInstanceOnTrack(unsigned trackIndex, const f_t &f) const {
-    assert(trackIndex < tracks.size());
+    if(trackIndex >= tracks.size()) return; // this track does not exist...
     for (auto &item : tracks[trackIndex]) {
       f(*item);
     }
@@ -61,6 +61,11 @@ public:
     size_t result = 0u;
     for(auto &t : tracks) result += t.size();
     return result;
+  }
+
+  size_t getInstanceCount(unsigned trackIndex) const {
+    if(trackIndex >= tracks.size()) return 0u; // this track does not exist...
+    return tracks[trackIndex].size();
   }
 
 private:

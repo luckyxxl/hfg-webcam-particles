@@ -16,10 +16,16 @@ set(SOURCE_FILES
   source/effects/AccumulationEffect.hpp
   source/effects/ConvergeCircleEffect.cpp
   source/effects/ConvergeCircleEffect.hpp
+  source/effects/ConvergePoint2Effect.cpp
+  source/effects/ConvergePoint2Effect.hpp
   source/effects/ConvergePointEffect.cpp
   source/effects/ConvergePointEffect.hpp
+  source/effects/EaseInOutEffect.cpp
+  source/effects/EaseInOutEffect.hpp
   source/effects/EffectRegistry.cpp
   source/effects/EffectRegistry.hpp
+  source/effects/HueDisplace2Effect.cpp
+  source/effects/HueDisplace2Effect.hpp
   source/effects/HueDisplaceEffect.cpp
   source/effects/HueDisplaceEffect.hpp
   source/effects/ParticleDisplaceEffect.cpp

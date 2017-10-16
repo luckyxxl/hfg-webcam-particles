@@ -4,7 +4,9 @@
 
 #include "Resources.hpp"
 #include "effects/ConvergeCircleEffect.hpp"
+#include "effects/ConvergePoint2Effect.hpp"
 #include "effects/ConvergePointEffect.hpp"
+#include "effects/HueDisplace2Effect.hpp"
 #include "effects/HueDisplaceEffect.hpp"
 #include "effects/ParticleDisplaceEffect.hpp"
 #include "effects/ParticleSizeByHueEffect.hpp"
@@ -41,7 +43,9 @@ bool Application::create(Resources *resources, graphics::Window *window,
   }
 
   effectRegistry.registerEffect<ConvergeCircleEffect>();
+  effectRegistry.registerEffect<ConvergePoint2Effect>();
   effectRegistry.registerEffect<ConvergePointEffect>();
+  effectRegistry.registerEffect<HueDisplace2Effect>();
   effectRegistry.registerEffect<HueDisplaceEffect>();
   effectRegistry.registerEffect<ParticleDisplaceEffect>();
   effectRegistry.registerEffect<ParticleSizeByHueEffect>();
@@ -252,8 +256,8 @@ static bool isEmptyEffect(const IEffect &i) {
 }
 
 static void removeEmptySpace(Timeline *timeline) {
-  const auto instanceCount = timeline->getInstanceCount();
-  if(instanceCount == 0u) return;
+  const auto instanceCount = timeline->getInstanceCount(randomTrackIndex);
+  assert(instanceCount > 0u);
 
   std::vector<Interval> intervals;
   intervals.reserve(instanceCount);
