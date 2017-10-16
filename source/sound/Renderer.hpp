@@ -60,14 +60,14 @@ public:
     return play(sampleBuffer, PlayParameters());
   }
 
-  // don't call this!
-  void audioCallback(Uint8 *stream, int len);
-
 private:
   SDL_AudioDeviceID audioDevice;
   SDL_AudioSpec audioSpec;
 
   std::array<Voice, 16> voices;
+
+  void audioCallback(Uint8 *stream, int len);
+  static void sdlAudioCallback(void *userdata, Uint8 *stream, int len);
 };
 
 } // namespace sound

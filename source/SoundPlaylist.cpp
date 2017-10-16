@@ -2,8 +2,11 @@
 
 #include "SoundPlaylist.hpp"
 
+using namespace sound;
+
 void SoundPlaylist::clear() {
   items.clear();
+  playedUntil = 0.;
 }
 
 void SoundPlaylist::add(const sound::SampleBuffer *sample, double startTime) {
@@ -14,16 +17,18 @@ void SoundPlaylist::add(const sound::SampleBuffer *sample, double startTime) {
 }
 
 void SoundPlaylist::update(const Clock &clock, sound::Renderer *renderer) {
-  //TODO: start sounds early and with startDelay to be more independent of
-  //      framerate
+  // magic numbers
+  constexpr auto LOOKAHEAD = (1000. / 15.);
+  constexpr auto EPS = 0.1;
 
-  const auto playItemsRange =
-      std::make_pair(items.lower_bound(clock.getTime() - clock.getDelta()),
-                     items.upper_bound(clock.getTime()));
+  const auto now = clock.getTime();
 
-  for(auto it = playItemsRange.first; it != playItemsRange.second; ++it) {
-    const auto &item = *it;
+  const auto begin = items.lower_bound(playedUntil + EPS);
+  const auto end = items.upper_bound(now + LOOKAHEAD);
 
-    renderer->play(item.sample);
+  for (auto it = begin; it != end; ++it) {
+    renderer->play(it->sample, Renderer::PlayParameters{
+                                   std::max(it->startTime - now, 0.), false});
   }
+  playedUntil = now + LOOKAHEAD;
 }

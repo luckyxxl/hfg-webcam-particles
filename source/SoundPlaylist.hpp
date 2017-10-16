@@ -1,9 +1,11 @@
 #pragma once
 
-#include "sound/Renderer.hpp"
 #include "RendererState.hpp"
+#include "sound/Renderer.hpp"
 
 class SoundPlaylist {
+  double playedUntil = 0.;
+
 public:
   void clear();
   void add(const sound::SampleBuffer *sample, double startTime);

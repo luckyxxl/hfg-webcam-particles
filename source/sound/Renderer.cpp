@@ -5,10 +5,6 @@
 
 namespace sound {
 
-static void sdlAudioCallback(void *userdata, Uint8 *stream, int len) {
-  static_cast<Renderer *>(userdata)->audioCallback(stream, len);
-}
-
 bool Renderer::create() {
   {
     SDL_AudioSpec desiredAudioSpec;
@@ -108,6 +104,10 @@ Voice *Renderer::play(const SampleBuffer *sampleBuffer,
   std::cout << "out of voices\n";
 
   return nullptr;
+}
+
+void Renderer::sdlAudioCallback(void *userdata, Uint8 *stream, int len) {
+  static_cast<Renderer *>(userdata)->audioCallback(stream, len);
 }
 
 void Renderer::audioCallback(Uint8 *stream, int len) {
