@@ -76,6 +76,8 @@ set(SOURCE_FILES
   source/ImageProvider.hpp
   source/ParticleRenderer.cpp
   source/ParticleRenderer.hpp
+  source/ReactionTimelineRandomizer.cpp
+  source/ReactionTimelineRandomizer.hpp
   source/RendererState.hpp
   source/main.cpp
   source/main.hpp

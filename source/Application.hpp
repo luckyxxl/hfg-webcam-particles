@@ -8,6 +8,7 @@
 #include "FaceBlitter.hpp"
 #include "OverlayCompose.hpp"
 #include "FinalComposite.hpp"
+#include "ReactionTimelineRandomizer.hpp"
 
 class Resources;
 namespace sound {
@@ -49,6 +50,8 @@ private:
   OverlayCompose overlayCompose;
 
   ParticleRenderer::GlobalState particleRendererGlobalState;
+
+  ReactionTimelineRandomizer reactionTimelineRandomizer;
 
   ParticleRenderer standbyParticleRenderer;
   ParticleRenderer reactionParticleRenderer;

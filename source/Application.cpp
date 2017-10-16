@@ -3,25 +3,9 @@
 #include "Application.hpp"
 
 #include "Resources.hpp"
-#include "effects/ConvergeCircleEffect.hpp"
-#include "effects/ConvergePoint2Effect.hpp"
-#include "effects/ConvergePointEffect.hpp"
-#include "effects/HueDisplace2Effect.hpp"
-#include "effects/HueDisplaceEffect.hpp"
-#include "effects/ParticleDisplaceEffect.hpp"
-#include "effects/ParticleSizeByHueEffect.hpp"
-#include "effects/ParticleSizeModifyEffect.hpp"
-#include "effects/ParticleSpacingEffect.hpp"
-#include "effects/ReduceParticleCountEffect.hpp"
-#include "effects/SmearEffect.hpp"
-#include "effects/SmoothTrailsEffect.hpp"
-#include "effects/StandingWaveEffect.hpp"
-#include "effects/TrailsEffect.hpp"
-#include "effects/VignetteEffect.hpp"
-#include "effects/WaveEffect.hpp"
+#include "effects/AllEffects.hpp"
 #include "graphics/Window.hpp"
 #include "sound/Renderer.hpp"
-#include "IntervalMath.hpp"
 
 #include <stb_image_write.h>
 
@@ -93,35 +77,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   }
 
   {
-    auto timeline = std::make_unique<Timeline>(&effectRegistry);
-
-    timeline->emplaceEffectInstance<ConvergeCircleEffect>(randomTrackIndex);
-    timeline->emplaceEffectInstance<ConvergePointEffect>(randomTrackIndex);
-    timeline->emplaceEffectInstance<ParticleDisplaceEffect>(randomTrackIndex);
-    timeline->emplaceEffectInstance<HueDisplaceEffect>(randomTrackIndex);
-    timeline->emplaceEffectInstance<ParticleSpacingEffect>(randomTrackIndex);
-    timeline->emplaceEffectInstance<StandingWaveEffect>(randomTrackIndex);
-    timeline->emplaceEffectInstance<WaveEffect>(randomTrackIndex);
-
-    auto reduceCount = timeline->emplaceEffectInstance<ReduceParticleCountEffect>();
-    reduceCount->amount = 128u;
-    reduceCount->easeInTime = 1000.f;
-    reduceCount->easeOutTime = 1000.f;
-    reduceCount->easeFunc = ReduceParticleCountEffect::EaseFunction::Linear;
-
-    auto sizeModify = timeline->emplaceEffectInstance<ParticleSizeModifyEffect>();
-    sizeModify->scaling = 2.f;
-    sizeModify->easeInTime = 1000.f;
-    sizeModify->easeOutTime = 1000.f;
-    sizeModify->easeFunc = ParticleSizeModifyEffect::EaseFunction::Linear;
-
-#if 0
-    auto accum = timeline->emplaceEffectInstance<TrailsEffect>();
-    accum->fadeIn = 1000.f;
-    accum->fadeOut = 1000.f;
-    accum->strength = .8f;
-#endif
-
+    auto timeline = reactionTimelineRandomizer.createTimeline(&effectRegistry);
     reactionParticleRenderer.setTimeline(particleRendererGlobalState, std::move(timeline));
 
     reactionParticleRenderer.getClock().disableLooping();
@@ -251,93 +207,6 @@ bool Application::handleEvents() {
   return true;
 }
 
-static bool isEmptyEffect(const IEffect &i) {
-  return !i.enabled || i.isAccumulationEffect()
-          || !strcmp(i.getName(), "ParticleDisplaceEffect")
-          || !strcmp(i.getName(), "ParticleSpacingEffect");
-}
-
-static void removeEmptySpace(Timeline *timeline) {
-  const auto instanceCount = timeline->getInstanceCount(randomTrackIndex);
-  assert(instanceCount > 0u);
-
-  std::vector<Interval> intervals;
-  intervals.reserve(instanceCount);
-  timeline->forEachInstanceOnTrack(randomTrackIndex, [&](const IEffect &i) {
-    if(isEmptyEffect(i)) return;
-
-    intervals.emplace_back(i.timeBegin, i.timeEnd);
-  });
-  std::sort(intervals.begin(), intervals.end());
-
-  auto emptyIntervals = getEmptyIntervals(intervals, 0.f);
-
-  assert(std::is_sorted(emptyIntervals.begin(), emptyIntervals.end()));
-
-  for(auto interval = emptyIntervals.begin(); interval != emptyIntervals.end(); ++interval) {
-    const auto move = -interval->length();
-
-    timeline->forEachInstanceOnTrack(randomTrackIndex, [&](IEffect &i) {
-      if(interval->start() <= i.timeBegin) {
-        i.timeBegin += move;
-        i.timeEnd += move;
-      }
-    });
-
-    for(auto i = interval+1; i != emptyIntervals.end(); ++i) {
-      i->start() += move;
-      i->end() += move;
-    }
-  }
-}
-
-static void randomizeTimeline(Timeline *timeline,
-                              std::default_random_engine &random) {
-  const auto period = std::uniform_real_distribution<float>(15000.f, 30000.f)(random);
-  const auto minLength = 5000.f;
-
-  timeline->forEachInstanceOnTrack(0u, [](IEffect &i) {
-    i.timeBegin = 0.f;
-    i.timeEnd = 0.f;
-  });
-
-  timeline->forEachInstanceOnTrack(randomTrackIndex, [&](IEffect &i) {
-    i.timeBegin = std::uniform_real_distribution<float>(0.f, period - minLength)(random);
-    i.timeEnd = std::uniform_real_distribution<float>(minLength, period - i.timeBegin)(random)
-                + i.timeBegin;
-    i.randomizeConfig(random);
-  });
-
-  {
-    size_t enabledCount;
-    do {
-      enabledCount = 0u;
-      timeline->forEachInstanceOnTrack(randomTrackIndex, [&](IEffect &i) {
-        i.enabled = std::bernoulli_distribution(.95)(random);
-        if(i.enabled) ++enabledCount;
-      });
-    } while(enabledCount < 2u);
-  }
-
-  removeEmptySpace(timeline);
-
-  float nonEmptyPeriod = 0.f;
-  timeline->forEachInstanceOnTrack(randomTrackIndex, [&](IEffect &i) {
-    if(!isEmptyEffect(i)) nonEmptyPeriod = std::max(nonEmptyPeriod, i.timeEnd);
-  });
-
-  timeline->forEachInstanceOnTrack(randomTrackIndex, [&](IEffect &i) {
-    if(isEmptyEffect(i)) {
-      if(i.timeBegin < 0.f) i.timeBegin = 0.f;
-      if(i.timeEnd > nonEmptyPeriod) i.timeEnd = nonEmptyPeriod;
-    }
-  });
-
-  timeline->forEachInstanceOnTrack(0u, [&](IEffect &i) {
-    i.timeEnd = timeline->getPeriod();
-  });
-}
-
 static glm::vec2 sampleCircle(std::default_random_engine &random) {
   float a = std::uniform_real_distribution<float>(0.f, 2.f * PI)(random);
   float r = std::sqrt(std::uniform_real_distribution<float>(.5f, 1.f)(random));
@@ -404,7 +273,7 @@ void Application::update(float dt) {
 
     std::cout << "start reaction\n";
 
-    randomizeTimeline(reactionParticleRenderer.getTimeline(), random);
+    reactionTimelineRandomizer.randomize(random);
     reactionParticleRenderer.refreshPeriod();
     reactionParticleRenderer.getClock().play();
     reactionParticleRenderer.enableSound(particleRendererGlobalState);
