@@ -107,17 +107,18 @@ bool Application::create(Resources *resources, graphics::Window *window,
 #if WITH_EDIT_TOOLS
   {
     auto bar = TwNewBar("global");
-    TwDefine("global position='0 0' size='200 1000' refresh=0.1");
+    TwDefine("global position='0 0' size='200 1000' refresh=0.05");
 
     TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, &paused, "label=paused");
+    TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, &skipStandby, "label='skip standby'");
 
     TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, standbyParticleRenderer.getClock().dbgGetTimeP(), "group=standby label=time");
     TwAddVarRO(bar, NULL, TW_TYPE_FLOAT, standbyParticleRenderer.getClock().dbgGetPeriodP(), "group=standby label=period");
-    //TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, standbyParticleRenderer.getClock().dbgGetPausedP(), "group=standby label=paused");
+    TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, standbyParticleRenderer.getClock().dbgGetPausedP(), "group=standby label=paused");
 
     TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, reactionParticleRenderer.getClock().dbgGetTimeP(), "group=reaction label=time");
     TwAddVarRO(bar, NULL, TW_TYPE_FLOAT, reactionParticleRenderer.getClock().dbgGetPeriodP(), "group=reaction label=period");
-    //TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, reactionParticleRenderer.getClock().dbgGetPausedP(), "group=reaction label=paused");
+    TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, reactionParticleRenderer.getClock().dbgGetPausedP(), "group=reaction label=paused");
   }
 #endif
 
@@ -328,6 +329,13 @@ void Application::update(float dt) {
     standbyParticleRenderer.getClock().enableLooping();
     standbyParticleRenderer.getClock().play();
 
+#if WITH_EDIT_TOOLS
+    *reactionParticleRenderer.getClock().dbgGetTimeP() = 0.f;
+    if(skipStandby) {
+      standbyParticleRenderer.getClock().pause();
+      reactionState = ReactionState::FinishStandbyTimeline;
+    } else
+#endif
     reactionState = ReactionState::Inactive;
   }
 

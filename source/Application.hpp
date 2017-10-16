@@ -78,5 +78,6 @@ private:
 
 #if WITH_EDIT_TOOLS
   bool paused = false;
+  bool skipStandby = false;
 #endif
 };
