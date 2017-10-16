@@ -36,8 +36,8 @@ void ParticleDisplaceEffect::saveConfig(json &json) const {
 void ParticleDisplaceEffect::randomizeConfig(std::default_random_engine &random) {
   direction = std::uniform_real_distribution<float>(0.f, 2.f * PI)(random);
   distance = std::uniform_real_distribution<float>(0.f, .25f)(random);
-  easeInTime = std::uniform_real_distribution<float>(1000.f, 1500.f)(random);
-  easeOutTime = std::uniform_real_distribution<float>(1000.f, 1500.f)(random);
+  easeInTime = std::min(std::uniform_real_distribution<float>(1000.f, 1500.f)(random), getPeriod() / 2.f);
+  easeOutTime = std::min(std::uniform_real_distribution<float>(1000.f, 1500.f)(random), getPeriod() / 2.f);
   easeFunc = EaseFunction::Sine;
 }
 

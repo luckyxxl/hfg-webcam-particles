@@ -37,8 +37,8 @@ void ParticleSpacingEffect::randomizeConfig(std::default_random_engine &random) 
   // uniform distribution is not really correct here...
   xSpread = std::uniform_real_distribution<float>(0.5f, 2.f)(random);
   ySpread = std::uniform_real_distribution<float>(0.5f, 2.f)(random);
-  easeInTime = std::uniform_real_distribution<float>(1000.f, 1500.f)(random);
-  easeOutTime = std::uniform_real_distribution<float>(1000.f, 1500.f)(random);
+  easeInTime = std::min(std::uniform_real_distribution<float>(1000.f, 1500.f)(random), getPeriod() / 2.f);
+  easeOutTime = std::min(std::uniform_real_distribution<float>(1000.f, 1500.f)(random), getPeriod() / 2.f);
   easeFunc = EaseFunction::Sine;
 }
 
