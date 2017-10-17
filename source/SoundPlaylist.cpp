@@ -17,7 +17,7 @@ void SoundPlaylist::add(const sound::SampleBuffer *sample, double startTime) {
 }
 
 void SoundPlaylist::update(const Clock &clock, sound::Renderer *renderer) {
-#if !WITH_EDIT_TOOLS // Seeking breaks this. That's fine :)
+#if 1 // Seeking breaks this. That's fine :)
   // magic numbers
   constexpr auto LOOKAHEAD = (1000. / 15.);
   constexpr auto EPS = 0.1;

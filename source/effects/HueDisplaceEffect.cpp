@@ -28,7 +28,7 @@ void HueDisplaceEffect::saveConfig(json &json) const {
 }
 
 void HueDisplaceEffect::randomizeConfig(std::default_random_engine &random) {
-  distance = std::uniform_real_distribution<float>()(random);
+  distance = std::uniform_real_distribution<float>(0.f, .5f)(random);
   scaleByValue = std::uniform_real_distribution<float>()(random);
   scaleByForegroundMask = 0.f;
   randomDirectionOffset = std::bernoulli_distribution()(random);

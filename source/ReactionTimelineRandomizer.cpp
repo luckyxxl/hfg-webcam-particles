@@ -12,11 +12,11 @@
 constexpr auto WHOLE_SHOW_REDUCE_COUNT_TIME_OFFSET = 18000.f;
 constexpr auto WHOLE_SHOW_SIZE_MODIFY_TIME_OFFSET = 18000.f;
 
-constexpr auto FADE_PHASE_TIME = 30000.f;
-constexpr auto FADE_PHASE_FADE_TIME = 3000.f;
+constexpr auto FADE_PHASE_TIME = 28000.f;
+constexpr auto FADE_PHASE_FADE_TIME = 10000.f;
 
 constexpr auto RANDOM_PHASE_MIN_LENGTH = 15000.f;
-constexpr auto RANDOM_PHASE_MAX_LENGTH = 30000.f;
+constexpr auto RANDOM_PHASE_MAX_LENGTH = 45000.f;
 constexpr auto RANDOM_PHASE_MIN_INSTANCE_LENGTH = 5000.f;
 constexpr auto RANDOM_PHASE_REP_P = .3f;
 constexpr auto RANDOM_PHASE_REP_MIN = 10;
@@ -62,6 +62,12 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     wholeShowEffects.sizeModify->scaling  = 2.f;
     wholeShowEffectInstances.push_back({wholeShowEffects.sizeModify, WHOLE_SHOW_SIZE_MODIFY_TIME_OFFSET});
 
+    wholeShowEffects.convergeCircle = timeline->emplaceEffectInstance<ConvergeCircle2Effect>(2u);
+    wholeShowEffects.convergeCircle->easeInTime = wholeShowEffects.convergeCircle->easeOutTime = 1000.f;
+    wholeShowEffects.convergeCircle->easeInFunction = wholeShowEffects.convergeCircle->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
+    wholeShowEffects.convergeCircle->radius = .5f;
+    wholeShowEffectInstances.push_back({wholeShowEffects.convergeCircle, FADE_PHASE_TIME});
+
 #if WITH_EDIT_TOOLS
     TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &WHOLE_SHOW_REDUCE_COUNT_TIME_OFFSET, "group='reduce count' label='time offset'");
     TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &wholeShowEffects.reduceCount->easeInTime, "group='reduce count' label='ease time'");
@@ -80,10 +86,11 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
 
   // random
   {
-    randomEffectInstances.push_back({timeline->emplaceEffectInstance<ConvergeCircleEffect>()});
-    randomEffectInstances.push_back({timeline->emplaceEffectInstance<ConvergePointEffect>()});
+    //randomEffectInstances.push_back({timeline->emplaceEffectInstance<ConvergeCircleEffect>()});
+    //randomEffectInstances.push_back({timeline->emplaceEffectInstance<ConvergePointEffect>()});
     randomEffectInstances.push_back({timeline->emplaceEffectInstance<ParticleDisplaceEffect>()});
     randomEffectInstances.push_back({timeline->emplaceEffectInstance<HueDisplaceEffect>()});
+    randomEffectInstances.push_back({timeline->emplaceEffectInstance<HueDisplace2Effect>()});
     randomEffectInstances.push_back({timeline->emplaceEffectInstance<ParticleSpacingEffect>()});
     randomEffectInstances.push_back({timeline->emplaceEffectInstance<StandingWaveEffect>()});
     randomEffectInstances.push_back({timeline->emplaceEffectInstance<WaveEffect>()});
@@ -95,7 +102,7 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     fadeInEffects.displace->easeInTime = 10000.f;
     fadeInEffects.displace->easeInFunction = IEaseInOutEffect::EaseFunction::Pow1_2;
     fadeInEffects.displace->easeOutTime = FADE_PHASE_FADE_TIME;
-    fadeInEffects.displace->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.displace->easeOutFunction = IEaseInOutEffect::EaseFunction::SineInOut;
     fadeInEffects.displace->distance = .1f;
     fadeInEffects.displace->scaleByValue = 1.5f;
     fadeInEffects.displace->directionOffset = 0.f;
@@ -106,7 +113,7 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     fadeInEffects.displace2->easeInTime = 5000.f;
     fadeInEffects.displace2->easeInFunction = IEaseInOutEffect::EaseFunction::SineInOut;
     fadeInEffects.displace2->easeOutTime = FADE_PHASE_FADE_TIME;
-    fadeInEffects.displace2->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.displace2->easeOutFunction = IEaseInOutEffect::EaseFunction::SineInOut;
     fadeInEffects.displace2->distance = .03f;
     fadeInEffects.displace2->scaleByValue = .9f;
     fadeInEffects.displace2->directionOffset = PI/2.f;
@@ -118,14 +125,14 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     fadeInEffects.convergePoint->easeInTime = FADE_PHASE_TIME;
     fadeInEffects.convergePoint->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
     fadeInEffects.convergePoint->easeOutTime = FADE_PHASE_FADE_TIME;
-    fadeInEffects.convergePoint->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.convergePoint->easeOutFunction = IEaseInOutEffect::EaseFunction::SineInOut;
     fadeInEffectInstances.push_back({fadeInEffects.convergePoint, FADE_CONVERGE_POINT_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
 
     fadeInEffects.convergeCircle = timeline->emplaceEffectInstance<ConvergeCircle2Effect>(1u);
     fadeInEffects.convergeCircle->easeInTime = 15000.f;
     fadeInEffects.convergeCircle->easeInFunction = IEaseInOutEffect::EaseFunction::SineInOut;
     fadeInEffects.convergeCircle->easeOutTime = FADE_PHASE_FADE_TIME;
-    fadeInEffects.convergeCircle->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.convergeCircle->easeOutFunction = IEaseInOutEffect::EaseFunction::SineInOut;
     fadeInEffects.convergeCircle->radius = .4f;
     fadeInEffects.convergeCircle->rotationSpeed = 0.f;
     fadeInEffectInstances.push_back({fadeInEffects.convergeCircle, FADE_CONVERGE_CIRCLE_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
@@ -259,8 +266,8 @@ void ReactionTimelineRandomizer::randomize(std::default_random_engine &random) {
 
     i.i->timeBegin = randomStart + std::uniform_real_distribution<float>(0.f, randomLength - minInstanceLength)(random);
     i.i->timeEnd = i.i->timeBegin + std::uniform_real_distribution<float>(minInstanceLength, randomStart + randomLength - i.i->timeBegin)(random);
-    i.i->repetitions = std::bernoulli_distribution(RANDOM_PHASE_REP_P)(random) ?
-      std::uniform_int_distribution<int>(RANDOM_PHASE_REP_MIN, RANDOM_PHASE_REP_MAX)(random) : 1;
+    //i.i->repetitions = std::bernoulli_distribution(RANDOM_PHASE_REP_P)(random) ?
+    //  std::uniform_int_distribution<int>(RANDOM_PHASE_REP_MIN, RANDOM_PHASE_REP_MAX)(random) : 1;
   }
 
   // randomize effect enabled

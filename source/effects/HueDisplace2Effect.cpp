@@ -28,6 +28,14 @@ void HueDisplace2Effect::saveConfig(json &json) const {
 }
 
 void HueDisplace2Effect::randomizeConfig(std::default_random_engine &random) {
+  easeInTime = std::min(std::uniform_real_distribution<float>(1000.f, 5000.f)(random), getPeriod() / 2.f);
+  easeInFunction = IEaseInOutEffect::EaseFunction::SineInOut;
+  easeOutTime = std::min(std::uniform_real_distribution<float>(1000.f, 5000.f)(random), getPeriod() / 2.f);
+  easeOutFunction = IEaseInOutEffect::EaseFunction::SineInOut;
+  distance = std::uniform_real_distribution<float>(0.f, .5f)(random);
+  scaleByValue = std::uniform_real_distribution<float>()(random);
+  directionOffset = std::uniform_real_distribution<float>(0.f, 2.f*PI)(random);
+  rotate = std::uniform_real_distribution<float>(-1.f, 1.f)(random);
 }
 
 void HueDisplace2Effect::registerEffect(EffectRegistrationData &data) const {

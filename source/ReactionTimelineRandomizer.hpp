@@ -22,6 +22,7 @@ private:
   struct {
     ReduceParticleCountEffect *reduceCount;
     ParticleSizeModifyEffect *sizeModify;
+    ConvergeCircle2Effect *convergeCircle;
   } wholeShowEffects;
 
   struct {
