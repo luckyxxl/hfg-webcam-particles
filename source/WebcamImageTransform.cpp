@@ -110,7 +110,7 @@ void WebcamImageTransform::create(const graphics::ScreenRectBuffer *rectangle,
       rgb = imageParameters[0] * rgb + imageParameters[1]; // increase overall brightness
       vec3 hsv = rgb2hsv(rgb);
       hsv.y = hsv.y * imageParameters[2]; // increase saturation
-      rgb = hsv2rgb(hsv);
+      rgb = clamp(hsv2rgb(hsv), 0., 1.);
       frag_color = vec4(rgb, 0.);
     }
   )glsl";
