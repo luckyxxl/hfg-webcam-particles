@@ -36,7 +36,7 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
 
 #if WITH_EDIT_TOOLS
   auto bar = TwNewBar("randomizer");
-  TwDefine("randomizer position='1080 0' size='200 1000'"); //TODO position[0]=1720
+  TwDefine("randomizer position='1720 0' size='200 1000'");
 
   TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &FADE_PHASE_TIME, "group='fade phase' label='time'");
 
