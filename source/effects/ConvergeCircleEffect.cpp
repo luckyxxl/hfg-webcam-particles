@@ -78,9 +78,11 @@ void ConvergeCircleEffect::registerEffect(EffectRegistrationData &data) const {
 }
 
 void ConvergeCircleEffect::registerEffectSound(EffectSoundRegistrationData &data) const {
+#if 0
   for(auto i = 0u; i < repetitions; ++i) {
     data.soundPlaylist.add(data.sampleLibrary->getRandomWhoosh(), timeBegin + i * getPeriod());
     data.soundPlaylist.add(data.sampleLibrary->getRandomWhoosh(), timeBegin + getPeriod() / 3.f + i * getPeriod());
     data.soundPlaylist.add(data.sampleLibrary->getRandomWhoosh(), timeBegin + getPeriod() / 2.f + i * getPeriod());
   }
+#endif
 }

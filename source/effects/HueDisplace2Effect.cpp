@@ -69,4 +69,6 @@ void HueDisplace2Effect::registerEffect(EffectRegistrationData &data) const {
 }
 
 void HueDisplace2Effect::registerEffectSound(EffectSoundRegistrationData &data) const {
+  data.soundPlaylist.add(data.sampleLibrary->getRandomWhoosh(), timeBegin);
+  data.soundPlaylist.add(data.sampleLibrary->getRandomWhoosh(), timeEnd - easeOutTime);
 }

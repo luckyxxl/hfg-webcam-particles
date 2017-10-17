@@ -90,4 +90,6 @@ void ParticleDisplaceEffect::registerEffect(EffectRegistrationData &data) const 
 }
 
 void ParticleDisplaceEffect::registerEffectSound(EffectSoundRegistrationData &data) const {
+  data.soundPlaylist.add(data.sampleLibrary->getRandomWhoosh(), timeBegin);
+  data.soundPlaylist.add(data.sampleLibrary->getRandomWhoosh(), timeEnd - easeOutTime);
 }
