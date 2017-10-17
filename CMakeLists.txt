@@ -80,7 +80,7 @@ set(SOURCE_FILES
   source/FaceBlitter.hpp
   source/FinalComposite.cpp
   source/FinalComposite.hpp
-  source/ImageProvider_debug.cpp
+  source/ImageProvider.cpp
   source/ImageProvider.hpp
   source/ParticleRenderer.cpp
   source/ParticleRenderer.hpp
