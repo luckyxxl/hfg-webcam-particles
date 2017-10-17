@@ -53,7 +53,7 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     wholeShowEffects.reduceCount = timeline->emplaceEffectInstance<ReduceParticleCountEffect>(2u);
     wholeShowEffects.reduceCount->easeInTime = wholeShowEffects.reduceCount->easeOutTime = 10000.f;
     wholeShowEffects.reduceCount->easeFunc = ReduceParticleCountEffect::EaseFunction::Linear;
-    wholeShowEffects.reduceCount->amount   = 258u;
+    wholeShowEffects.reduceCount->amount   = 97u;
     wholeShowEffectInstances.push_back({wholeShowEffects.reduceCount, WHOLE_SHOW_REDUCE_COUNT_TIME_OFFSET});
 
     wholeShowEffects.sizeModify = timeline->emplaceEffectInstance<ParticleSizeModifyEffect>(2u);
@@ -94,6 +94,18 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     randomEffectInstances.push_back({timeline->emplaceEffectInstance<ParticleSpacingEffect>()});
     randomEffectInstances.push_back({timeline->emplaceEffectInstance<StandingWaveEffect>()});
     randomEffectInstances.push_back({timeline->emplaceEffectInstance<WaveEffect>()});
+  }
+
+  // glitch
+  {
+    glitchEffectInstances.push_back({timeline->emplaceEffectInstance<ConvergePointEffect>()});
+
+#if WITH_EDIT_TOOLS
+    TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, &glitchEffectInstances[0].i->enabled, "group='glitch' label='converge point'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &glitchEffectInstances[0].i->timeBegin, "group='glitch' label='converge point tb'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &glitchEffectInstances[0].i->timeEnd, "group='glitch' label='converge point tb'");
+    TwAddVarRW(bar, NULL, TW_TYPE_UINT32, &glitchEffectInstances[0].i->repetitions, "group='glitch' label='converge point r'");
+#endif
   }
 
   // fade in
@@ -242,6 +254,12 @@ void ReactionTimelineRandomizer::mirrorFadeOutEffects() {
   }
 }
 
+void ramdomizeGlitchConfig(IEffect *instance) {
+  auto convergePoint = dynamic_cast<ConvergePointEffect*>(instance);
+  if(convergePoint) {
+  }
+}
+
 static bool isEmptyEffect(const IEffect *i) {
   return !i->enabled || i->isAccumulationEffect()
           || !strcmp(i->getName(), "ParticleDisplaceEffect")
@@ -337,6 +355,17 @@ void ReactionTimelineRandomizer::randomize(std::default_random_engine &random) {
     i.i->randomizeConfig(random);
   }
 
+
+  for(auto i : glitchEffectInstances) {
+    i.i->enabled = std::bernoulli_distribution(.25)(random);
+
+    const auto length = std::uniform_real_distribution<float>(500.f, 1000.f)(random);
+    i.i->timeBegin = std::uniform_real_distribution<float>(randomStart, randomStart + randomLength - length)(random);
+    i.i->timeEnd = i.i->timeBegin + length;
+    i.i->repetitions = std::uniform_int_distribution<uint32_t>(1u, 5u)(random);
+
+    ramdomizeGlitchConfig(i.i);
+  }
 
   for(auto i : fadeOutEffectInstances) {
     i.i->timeBegin = randomStart + randomLength - i.base->timeEndOffset;

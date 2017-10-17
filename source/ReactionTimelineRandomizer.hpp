@@ -43,6 +43,11 @@ private:
   };
   std::vector<RandomElement> randomEffectInstances;
 
+  struct GlitchElement {
+    IEffect *i;
+  };
+  std::vector<GlitchElement> glitchEffectInstances;
+
   struct FadeInElement {
     IEffect *i;
     const float &timeBeginOffset;
