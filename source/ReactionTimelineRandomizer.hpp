@@ -3,15 +3,54 @@
 #include "Timeline.hpp"
 #include "effects/EffectRegistry.hpp"
 
+class ReduceParticleCountEffect;
+class ParticleSizeModifyEffect;
+class HueDisplace2Effect;
+class ConvergePoint2Effect;
+
 class ReactionTimelineRandomizer {
 public:
   std::unique_ptr<Timeline> createTimeline(EffectRegistry *effectRegistry);
   void randomize(std::default_random_engine &random);
 
+#if WITH_EDIT_TOOLS
+  void editUpdate();
+#endif
+
 private:
-  std::vector<IEffect*> fadeInEffectInstances;
-  std::vector<IEffect*> fadeOutEffectInstances;
-  std::vector<IEffect*> randomEffectInstances;
-  std::vector<IEffect*> wholeShowEffectInstances;
+  struct {
+    ReduceParticleCountEffect *reduceCount;
+    ParticleSizeModifyEffect *sizeModify;
+  } wholeShowEffects;
+
+  struct {
+    HueDisplace2Effect *displace;
+    ConvergePoint2Effect *converge;
+  } fadeInEffects;
+
+  struct WholeShowElement {
+    IEffect *i;
+    const float &timeOffset;
+  };
+  std::vector<WholeShowElement> wholeShowEffectInstances;
+
+  struct RandomElement {
+    IEffect *i;
+  };
+  std::vector<RandomElement> randomEffectInstances;
+
+  struct FadeInElement {
+    IEffect *i;
+    const float &timeBeginOffset;
+    const float &timeEndOffset;
+  };
+  std::vector<FadeInElement> fadeInEffectInstances;
+
+  struct FadeOutElement {
+    IEffect *i;
+    const FadeInElement *base;
+  };
+  std::vector<FadeOutElement> fadeOutEffectInstances;
+  void mirrorFadeOutEffects();
 };
 

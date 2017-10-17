@@ -9,8 +9,21 @@
 #define constexpr static
 #endif
 
+constexpr auto WHOLE_SHOW_REDUCE_COUNT_TIME_OFFSET = 0.f;
+constexpr auto WHOLE_SHOW_SIZE_MODIFY_TIME_OFFSET = 0.f;
+
 constexpr auto FADE_PHASE_TIME = 10000.f;
 constexpr auto FADE_PHASE_FADE_TIME = 3000.f;
+
+constexpr auto RANDOM_PHASE_MIN_LENGTH = 15000.f;
+constexpr auto RANDOM_PHASE_MAX_LENGTH = 30000.f;
+constexpr auto RANDOM_PHASE_MIN_INSTANCE_LENGTH = 5000.f;
+constexpr auto RANDOM_PHASE_REP_P = .3f;
+constexpr auto RANDOM_PHASE_REP_MIN = 10;
+constexpr auto RANDOM_PHASE_REP_MAX = 30;
+
+constexpr auto FADE_DISPLACE_BEGIN_OFFSET = 0.f;
+constexpr auto FADE_CONVERGE_BEGIN_OFFSET = 0.f;
 
 #if WITH_EDIT_TOOLS
 #undef constexpr
@@ -24,95 +37,142 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
   TwDefine("randomizer position='1080 0' size='200 1000'"); //TODO position[0]=1720
 
   TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &FADE_PHASE_TIME, "group='fade phase' label='time'");
-#endif
 
-#if 1
-  // random
-  {
-    randomEffectInstances.push_back(timeline->emplaceEffectInstance<ConvergeCircleEffect>());
-    randomEffectInstances.push_back(timeline->emplaceEffectInstance<ConvergePointEffect>());
-    randomEffectInstances.push_back(timeline->emplaceEffectInstance<ParticleDisplaceEffect>());
-    randomEffectInstances.push_back(timeline->emplaceEffectInstance<HueDisplaceEffect>());
-    randomEffectInstances.push_back(timeline->emplaceEffectInstance<ParticleSpacingEffect>());
-    randomEffectInstances.push_back(timeline->emplaceEffectInstance<StandingWaveEffect>());
-    randomEffectInstances.push_back(timeline->emplaceEffectInstance<WaveEffect>());
-  }
+  TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &RANDOM_PHASE_MIN_LENGTH, "group='random phase' label='min length'");
+  TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &RANDOM_PHASE_MAX_LENGTH, "group='random phase' label='max length'");
+  TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &RANDOM_PHASE_MIN_INSTANCE_LENGTH, "group='random phase' label='min instance length'");
+  TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &RANDOM_PHASE_REP_P, "group='random phase' label='rep p'");
+  TwAddVarRW(bar, NULL, TW_TYPE_INT32, &RANDOM_PHASE_REP_MIN, "group='random phase' label='rep min'");
+  TwAddVarRW(bar, NULL, TW_TYPE_INT32, &RANDOM_PHASE_REP_MAX, "group='random phase' label='rep max'");
 #endif
 
   // whole show
   {
-    auto reduceCount = timeline->emplaceEffectInstance<ReduceParticleCountEffect>();
-    reduceCount->amount = 256u;
-    reduceCount->easeInTime = reduceCount->easeOutTime = 1000.f;
-    reduceCount->easeFunc = ReduceParticleCountEffect::EaseFunction::Linear;
-    wholeShowEffectInstances.push_back(reduceCount);
+    wholeShowEffects.reduceCount = timeline->emplaceEffectInstance<ReduceParticleCountEffect>();
+    wholeShowEffects.reduceCount->easeInTime = wholeShowEffects.reduceCount->easeOutTime = 1000.f;
+    wholeShowEffects.reduceCount->easeFunc = ReduceParticleCountEffect::EaseFunction::Linear;
+    wholeShowEffects.reduceCount->amount   = 258u;
+    wholeShowEffectInstances.push_back({wholeShowEffects.reduceCount, WHOLE_SHOW_REDUCE_COUNT_TIME_OFFSET});
+
+    wholeShowEffects.sizeModify = timeline->emplaceEffectInstance<ParticleSizeModifyEffect>();
+    wholeShowEffects.sizeModify->easeInTime = wholeShowEffects.sizeModify->easeOutTime = 1000.f;
+    wholeShowEffects.sizeModify->easeFunc = ParticleSizeModifyEffect::EaseFunction::Linear;
+    wholeShowEffects.sizeModify->scaling  = 4.f;
+    wholeShowEffectInstances.push_back({wholeShowEffects.sizeModify, WHOLE_SHOW_SIZE_MODIFY_TIME_OFFSET});
 
 #if WITH_EDIT_TOOLS
-    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &reduceCount->easeInTime, "group='reduce count' label='ease in time'");
-    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &reduceCount->easeOutTime, "group='reduce count' label='ease out time'");
-    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &reduceCount->easeFunc, "group='reduce count' label='ease func'");
-    TwAddVarRW(bar, NULL, TW_TYPE_UINT32, &reduceCount->amount, "group='reduce count' label=amount");
-#endif
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &WHOLE_SHOW_REDUCE_COUNT_TIME_OFFSET, "group='reduce count' label='time offset'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &wholeShowEffects.reduceCount->easeInTime, "group='reduce count' label='ease time'");
+    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &wholeShowEffects.reduceCount->easeFunc, "group='reduce count' label='ease func'");
+    TwAddVarRW(bar, NULL, TW_TYPE_UINT32, &wholeShowEffects.reduceCount->amount, "group='reduce count' label=amount");
 
-    auto sizeModify = timeline->emplaceEffectInstance<ParticleSizeModifyEffect>();
-    sizeModify->scaling = 4.f;
-    sizeModify->easeInTime = sizeModify->easeOutTime = 1000.f;
-    sizeModify->easeFunc = ParticleSizeModifyEffect::EaseFunction::Linear;
-    wholeShowEffectInstances.push_back(sizeModify);
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &WHOLE_SHOW_SIZE_MODIFY_TIME_OFFSET, "group='reduce size' label='time offset'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &wholeShowEffects.sizeModify->easeInTime, "group='reduce size' label='ease time'");
+    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &wholeShowEffects.sizeModify->easeFunc, "group='reduce size' label='ease func'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &wholeShowEffects.sizeModify->scaling, "group='reduce size' label=scaling");
 
-#if WITH_EDIT_TOOLS
-    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &sizeModify->easeInTime, "group='reduce size' label='ease in time'");
-    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &sizeModify->easeOutTime, "group='reduce size' label='ease out time'");
-    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &sizeModify->easeFunc, "group='reduce size' label='ease func'");
-    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &sizeModify->scaling, "group='reduce size' label=scaling");
+    TwDefine("randomizer/'reduce count' group='whole show'");
+    TwDefine("randomizer/'reduce size' group='whole show'");
 #endif
   }
 
-#if 1
+  // random
+  {
+    randomEffectInstances.push_back({timeline->emplaceEffectInstance<ConvergeCircleEffect>()});
+    randomEffectInstances.push_back({timeline->emplaceEffectInstance<ConvergePointEffect>()});
+    randomEffectInstances.push_back({timeline->emplaceEffectInstance<ParticleDisplaceEffect>()});
+    randomEffectInstances.push_back({timeline->emplaceEffectInstance<HueDisplaceEffect>()});
+    randomEffectInstances.push_back({timeline->emplaceEffectInstance<ParticleSpacingEffect>()});
+    randomEffectInstances.push_back({timeline->emplaceEffectInstance<StandingWaveEffect>()});
+    randomEffectInstances.push_back({timeline->emplaceEffectInstance<WaveEffect>()});
+  }
+
   // fade in
   {
-    auto displace = timeline->emplaceEffectInstance<HueDisplace2Effect>(1u);
-    displace->easeInTime = FADE_PHASE_TIME;
-    displace->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
-    displace->easeOutTime = FADE_PHASE_FADE_TIME;
-    displace->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
-    displace->distance = .2f;
-    displace->scaleByValue = .5f;
-    displace->rotate = .2f;
-    fadeInEffectInstances.push_back(displace);
+    fadeInEffects.displace = timeline->emplaceEffectInstance<HueDisplace2Effect>(1u);
+    fadeInEffects.displace->easeInTime = FADE_PHASE_TIME;
+    fadeInEffects.displace->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.displace->easeOutTime = FADE_PHASE_FADE_TIME;
+    fadeInEffects.displace->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.displace->distance = .2f;
+    fadeInEffects.displace->scaleByValue = .5f;
+    fadeInEffects.displace->directionOffset = 0.f;
+    fadeInEffects.displace->rotate = .2f;
+    fadeInEffectInstances.push_back({fadeInEffects.displace, FADE_DISPLACE_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
 
-    auto converge = timeline->emplaceEffectInstance<ConvergePoint2Effect>(1u);
-    converge->easeInTime = FADE_PHASE_TIME;
-    converge->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
-    converge->easeOutTime = FADE_PHASE_FADE_TIME;
-    converge->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
-    fadeInEffectInstances.push_back(converge);
-  }
+    fadeInEffects.converge = timeline->emplaceEffectInstance<ConvergePoint2Effect>(1u);
+    fadeInEffects.converge->easeInTime = FADE_PHASE_TIME;
+    fadeInEffects.converge->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.converge->easeOutTime = FADE_PHASE_FADE_TIME;
+    fadeInEffects.converge->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffectInstances.push_back({fadeInEffects.converge, FADE_CONVERGE_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
+
+#if WITH_EDIT_TOOLS
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &FADE_DISPLACE_BEGIN_OFFSET, "group='displace' label='begin offset'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace->easeInTime, "group='displace' label='ease in time'");
+    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &fadeInEffects.displace->easeInFunction, "group='displace' label='ease in func'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace->easeOutTime, "group='displace' label='ease out time'");
+    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &fadeInEffects.displace->easeOutFunction, "group='displace' label='ease out func'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace->distance, "group='displace' label='distance'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace->scaleByValue, "group='displace' label='scaleByValue'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace->directionOffset, "group='displace' label='directionOffset'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace->rotate, "group='displace' label='rotate'");
+
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &FADE_CONVERGE_BEGIN_OFFSET, "group='converge' label='begin offset'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.converge->easeInTime, "group='converge' label='ease in time'");
+    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &fadeInEffects.converge->easeInFunction, "group='converge' label='ease in func'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.converge->easeOutTime, "group='converge' label='ease out time'");
+    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &fadeInEffects.converge->easeOutFunction, "group='converge' label='ease out func'");
+
+    TwDefine("randomizer/displace group='fade phase'");
+    TwDefine("randomizer/converge group='fade phase'");
 #endif
+  }
 
-#if 1
   // fade out
   {
-    auto displace = timeline->emplaceEffectInstance<HueDisplace2Effect>(1u);
-    displace->easeInTime = FADE_PHASE_FADE_TIME;
-    displace->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
-    displace->easeOutTime = FADE_PHASE_TIME;
-    displace->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
-    displace->distance = .2f;
-    displace->scaleByValue = .5f;
-    displace->rotate = .2f;
-    fadeOutEffectInstances.push_back(displace);
+    auto it = fadeInEffectInstances.cbegin();
 
-    auto converge = timeline->emplaceEffectInstance<ConvergePoint2Effect>(1u);
-    converge->easeInTime = FADE_PHASE_FADE_TIME;
-    converge->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
-    converge->easeOutTime = FADE_PHASE_TIME;
-    converge->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
-    fadeOutEffectInstances.push_back(converge);
+    fadeOutEffectInstances.push_back({timeline->emplaceEffectInstance<HueDisplace2Effect>(1u), &*it++});
+    fadeOutEffectInstances.push_back({timeline->emplaceEffectInstance<ConvergePoint2Effect>(1u), &*it++});
+
+    mirrorFadeOutEffects();
   }
-#endif
+
 
   return timeline;
+}
+
+void ReactionTimelineRandomizer::mirrorFadeOutEffects() {
+  for(auto &i : fadeOutEffectInstances) {
+    auto easeInOut = dynamic_cast<IEaseInOutEffect*>(i.i);
+    if(easeInOut) {
+      auto base = dynamic_cast<IEaseInOutEffect*>(i.base->i);
+      if(!base) throw "type mismatch in mirrorFadeOutEffects";
+
+      easeInOut->easeInTime = base->easeOutTime;
+      easeInOut->easeInFunction = base->easeOutFunction;
+      easeInOut->easeOutTime = base->easeInTime;
+      easeInOut->easeOutFunction = base->easeInFunction;
+    }
+
+    auto hueDisplace2 = dynamic_cast<HueDisplace2Effect*>(i.i);
+    if(hueDisplace2) {
+      auto base = dynamic_cast<HueDisplace2Effect*>(i.base->i);
+      if(!base) throw "type mismatch in mirrorFadeOutEffects";
+
+      hueDisplace2->distance = base->distance;
+      hueDisplace2->scaleByValue = base->scaleByValue;
+      hueDisplace2->directionOffset = base->directionOffset;
+      hueDisplace2->rotate = base->rotate;
+    }
+
+    auto convergePoint2 = dynamic_cast<ConvergePoint2Effect*>(i.i);
+    if(convergePoint2) {
+      auto base = dynamic_cast<ConvergePoint2Effect*>(i.base->i);
+      if(!base) throw "type mismatch in mirrorFadeOutEffects";
+    }
+  }
 }
 
 static bool isEmptyEffect(const IEffect *i) {
@@ -124,27 +184,23 @@ static bool isEmptyEffect(const IEffect *i) {
 void ReactionTimelineRandomizer::randomize(std::default_random_engine &random) {
   if(randomEffectInstances.empty()) return; // fix debugging :)
 
-  for(auto i : wholeShowEffectInstances) {
-    i->timeBegin = 0.f;
-    i->timeEnd = 0.f;
-  }
-
   for(auto i : fadeInEffectInstances) {
-    i->timeBegin = 0.f;
-    i->timeEnd = 0.f + FADE_PHASE_TIME + FADE_PHASE_FADE_TIME;
+    i.i->timeBegin = i.timeBeginOffset;
+    i.i->timeEnd = FADE_PHASE_TIME + i.timeEndOffset;
   }
 
 
   const auto randomStart = FADE_PHASE_TIME;
-  auto randomLength = std::uniform_real_distribution<float>(15000.f, 30000.f)(random);
+  auto randomLength = std::uniform_real_distribution<float>(RANDOM_PHASE_MIN_LENGTH, RANDOM_PHASE_MAX_LENGTH)(random);
 
   // randomize effect time ranges
   for(auto i : randomEffectInstances) {
-    const auto minInstanceLength = 5000.f;
+    const auto minInstanceLength = RANDOM_PHASE_MIN_INSTANCE_LENGTH;
 
-    i->timeBegin = randomStart + std::uniform_real_distribution<float>(0.f, randomLength - minInstanceLength)(random);
-    i->timeEnd = i->timeBegin + std::uniform_real_distribution<float>(minInstanceLength, randomStart + randomLength - i->timeBegin)(random);
-    i->repetitions = std::bernoulli_distribution(.3f)(random) ? std::uniform_int_distribution<int>(10, 30)(random) : 1;
+    i.i->timeBegin = randomStart + std::uniform_real_distribution<float>(0.f, randomLength - minInstanceLength)(random);
+    i.i->timeEnd = i.i->timeBegin + std::uniform_real_distribution<float>(minInstanceLength, randomStart + randomLength - i.i->timeBegin)(random);
+    i.i->repetitions = std::bernoulli_distribution(RANDOM_PHASE_REP_P)(random) ?
+      std::uniform_int_distribution<int>(RANDOM_PHASE_REP_MIN, RANDOM_PHASE_REP_MAX)(random) : 1;
   }
 
   // randomize effect enabled
@@ -153,8 +209,8 @@ void ReactionTimelineRandomizer::randomize(std::default_random_engine &random) {
     do {
       enabledCount = 0u;
       for(auto i : randomEffectInstances) {
-        i->enabled = std::bernoulli_distribution(.95)(random);
-        if(i->enabled) ++enabledCount;
+        i.i->enabled = std::bernoulli_distribution(.95)(random);
+        if(i.i->enabled) ++enabledCount;
       }
     } while(enabledCount < 2u);
   }
@@ -167,8 +223,8 @@ void ReactionTimelineRandomizer::randomize(std::default_random_engine &random) {
     std::vector<Interval> intervals;
     intervals.reserve(instanceCount);
     for(auto i : randomEffectInstances) {
-      if(isEmptyEffect(i)) continue;
-      intervals.emplace_back(i->timeBegin, i->timeEnd);
+      if(isEmptyEffect(i.i)) continue;
+      intervals.emplace_back(i.i->timeBegin, i.i->timeEnd);
     }
 
     std::sort(intervals.begin(), intervals.end());
@@ -181,9 +237,9 @@ void ReactionTimelineRandomizer::randomize(std::default_random_engine &random) {
       const auto move = -interval->length();
 
       for(auto i : randomEffectInstances) {
-        if(interval->start() <= i->timeBegin) {
-          i->timeBegin += move;
-          i->timeEnd += move;
+        if(interval->start() <= i.i->timeBegin) {
+          i.i->timeBegin += move;
+          i.i->timeEnd += move;
         }
       }
 
@@ -198,31 +254,38 @@ void ReactionTimelineRandomizer::randomize(std::default_random_engine &random) {
   {
     randomLength = 0.f;
     for(auto i : randomEffectInstances) {
-      if(!isEmptyEffect(i)) randomLength = std::max(randomLength, i->timeEnd - randomStart);
+      if(!isEmptyEffect(i.i)) randomLength = std::max(randomLength, i.i->timeEnd - randomStart);
     }
 
     for(auto i : randomEffectInstances) {
-      if(isEmptyEffect(i)) {
-        i->timeBegin = std::max(i->timeBegin, randomStart);
-        i->timeEnd = std::min(i->timeEnd, randomStart + randomLength);
+      if(isEmptyEffect(i.i)) {
+        i.i->timeBegin = std::max(i.i->timeBegin, randomStart);
+        i.i->timeEnd = std::min(i.i->timeEnd, randomStart + randomLength);
       }
     }
   }
 
   // randomize effect configs
   for(auto i : randomEffectInstances) {
-    i->randomizeConfig(random);
+    i.i->randomizeConfig(random);
   }
 
 
   for(auto i : fadeOutEffectInstances) {
-    i->timeBegin = randomStart + randomLength - FADE_PHASE_FADE_TIME;
-    i->timeEnd = randomStart + randomLength + FADE_PHASE_TIME;
+    i.i->timeBegin = randomStart + randomLength - i.base->timeEndOffset;
+    i.i->timeEnd = randomStart + randomLength + FADE_PHASE_TIME - i.base->timeBeginOffset;
   }
 
   for(auto i : wholeShowEffectInstances) {
-    i->timeBegin = 0.f;
-    i->timeEnd = 2 * FADE_PHASE_TIME + randomLength;
+    i.i->timeBegin = i.timeOffset;
+    i.i->timeEnd = 2 * FADE_PHASE_TIME + randomLength - i.timeOffset;
   }
 }
 
+#if WITH_EDIT_TOOLS
+void ReactionTimelineRandomizer::editUpdate() {
+  wholeShowEffects.reduceCount->easeOutTime = wholeShowEffects.reduceCount->easeInTime;
+  wholeShowEffects.sizeModify->easeOutTime = wholeShowEffects.sizeModify->easeInTime;
+  mirrorFadeOutEffects();
+}
+#endif

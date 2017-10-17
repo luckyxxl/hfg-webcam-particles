@@ -69,10 +69,10 @@ public:
   void enableLooping() { setLooping(true); }
 
 #if WITH_EDIT_TOOLS
-  // really just for debugging... really!
-  float *dbgGetTimeP() { return &time; }
-  float *dbgGetPeriodP() { return &period; }
-  bool *dbgGetPausedP() { return &paused; }
+  // really just for edit tools... really!
+  float *editGetTimeP() { return &time; }
+  float *editGetPeriodP() { return &period; }
+  bool *editGetPausedP() { return &paused; }
 #endif
 
 private:

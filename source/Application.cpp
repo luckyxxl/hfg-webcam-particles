@@ -112,13 +112,13 @@ bool Application::create(Resources *resources, graphics::Window *window,
     TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, &paused, "label=paused");
     TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, &skipStandby, "label='skip standby'");
 
-    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, standbyParticleRenderer.getClock().dbgGetTimeP(), "group=standby label=time");
-    TwAddVarRO(bar, NULL, TW_TYPE_FLOAT, standbyParticleRenderer.getClock().dbgGetPeriodP(), "group=standby label=period");
-    TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, standbyParticleRenderer.getClock().dbgGetPausedP(), "group=standby label=paused");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, standbyParticleRenderer.getClock().editGetTimeP(), "group=standby label=time");
+    TwAddVarRO(bar, NULL, TW_TYPE_FLOAT, standbyParticleRenderer.getClock().editGetPeriodP(), "group=standby label=period");
+    TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, standbyParticleRenderer.getClock().editGetPausedP(), "group=standby label=paused");
 
-    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, reactionParticleRenderer.getClock().dbgGetTimeP(), "group=reaction label=time");
-    TwAddVarRO(bar, NULL, TW_TYPE_FLOAT, reactionParticleRenderer.getClock().dbgGetPeriodP(), "group=reaction label=period");
-    TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, reactionParticleRenderer.getClock().dbgGetPausedP(), "group=reaction label=paused");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, reactionParticleRenderer.getClock().editGetTimeP(), "group=reaction label=time");
+    TwAddVarRO(bar, NULL, TW_TYPE_FLOAT, reactionParticleRenderer.getClock().editGetPeriodP(), "group=reaction label=period");
+    TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, reactionParticleRenderer.getClock().editGetPausedP(), "group=reaction label=paused");
   }
 #endif
 
@@ -249,6 +249,7 @@ static glm::vec2 sampleCircle(std::default_random_engine &random) {
 
 void Application::update(float dt) {
 #if WITH_EDIT_TOOLS
+  reactionTimelineRandomizer.editUpdate();
   if(paused) return;
 #endif
 
@@ -330,7 +331,7 @@ void Application::update(float dt) {
     standbyParticleRenderer.getClock().play();
 
 #if WITH_EDIT_TOOLS
-    *reactionParticleRenderer.getClock().dbgGetTimeP() = 0.f;
+    *reactionParticleRenderer.getClock().editGetTimeP() = 0.f;
     if(skipStandby) {
       standbyParticleRenderer.getClock().pause();
       reactionState = ReactionState::FinishStandbyTimeline;
