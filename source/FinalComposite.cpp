@@ -22,6 +22,7 @@ void FinalComposite::create(const graphics::ScreenRectBuffer *rectangle) {
   static const char *fragmentShaderSource = R"glsl(
     #version 330 core
     uniform sampler2D source;
+    uniform sampler2D overlay;
 
     in vec2 screenCoord;
     in vec2 texcoord;
@@ -48,24 +49,30 @@ void FinalComposite::create(const graphics::ScreenRectBuffer *rectangle) {
     void main() {
       //vec3 c = texture(source, texcoord).rgb;
       vec3 c = texelFetch(source, ivec2(gl_FragCoord.xy), 0).rgb;
-      frag_color = vec4(c * vignette(screenCoord), 0.);
+      vec4 o = texelFetch(overlay, ivec2(gl_FragCoord.xy), 0);
+      frag_color = vec4(mix(c, o.rgb, o.a) * vignette(screenCoord), 0.);
     }
   )glsl";
 
   pipeline.create(vertexShaderSource, fragmentShaderSource, graphics::Pipeline::BlendMode::None);
 
   pipeline_source_location = pipeline.getUniformLocation("source");
+  pipeline_overlay_location = pipeline.getUniformLocation("overlay");
+  pipeline_overlayVisibility_location = pipeline.getUniformLocation("overlayVisibility");
 }
 
 void FinalComposite::destroy() {
   pipeline.destroy();
 }
 
-void FinalComposite::draw(graphics::Texture &source, uint32_t screen_width, uint32_t screen_height) {
+void FinalComposite::draw(graphics::Texture &source, graphics::Texture &overlay, float overlayVisibility, uint32_t screen_width, uint32_t screen_height) {
   graphics::Framebuffer::unbind();
   glViewport(0, 0, screen_width, screen_height);
   pipeline.bind();
   source.bind(0u);
   glUniform1i(pipeline_source_location, 0u);
+  overlay.bind(1u);
+  glUniform1i(pipeline_overlay_location, 1u);
+  glUniform1f(pipeline_overlayVisibility_location, overlayVisibility);
   rectangle->draw();
 }

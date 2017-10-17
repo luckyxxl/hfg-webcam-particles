@@ -67,7 +67,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   screenRectBuffer.create();
 
   webcamImageTransform.create(&screenRectBuffer, imageProvider.width(), imageProvider.height(), particles_width, particles_height);
-  faceBlitter.create(&screenRectBuffer, particles_width, particles_height);
+  faceBlitter.create(&screenRectBuffer, screen_width, screen_height);
 
   overlayCompose.create(&screenRectBuffer);
 
@@ -350,23 +350,7 @@ void Application::update(float dt) {
 void Application::render() {
   faceBlitter.draw();
 
-  // compose webcam and overlay into particleSourceFramebuffer
-  {
-    float overlayVisibility = 1.f;
-    if(reactionState == ReactionState::RenderReactionTimeline) {
-      if(reactionParticleRenderer.getClock().isPaused()) {
-        overlayVisibility = 0.f;
-      } else {
-        auto p = reactionParticleRenderer.getClock().getPeriod() - 1000.f;
-        auto t = reactionParticleRenderer.getClock().getTime();
-        overlayVisibility = std::min(std::max((p - t) / 4000.f, 0.f), 1.f);
-      }
-    }
-
-    overlayCompose.draw(webcamFramebuffer.getTexture(), faceBlitter.getResultTexture(), overlayVisibility, particleSourceFramebuffer);
-  }
-
-  RendererParameters parameters(&particleSourceFramebuffer.getTexture(), &backgroundFramebuffer.getTexture(),
+  RendererParameters parameters(&webcamFramebuffer.getTexture(), &backgroundFramebuffer.getTexture(),
                                 &particleOutputFramebuffer);
 
   if (reactionState == ReactionState::RenderReactionTimeline) {
@@ -380,7 +364,21 @@ void Application::render() {
     standbyParticleRenderer.render(particleRendererGlobalState, parameters);
   }
 
-  finalComposite.draw(particleOutputFramebuffer.getTexture(), screen_width, screen_height);
+  // compose webcam and overlay into particleSourceFramebuffer
+  {
+    float overlayVisibility = 1.f;
+    if(reactionState == ReactionState::RenderReactionTimeline) {
+      if(reactionParticleRenderer.getClock().isPaused()) {
+        overlayVisibility = 0.f;
+      } else {
+        auto p = reactionParticleRenderer.getClock().getPeriod() - 1000.f;
+        auto t = reactionParticleRenderer.getClock().getTime();
+        overlayVisibility = std::min(std::max((p - t) / 4000.f, 0.f), 1.f);
+      }
+    }
+
+    finalComposite.draw(particleOutputFramebuffer.getTexture(), faceBlitter.getResultTexture(), overlayVisibility, screen_width, screen_height);
+  }
 
   {
     GLenum error = glGetError();
