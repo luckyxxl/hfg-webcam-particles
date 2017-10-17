@@ -38,6 +38,8 @@ void WebcamImageTransform::create(const graphics::ScreenRectBuffer *rectangle,
     #version 330 core
     uniform sampler2D source;
 
+    uniform vec3 imageParameters;
+
     in vec2 texcoord;
 
     out vec4 frag_color;
@@ -105,9 +107,9 @@ void WebcamImageTransform::create(const graphics::ScreenRectBuffer *rectangle,
 
     void main() {
       vec3 rgb = texture(source, texcoord).bgr;
-      rgb = 1.8 * rgb - vec3(.1); // increase overall brightness
+      rgb = imageParameters[0] * rgb + imageParameters[1]; // increase overall brightness
       vec3 hsv = rgb2hsv(rgb);
-      hsv.y = hsv.y * 2.; // increase saturation
+      hsv.y = hsv.y * imageParameters[2]; // increase saturation
       rgb = hsv2rgb(hsv);
       frag_color = vec4(rgb, 0.);
     }
@@ -117,6 +119,7 @@ void WebcamImageTransform::create(const graphics::ScreenRectBuffer *rectangle,
 
   pipeline_transform_location = pipeline.getUniformLocation("transform");
   pipeline_source_location = pipeline.getUniformLocation("source");
+  pipeline_imageParameters_location = pipeline.getUniformLocation("imageParameters");
 }
 
 void WebcamImageTransform::destroy() {
@@ -135,5 +138,6 @@ void WebcamImageTransform::draw(graphics::Texture &input, graphics::Framebuffer 
   glUniformMatrix3fv(pipeline_transform_location, 1, GL_FALSE, &transform[0][0]);
   input.bind(0u);
   glUniform1i(pipeline_source_location, 0u);
+  glUniform3f(pipeline_imageParameters_location, brightnessMul, brightnessAdd, saturation);
   rectangle->draw();
 }

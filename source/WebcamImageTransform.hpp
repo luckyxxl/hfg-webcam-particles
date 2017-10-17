@@ -16,14 +16,23 @@ public:
 
   void draw(graphics::Texture &input, graphics::Framebuffer &output);
 
+#if WITH_EDIT_TOOLS
+  float *editGetBrightnessMulP() { return &brightnessMul; }
+  float *editGetBrightnessAddP() { return &brightnessAdd; }
+  float *editGetSaturationP() { return &saturation; }
+#endif
+
 private:
   const graphics::ScreenRectBuffer *rectangle;
   graphics::Pipeline pipeline;
   GLint pipeline_transform_location;
   GLint pipeline_source_location;
+  GLint pipeline_imageParameters_location;
 
   uint32_t input_width, input_height;
   uint32_t output_width, output_height;
+
+  float brightnessMul = 1.8f, brightnessAdd = -.1f, saturation = 2.f;
 
   glm::mat3 transform, inverseTransform;
 };

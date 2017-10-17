@@ -120,6 +120,10 @@ bool Application::create(Resources *resources, graphics::Window *window,
     TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, reactionParticleRenderer.getClock().editGetTimeP(), "group=reaction label=time");
     TwAddVarRO(bar, NULL, TW_TYPE_FLOAT, reactionParticleRenderer.getClock().editGetPeriodP(), "group=reaction label=period");
     TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, reactionParticleRenderer.getClock().editGetPausedP(), "group=reaction label=paused");
+
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, webcamImageTransform.editGetBrightnessMulP(), "group='webcam image' label='brightness *'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, webcamImageTransform.editGetBrightnessAddP(), "group='webcam image' label='brightness +'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, webcamImageTransform.editGetSaturationP(), "group='webcam image' label=saturation");
   }
 #endif
 
