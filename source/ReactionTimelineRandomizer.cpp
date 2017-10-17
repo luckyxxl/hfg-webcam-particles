@@ -59,7 +59,7 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     wholeShowEffects.sizeModify = timeline->emplaceEffectInstance<ParticleSizeModifyEffect>(2u);
     wholeShowEffects.sizeModify->easeInTime = wholeShowEffects.sizeModify->easeOutTime = 10000.f;
     wholeShowEffects.sizeModify->easeFunc = ParticleSizeModifyEffect::EaseFunction::Linear;
-    wholeShowEffects.sizeModify->scaling  = 4.f;
+    wholeShowEffects.sizeModify->scaling  = 2.f;
     wholeShowEffectInstances.push_back({wholeShowEffects.sizeModify, WHOLE_SHOW_SIZE_MODIFY_TIME_OFFSET});
 
 #if WITH_EDIT_TOOLS
@@ -97,7 +97,7 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     fadeInEffects.displace->easeOutTime = FADE_PHASE_FADE_TIME;
     fadeInEffects.displace->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
     fadeInEffects.displace->distance = .1f;
-    fadeInEffects.displace->scaleByValue = .9f;
+    fadeInEffects.displace->scaleByValue = 1.5f;
     fadeInEffects.displace->directionOffset = 0.f;
     fadeInEffects.displace->rotate = 0.f;
     fadeInEffectInstances.push_back({fadeInEffects.displace, FADE_DISPLACE_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
@@ -107,10 +107,10 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     fadeInEffects.displace2->easeInFunction = IEaseInOutEffect::EaseFunction::SineInOut;
     fadeInEffects.displace2->easeOutTime = FADE_PHASE_FADE_TIME;
     fadeInEffects.displace2->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
-    fadeInEffects.displace2->distance = .01f;
+    fadeInEffects.displace2->distance = .03f;
     fadeInEffects.displace2->scaleByValue = .9f;
     fadeInEffects.displace2->directionOffset = PI/2.f;
-    fadeInEffects.displace2->rotate = 5.f;
+    fadeInEffects.displace2->rotate = 7.f;
     fadeInEffectInstances.push_back({fadeInEffects.displace2, FADE_DISPLACE2_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
 
     fadeInEffects.convergePoint = timeline->emplaceEffectInstance<ConvergePoint2Effect>(1u);
