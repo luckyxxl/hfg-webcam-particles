@@ -9,10 +9,10 @@
 #define constexpr static
 #endif
 
-constexpr auto WHOLE_SHOW_REDUCE_COUNT_TIME_OFFSET = 0.f;
-constexpr auto WHOLE_SHOW_SIZE_MODIFY_TIME_OFFSET = 0.f;
+constexpr auto WHOLE_SHOW_REDUCE_COUNT_TIME_OFFSET = 18000.f;
+constexpr auto WHOLE_SHOW_SIZE_MODIFY_TIME_OFFSET = 18000.f;
 
-constexpr auto FADE_PHASE_TIME = 10000.f;
+constexpr auto FADE_PHASE_TIME = 30000.f;
 constexpr auto FADE_PHASE_FADE_TIME = 3000.f;
 
 constexpr auto RANDOM_PHASE_MIN_LENGTH = 15000.f;
@@ -23,9 +23,9 @@ constexpr auto RANDOM_PHASE_REP_MIN = 10;
 constexpr auto RANDOM_PHASE_REP_MAX = 30;
 
 constexpr auto FADE_DISPLACE_BEGIN_OFFSET = 0.f;
-constexpr auto FADE_DISPLACE2_BEGIN_OFFSET = 0.f;
+constexpr auto FADE_DISPLACE2_BEGIN_OFFSET = 18000.f;
 constexpr auto FADE_CONVERGE_POINT_BEGIN_OFFSET = 0.f;
-constexpr auto FADE_CONVERGE_CIRCLE_BEGIN_OFFSET = 0.f;
+constexpr auto FADE_CONVERGE_CIRCLE_BEGIN_OFFSET = 5000.f;
 
 #if WITH_EDIT_TOOLS
 #undef constexpr
@@ -51,13 +51,13 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
   // whole show
   {
     wholeShowEffects.reduceCount = timeline->emplaceEffectInstance<ReduceParticleCountEffect>(2u);
-    wholeShowEffects.reduceCount->easeInTime = wholeShowEffects.reduceCount->easeOutTime = 1000.f;
+    wholeShowEffects.reduceCount->easeInTime = wholeShowEffects.reduceCount->easeOutTime = 10000.f;
     wholeShowEffects.reduceCount->easeFunc = ReduceParticleCountEffect::EaseFunction::Linear;
     wholeShowEffects.reduceCount->amount   = 258u;
     wholeShowEffectInstances.push_back({wholeShowEffects.reduceCount, WHOLE_SHOW_REDUCE_COUNT_TIME_OFFSET});
 
     wholeShowEffects.sizeModify = timeline->emplaceEffectInstance<ParticleSizeModifyEffect>(2u);
-    wholeShowEffects.sizeModify->easeInTime = wholeShowEffects.sizeModify->easeOutTime = 1000.f;
+    wholeShowEffects.sizeModify->easeInTime = wholeShowEffects.sizeModify->easeOutTime = 10000.f;
     wholeShowEffects.sizeModify->easeFunc = ParticleSizeModifyEffect::EaseFunction::Linear;
     wholeShowEffects.sizeModify->scaling  = 4.f;
     wholeShowEffectInstances.push_back({wholeShowEffects.sizeModify, WHOLE_SHOW_SIZE_MODIFY_TIME_OFFSET});
@@ -92,29 +92,29 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
   // fade in
   {
     fadeInEffects.displace = timeline->emplaceEffectInstance<HueDisplace2Effect>(1u);
-    fadeInEffects.displace->easeInTime = FADE_PHASE_TIME;
-    fadeInEffects.displace->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.displace->easeInTime = 10000.f;
+    fadeInEffects.displace->easeInFunction = IEaseInOutEffect::EaseFunction::Pow1_2;
     fadeInEffects.displace->easeOutTime = FADE_PHASE_FADE_TIME;
     fadeInEffects.displace->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
-    fadeInEffects.displace->distance = .2f;
-    fadeInEffects.displace->scaleByValue = .5f;
+    fadeInEffects.displace->distance = .1f;
+    fadeInEffects.displace->scaleByValue = .9f;
     fadeInEffects.displace->directionOffset = 0.f;
-    fadeInEffects.displace->rotate = .2f;
+    fadeInEffects.displace->rotate = 0.f;
     fadeInEffectInstances.push_back({fadeInEffects.displace, FADE_DISPLACE_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
 
     fadeInEffects.displace2 = timeline->emplaceEffectInstance<HueDisplace2Effect>(1u);
-    fadeInEffects.displace2->enabled = false;
-    fadeInEffects.displace2->easeInTime = FADE_PHASE_TIME;
-    fadeInEffects.displace2->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.displace2->easeInTime = 5000.f;
+    fadeInEffects.displace2->easeInFunction = IEaseInOutEffect::EaseFunction::SineInOut;
     fadeInEffects.displace2->easeOutTime = FADE_PHASE_FADE_TIME;
     fadeInEffects.displace2->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
-    fadeInEffects.displace2->distance = 0.f;
-    fadeInEffects.displace2->scaleByValue = 0.f;
-    fadeInEffects.displace2->directionOffset = 0.f;
-    fadeInEffects.displace2->rotate = 0.f;
+    fadeInEffects.displace2->distance = .01f;
+    fadeInEffects.displace2->scaleByValue = .9f;
+    fadeInEffects.displace2->directionOffset = PI/2.f;
+    fadeInEffects.displace2->rotate = 5.f;
     fadeInEffectInstances.push_back({fadeInEffects.displace2, FADE_DISPLACE2_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
 
     fadeInEffects.convergePoint = timeline->emplaceEffectInstance<ConvergePoint2Effect>(1u);
+    fadeInEffects.convergePoint->enabled = false;
     fadeInEffects.convergePoint->easeInTime = FADE_PHASE_TIME;
     fadeInEffects.convergePoint->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
     fadeInEffects.convergePoint->easeOutTime = FADE_PHASE_FADE_TIME;
@@ -122,12 +122,11 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     fadeInEffectInstances.push_back({fadeInEffects.convergePoint, FADE_CONVERGE_POINT_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
 
     fadeInEffects.convergeCircle = timeline->emplaceEffectInstance<ConvergeCircle2Effect>(1u);
-    fadeInEffects.convergeCircle->enabled = false;
-    fadeInEffects.convergeCircle->easeInTime = FADE_PHASE_TIME;
-    fadeInEffects.convergeCircle->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.convergeCircle->easeInTime = 15000.f;
+    fadeInEffects.convergeCircle->easeInFunction = IEaseInOutEffect::EaseFunction::SineInOut;
     fadeInEffects.convergeCircle->easeOutTime = FADE_PHASE_FADE_TIME;
     fadeInEffects.convergeCircle->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
-    fadeInEffects.convergeCircle->radius = .8f;
+    fadeInEffects.convergeCircle->radius = .4f;
     fadeInEffects.convergeCircle->rotationSpeed = 0.f;
     fadeInEffectInstances.push_back({fadeInEffects.convergeCircle, FADE_CONVERGE_CIRCLE_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
 
