@@ -7,6 +7,7 @@ class ReduceParticleCountEffect;
 class ParticleSizeModifyEffect;
 class HueDisplace2Effect;
 class ConvergePoint2Effect;
+class ConvergeCircle2Effect;
 
 class ReactionTimelineRandomizer {
 public:
@@ -25,7 +26,9 @@ private:
 
   struct {
     HueDisplace2Effect *displace;
-    ConvergePoint2Effect *converge;
+    HueDisplace2Effect *displace2;
+    ConvergePoint2Effect *convergePoint;
+    ConvergeCircle2Effect *convergeCircle;
   } fadeInEffects;
 
   struct WholeShowElement {

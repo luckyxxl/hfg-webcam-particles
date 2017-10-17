@@ -30,7 +30,6 @@ void ConvergePoint2Effect::registerEffect(EffectRegistrationData &data) const {
     vec2 target = (invViewProjectionMatrix * vec4(screenTarget, 0, 1)).xy;
 
     vec2 d = target - initialPosition.xy;
-    float d_len = length(d);
 
     position.xy += mix(vec2(0.), d, ${x});
   }

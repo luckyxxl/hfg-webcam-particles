@@ -35,6 +35,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   TwWindowSize(screen_width, screen_height);
 #endif
 
+  effectRegistry.registerEffect<ConvergeCircle2Effect>();
   effectRegistry.registerEffect<ConvergeCircleEffect>();
   effectRegistry.registerEffect<ConvergePoint2Effect>();
   effectRegistry.registerEffect<ConvergePointEffect>();

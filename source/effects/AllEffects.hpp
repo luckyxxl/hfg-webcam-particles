@@ -1,4 +1,5 @@
 #include "EffectRegistry.hpp"
+#include "ConvergeCircle2Effect.hpp"
 #include "ConvergeCircleEffect.hpp"
 #include "ConvergePoint2Effect.hpp"
 #include "ConvergePointEffect.hpp"
@@ -15,4 +16,3 @@
 #include "TrailsEffect.hpp"
 #include "VignetteEffect.hpp"
 #include "WaveEffect.hpp"
-

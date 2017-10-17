@@ -23,7 +23,9 @@ constexpr auto RANDOM_PHASE_REP_MIN = 10;
 constexpr auto RANDOM_PHASE_REP_MAX = 30;
 
 constexpr auto FADE_DISPLACE_BEGIN_OFFSET = 0.f;
-constexpr auto FADE_CONVERGE_BEGIN_OFFSET = 0.f;
+constexpr auto FADE_DISPLACE2_BEGIN_OFFSET = 0.f;
+constexpr auto FADE_CONVERGE_POINT_BEGIN_OFFSET = 0.f;
+constexpr auto FADE_CONVERGE_CIRCLE_BEGIN_OFFSET = 0.f;
 
 #if WITH_EDIT_TOOLS
 #undef constexpr
@@ -48,13 +50,13 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
 
   // whole show
   {
-    wholeShowEffects.reduceCount = timeline->emplaceEffectInstance<ReduceParticleCountEffect>();
+    wholeShowEffects.reduceCount = timeline->emplaceEffectInstance<ReduceParticleCountEffect>(2u);
     wholeShowEffects.reduceCount->easeInTime = wholeShowEffects.reduceCount->easeOutTime = 1000.f;
     wholeShowEffects.reduceCount->easeFunc = ReduceParticleCountEffect::EaseFunction::Linear;
     wholeShowEffects.reduceCount->amount   = 258u;
     wholeShowEffectInstances.push_back({wholeShowEffects.reduceCount, WHOLE_SHOW_REDUCE_COUNT_TIME_OFFSET});
 
-    wholeShowEffects.sizeModify = timeline->emplaceEffectInstance<ParticleSizeModifyEffect>();
+    wholeShowEffects.sizeModify = timeline->emplaceEffectInstance<ParticleSizeModifyEffect>(2u);
     wholeShowEffects.sizeModify->easeInTime = wholeShowEffects.sizeModify->easeOutTime = 1000.f;
     wholeShowEffects.sizeModify->easeFunc = ParticleSizeModifyEffect::EaseFunction::Linear;
     wholeShowEffects.sizeModify->scaling  = 4.f;
@@ -100,14 +102,37 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     fadeInEffects.displace->rotate = .2f;
     fadeInEffectInstances.push_back({fadeInEffects.displace, FADE_DISPLACE_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
 
-    fadeInEffects.converge = timeline->emplaceEffectInstance<ConvergePoint2Effect>(1u);
-    fadeInEffects.converge->easeInTime = FADE_PHASE_TIME;
-    fadeInEffects.converge->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
-    fadeInEffects.converge->easeOutTime = FADE_PHASE_FADE_TIME;
-    fadeInEffects.converge->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
-    fadeInEffectInstances.push_back({fadeInEffects.converge, FADE_CONVERGE_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
+    fadeInEffects.displace2 = timeline->emplaceEffectInstance<HueDisplace2Effect>(1u);
+    fadeInEffects.displace2->enabled = false;
+    fadeInEffects.displace2->easeInTime = FADE_PHASE_TIME;
+    fadeInEffects.displace2->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.displace2->easeOutTime = FADE_PHASE_FADE_TIME;
+    fadeInEffects.displace2->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.displace2->distance = 0.f;
+    fadeInEffects.displace2->scaleByValue = 0.f;
+    fadeInEffects.displace2->directionOffset = 0.f;
+    fadeInEffects.displace2->rotate = 0.f;
+    fadeInEffectInstances.push_back({fadeInEffects.displace2, FADE_DISPLACE2_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
+
+    fadeInEffects.convergePoint = timeline->emplaceEffectInstance<ConvergePoint2Effect>(1u);
+    fadeInEffects.convergePoint->easeInTime = FADE_PHASE_TIME;
+    fadeInEffects.convergePoint->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.convergePoint->easeOutTime = FADE_PHASE_FADE_TIME;
+    fadeInEffects.convergePoint->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffectInstances.push_back({fadeInEffects.convergePoint, FADE_CONVERGE_POINT_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
+
+    fadeInEffects.convergeCircle = timeline->emplaceEffectInstance<ConvergeCircle2Effect>(1u);
+    fadeInEffects.convergeCircle->enabled = false;
+    fadeInEffects.convergeCircle->easeInTime = FADE_PHASE_TIME;
+    fadeInEffects.convergeCircle->easeInFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.convergeCircle->easeOutTime = FADE_PHASE_FADE_TIME;
+    fadeInEffects.convergeCircle->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
+    fadeInEffects.convergeCircle->radius = .8f;
+    fadeInEffects.convergeCircle->rotationSpeed = 0.f;
+    fadeInEffectInstances.push_back({fadeInEffects.convergeCircle, FADE_CONVERGE_CIRCLE_BEGIN_OFFSET, FADE_PHASE_FADE_TIME});
 
 #if WITH_EDIT_TOOLS
+    TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, &fadeInEffects.displace->enabled, "group='displace' label='enabled'");
     TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &FADE_DISPLACE_BEGIN_OFFSET, "group='displace' label='begin offset'");
     TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace->easeInTime, "group='displace' label='ease in time'");
     TwAddVarRW(bar, NULL, TW_TYPE_INT32, &fadeInEffects.displace->easeInFunction, "group='displace' label='ease in func'");
@@ -118,14 +143,37 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace->directionOffset, "group='displace' label='directionOffset'");
     TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace->rotate, "group='displace' label='rotate'");
 
-    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &FADE_CONVERGE_BEGIN_OFFSET, "group='converge' label='begin offset'");
-    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.converge->easeInTime, "group='converge' label='ease in time'");
-    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &fadeInEffects.converge->easeInFunction, "group='converge' label='ease in func'");
-    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.converge->easeOutTime, "group='converge' label='ease out time'");
-    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &fadeInEffects.converge->easeOutFunction, "group='converge' label='ease out func'");
+    TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, &fadeInEffects.displace2->enabled, "group='displace2' label='enabled'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &FADE_DISPLACE2_BEGIN_OFFSET, "group='displace2' label='begin offset'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace2->easeInTime, "group='displace2' label='ease in time'");
+    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &fadeInEffects.displace2->easeInFunction, "group='displace2' label='ease in func'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace2->easeOutTime, "group='displace2' label='ease out time'");
+    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &fadeInEffects.displace2->easeOutFunction, "group='displace2' label='ease out func'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace2->distance, "group='displace2' label='distance'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace2->scaleByValue, "group='displace2' label='scaleByValue'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace2->directionOffset, "group='displace2' label='directionOffset'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.displace2->rotate, "group='displace2' label='rotate'");
+
+    TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, &fadeInEffects.convergePoint->enabled, "group='converge point' label='enabled'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &FADE_CONVERGE_POINT_BEGIN_OFFSET, "group='converge point' label='begin offset'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.convergePoint->easeInTime, "group='converge point' label='ease in time'");
+    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &fadeInEffects.convergePoint->easeInFunction, "group='converge point' label='ease in func'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.convergePoint->easeOutTime, "group='converge point' label='ease out time'");
+    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &fadeInEffects.convergePoint->easeOutFunction, "group='converge point' label='ease out func'");
+
+    TwAddVarRW(bar, NULL, TW_TYPE_BOOLCPP, &fadeInEffects.convergeCircle->enabled, "group='converge circle' label='enabled'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &FADE_CONVERGE_CIRCLE_BEGIN_OFFSET, "group='converge circle' label='begin offset'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.convergeCircle->easeInTime, "group='converge circle' label='ease in time'");
+    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &fadeInEffects.convergeCircle->easeInFunction, "group='converge circle' label='ease in func'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.convergeCircle->easeOutTime, "group='converge circle' label='ease out time'");
+    TwAddVarRW(bar, NULL, TW_TYPE_INT32, &fadeInEffects.convergeCircle->easeOutFunction, "group='converge circle' label='ease out func'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.convergeCircle->radius, "group='converge circle' label='radius'");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &fadeInEffects.convergeCircle->rotationSpeed, "group='converge circle' label='rotation speed'");
 
     TwDefine("randomizer/displace group='fade phase'");
-    TwDefine("randomizer/converge group='fade phase'");
+    TwDefine("randomizer/displace2 group='fade phase'");
+    TwDefine("randomizer/'converge point' group='fade phase'");
+    TwDefine("randomizer/'converge circle' group='fade phase'");
 #endif
   }
 
@@ -134,7 +182,9 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     auto it = fadeInEffectInstances.cbegin();
 
     fadeOutEffectInstances.push_back({timeline->emplaceEffectInstance<HueDisplace2Effect>(1u), &*it++});
+    fadeOutEffectInstances.push_back({timeline->emplaceEffectInstance<HueDisplace2Effect>(1u), &*it++});
     fadeOutEffectInstances.push_back({timeline->emplaceEffectInstance<ConvergePoint2Effect>(1u), &*it++});
+    fadeOutEffectInstances.push_back({timeline->emplaceEffectInstance<ConvergeCircle2Effect>(1u), &*it++});
 
     mirrorFadeOutEffects();
   }
@@ -145,6 +195,8 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
 
 void ReactionTimelineRandomizer::mirrorFadeOutEffects() {
   for(auto &i : fadeOutEffectInstances) {
+    i.i->enabled = i.base->i->enabled;
+
     auto easeInOut = dynamic_cast<IEaseInOutEffect*>(i.i);
     if(easeInOut) {
       auto base = dynamic_cast<IEaseInOutEffect*>(i.base->i);
@@ -171,6 +223,15 @@ void ReactionTimelineRandomizer::mirrorFadeOutEffects() {
     if(convergePoint2) {
       auto base = dynamic_cast<ConvergePoint2Effect*>(i.base->i);
       if(!base) throw "type mismatch in mirrorFadeOutEffects";
+    }
+
+    auto convergeCircle2 = dynamic_cast<ConvergeCircle2Effect*>(i.i);
+    if(convergeCircle2) {
+      auto base = dynamic_cast<ConvergeCircle2Effect*>(i.base->i);
+      if(!base) throw "type mismatch in mirrorFadeOutEffects";
+
+      convergeCircle2->radius = base->radius;
+      convergeCircle2->rotationSpeed = base->rotationSpeed;
     }
   }
 }
