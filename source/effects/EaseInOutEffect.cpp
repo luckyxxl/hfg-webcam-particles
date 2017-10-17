@@ -63,7 +63,7 @@ float IEaseInOutEffect::getEase(const RenderProps &props) const {
   const float t = glm::fract((props.state.clock.getTime() - timeBegin) / period);
 
   const float easeIn = calcEaseFunction(easeInFunction, (t / easeInT));
-  const float easeOut = calcEaseFunction(easeInFunction, 1.f - ((t - (1.f - easeOutT)) / easeOutT));
+  const float easeOut = calcEaseFunction(easeOutFunction, 1.f - ((t - (1.f - easeOutT)) / easeOutT));
 
   return glm::min(easeIn, easeOut);
 }
