@@ -53,6 +53,7 @@ void ReduceParticleCountEffect::registerEffect(EffectRegistrationData &data) con
 
     if((gl_VertexID - pixelPosition.y * 8) % ${amount} != 0) {
       visibility *= 1. - ease;
+      pointSize *= 1. - ease;
     }
   }
   )glsl")
