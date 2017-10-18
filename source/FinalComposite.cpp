@@ -34,9 +34,9 @@ void FinalComposite::create(const graphics::ScreenRectBuffer *rectangle) {
       // https://en.wikipedia.org/wiki/Squircle
       // https://thatsmaths.com/2016/07/14/squircles/  (Eq. 3)
       float s = sin(2 * a);
-      float x = length(screenCoord) - s * s * .15;
+      float x = length(screenCoord) - s * s * .25;
 
-      const float blendStart = 0.8;
+      const float blendStart = 0.7;
       const float blendEnd = 0.95;
 
       // linear ramp from blend start to blend end
