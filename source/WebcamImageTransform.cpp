@@ -16,7 +16,7 @@ void WebcamImageTransform::create(const graphics::ScreenRectBuffer *rectangle,
   // column-major!!!
   transform = glm::mat3(-.7f, 0.f, 0.f,
                         0.f, -.7f * overscan, 0.f,
-                        1.f, .8f, 1.f);
+                        .85f, .8f, 1.f);
   inverseTransform = glm::inverse(transform);
 
   static const char *vertexShaderSource = R"glsl(
