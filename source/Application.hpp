@@ -56,6 +56,9 @@ private:
   ParticleRenderer standbyParticleRenderer;
   ParticleRenderer reactionParticleRenderer;
 
+  ParticleRenderer::GlobalState backgroundParticleRendererGlobalState;
+  ParticleRenderer backgroundParticleRenderer;
+
   enum class ReactionState {
     Inactive,
     FinishStandbyTimeline,
@@ -73,6 +76,7 @@ private:
   graphics::Framebuffer particleSourceFramebuffer;
 
   graphics::Framebuffer particleOutputFramebuffer;
+  graphics::Framebuffer backgroundParticleOutputFramebuffer;
 
   FinalComposite finalComposite;
 
