@@ -29,6 +29,9 @@ bool SampleLibrary::create(std::default_random_engine &random,
   loadSample("W18");
   loadSample("W19");
   loadSample("W20");
+  loadSample("intro01");
+  loadSample("outro01");
+  loadSample("glitch");
 
   //TODO: check that all samples are loaded correctly
   return true;
