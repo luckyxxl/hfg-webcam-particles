@@ -399,7 +399,7 @@ void ParticleRenderer::enableSound(GlobalState &globalState) {
                                                *globalState.random);
 
   timeline->forEachInstance([&](const IEffect &i) {
-    if(i.enabled) i.registerEffectSound(registrationData);
+    if(i.enabled && i.soundEnabled) i.registerEffectSound(registrationData);
   });
 }
 

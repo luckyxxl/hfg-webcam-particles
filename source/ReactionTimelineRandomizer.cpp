@@ -207,6 +207,10 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     mirrorFadeOutEffects();
   }
 
+  for(auto i : wholeShowEffectInstances) i.i->soundEnabled = false;
+  for(auto i : glitchEffectInstances) i.i->soundEnabled = false;
+  for(auto i : fadeInEffectInstances) i.i->soundEnabled = false;
+  for(auto i : fadeOutEffectInstances) i.i->soundEnabled = false;
 
   return timeline;
 }
