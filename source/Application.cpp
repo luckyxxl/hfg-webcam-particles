@@ -329,8 +329,8 @@ void Application::update(float dt) {
     soundRenderer->play(sampleLibrary.getSample("outro01"), sound::Renderer::PlayParameters().setStartDelay(result.fadeOutBegin));
 
     if(result.glitchLength > 0.f) {
-      //soundRenderer->glitch(result.glitchBegin, result.glitchLength, std::uniform_real_distribution<double>(25., 80.)(random));
-      soundRenderer->play(sampleLibrary.getSample("glitch"), sound::Renderer::PlayParameters().setStartDelay(result.glitchBegin));
+      soundRenderer->glitch(result.glitchBegin, result.glitchLength, std::uniform_real_distribution<double>(25., 80.)(random));
+      //soundRenderer->play(sampleLibrary.getSample("glitch"), sound::Renderer::PlayParameters().setStartDelay(result.glitchBegin));
     }
 
     reactionState = ReactionState::RenderReactionTimeline;
