@@ -20,6 +20,7 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -DOPENGL_D
 set(SOURCE_FILES
   source/effects/AccumulationEffect.cpp
   source/effects/AccumulationEffect.hpp
+  source/effects/AllEffects.hpp
   source/effects/ConvergeCircle2Effect.cpp
   source/effects/ConvergeCircle2Effect.hpp
   source/effects/ConvergeCircleEffect.cpp
