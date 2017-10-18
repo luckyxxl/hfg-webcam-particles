@@ -28,7 +28,6 @@ private:
   struct {
     HueDisplace2Effect *displace;
     HueDisplace2Effect *displace2;
-    ConvergePoint2Effect *convergePoint;
     ConvergeCircle2Effect *convergeCircle;
   } fadeInEffects;
 
