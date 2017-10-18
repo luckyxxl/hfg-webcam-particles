@@ -244,9 +244,11 @@ static bool isEmptyEffect(const IEffect *i) {
           || !strcmp(i->getName(), "ParticleSpacingEffect");
 }
 
-void ReactionTimelineRandomizer::randomize(std::default_random_engine &random) {
-  if(randomEffectInstances.empty()) return; // fix debugging :)
+ReactionTimelineRandomizer::RandomizeResult ReactionTimelineRandomizer::randomize(std::default_random_engine &random) {
+  RandomizeResult result;
+  if(randomEffectInstances.empty()) return result; // fix debugging :)
 
+  result.fadeInBegin = 0.f;
   for(auto i : fadeInEffectInstances) {
     i.i->timeBegin = i.timeBeginOffset;
     i.i->timeEnd = FADE_PHASE_TIME + i.timeEndOffset;
@@ -333,7 +335,8 @@ void ReactionTimelineRandomizer::randomize(std::default_random_engine &random) {
 
 
   for(auto i : glitchEffectInstances) {
-    i.i->enabled = std::bernoulli_distribution(.25)(random);
+    //i.i->enabled = std::bernoulli_distribution(.25)(random);
+    i.i->enabled = std::bernoulli_distribution(1.)(random);
 
     const auto length = std::uniform_real_distribution<float>(500.f, 1000.f)(random);
     i.i->timeBegin = std::uniform_real_distribution<float>(randomStart, randomStart + randomLength - length)(random);
@@ -343,6 +346,13 @@ void ReactionTimelineRandomizer::randomize(std::default_random_engine &random) {
     ramdomizeGlitchConfig(i.i);
   }
 
+  assert(glitchEffectInstances.size() == 1u);
+  if(glitchEffectInstances[0u].i->enabled) {
+    result.glitchBegin = glitchEffectInstances[0u].i->timeBegin;
+    result.glitchLength = glitchEffectInstances[0u].i->timeEnd - glitchEffectInstances[0u].i->timeBegin;
+  }
+
+  result.fadeOutBegin = randomStart + randomLength;
   for(auto i : fadeOutEffectInstances) {
     i.i->timeBegin = randomStart + randomLength - i.base->timeEndOffset;
     i.i->timeEnd = randomStart + randomLength + FADE_PHASE_TIME - i.base->timeBeginOffset;
@@ -352,6 +362,8 @@ void ReactionTimelineRandomizer::randomize(std::default_random_engine &random) {
     i.i->timeBegin = i.timeOffset;
     i.i->timeEnd = 2 * FADE_PHASE_TIME + randomLength - i.timeOffset;
   }
+
+  return result;
 }
 
 #if WITH_EDIT_TOOLS

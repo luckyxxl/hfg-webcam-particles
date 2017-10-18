@@ -320,10 +320,13 @@ void Application::update(float dt) {
 
     std::cout << "start reaction\n";
 
-    reactionTimelineRandomizer.randomize(random);
+    auto result = reactionTimelineRandomizer.randomize(random);
     reactionParticleRenderer.refreshPeriod();
     reactionParticleRenderer.getClock().play();
     reactionParticleRenderer.enableSound(particleRendererGlobalState);
+
+    if(result.glitchLength > 0.f)
+      soundRenderer->glitch(result.glitchBegin, result.glitchLength, std::uniform_real_distribution<double>(25., 80.)(random));
 
     reactionState = ReactionState::RenderReactionTimeline;
   }

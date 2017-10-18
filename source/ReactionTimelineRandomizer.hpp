@@ -12,7 +12,12 @@ class ConvergeCircle2Effect;
 class ReactionTimelineRandomizer {
 public:
   std::unique_ptr<Timeline> createTimeline(EffectRegistry *effectRegistry);
-  void randomize(std::default_random_engine &random);
+
+  struct RandomizeResult {
+    float fadeInBegin = 0.f, fadeOutBegin = 60000.f;
+    float glitchBegin = 0.f, glitchLength = -1.f;
+  };
+  RandomizeResult randomize(std::default_random_engine &random);
 
 #if WITH_EDIT_TOOLS
   void editUpdate();
