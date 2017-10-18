@@ -12,6 +12,17 @@
 constexpr uint32_t particles_width = 1280u, particles_height = 800u;
 constexpr auto randomTrackIndex = 1u; // all other effects are on the default track (0)
 
+#if WITH_EDIT_TOOLS
+#define constexpr static
+#endif
+
+constexpr auto BACKGROUND_VISIBILITY = .2f;
+constexpr auto BACKGROUND_FADE_TIME = 10000.f;
+
+#if WITH_EDIT_TOOLS
+#undef constexpr
+#endif
+
 bool Application::create(Resources *resources, graphics::Window *window,
                          sound::Renderer *soundRenderer) {
   this->window = window;
@@ -35,6 +46,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   TwWindowSize(screen_width, screen_height);
 #endif
 
+  effectRegistry.registerEffect<BackgroundDifferenceGlowEffect>();
   effectRegistry.registerEffect<ConvergeCircle2Effect>();
   effectRegistry.registerEffect<ConvergeCircleEffect>();
   effectRegistry.registerEffect<ConvergePoint2Effect>();
@@ -72,6 +84,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   overlayCompose.create(&screenRectBuffer);
 
   particleRendererGlobalState.create(soundRenderer, &sampleLibrary, &random, &screenRectBuffer, screen_width, screen_height);
+  backgroundParticleRendererGlobalState.create(soundRenderer, &sampleLibrary, &random, &screenRectBuffer, screen_width, screen_height);
 
   {
     auto timeline = std::make_unique<Timeline>(&effectRegistry);
@@ -93,11 +106,30 @@ bool Application::create(Resources *resources, graphics::Window *window,
     reactionParticleRenderer.getClock().pause();
   }
 
+  {
+    auto timeline = std::make_unique<Timeline>(&effectRegistry);
+
+    auto hueDisplace = timeline->emplaceEffectInstance<HueDisplaceEffect>();
+    hueDisplace->timeBegin = 0.f;
+    hueDisplace->timeEnd = 4000.f;
+    hueDisplace->distance = .1f;
+    hueDisplace->scaleByForegroundMask = 1.f;
+
+    auto glow = timeline->emplaceEffectInstance<BackgroundDifferenceGlowEffect>();
+    glow->timeBegin = hueDisplace->timeBegin;
+    glow->timeEnd = hueDisplace->timeEnd;
+
+    backgroundParticleRenderer.setTimeline(backgroundParticleRendererGlobalState, std::move(timeline));
+
+    backgroundParticleRenderer.getClock().play();
+  }
+
   webcamInputTexture.create(imageProvider.width(), imageProvider.height());
   webcamFramebuffer.create(particles_width, particles_height);
   backgroundFramebuffer.create(particles_width, particles_height);
   particleSourceFramebuffer.create(particles_width, particles_height);
   particleOutputFramebuffer.create(screen_width, screen_height);
+  backgroundParticleOutputFramebuffer.create(screen_width, screen_height);
 
   finalComposite.create(&screenRectBuffer);
 
@@ -124,6 +156,9 @@ bool Application::create(Resources *resources, graphics::Window *window,
     TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, webcamImageTransform.editGetBrightnessMulP(), "group='webcam image' label='brightness *'");
     TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, webcamImageTransform.editGetBrightnessAddP(), "group='webcam image' label='brightness +'");
     TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, webcamImageTransform.editGetSaturationP(), "group='webcam image' label=saturation");
+
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &BACKGROUND_VISIBILITY, "group='background' label=visibility");
+    TwAddVarRW(bar, NULL, TW_TYPE_FLOAT, &BACKGROUND_FADE_TIME, "group='background' label='fade time'");
   }
 #endif
 
@@ -133,6 +168,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
 void Application::destroy() {
   finalComposite.destroy();
 
+  backgroundParticleOutputFramebuffer.destroy();
   particleOutputFramebuffer.destroy();
   particleSourceFramebuffer.destroy();
   backgroundFramebuffer.destroy();
@@ -143,6 +179,7 @@ void Application::destroy() {
   standbyParticleRenderer.reset();
 
   particleRendererGlobalState.destroy();
+  backgroundParticleRendererGlobalState.destroy();
 
   overlayCompose.destroy();
 
@@ -168,8 +205,9 @@ void Application::reshape(uint32_t width, uint32_t height) {
   screen_height = height;
 
   particleOutputFramebuffer.resize(width, height);
-  particleRendererGlobalState.resize(particleOutputFramebuffer.getWidth(),
-    particleOutputFramebuffer.getHeight());
+  backgroundParticleOutputFramebuffer.resize(width, height);
+  particleRendererGlobalState.resize(particleOutputFramebuffer.getWidth(), particleOutputFramebuffer.getHeight());
+  backgroundParticleRendererGlobalState.resize(backgroundParticleOutputFramebuffer.getWidth(), backgroundParticleOutputFramebuffer.getHeight());
 }
 
 bool Application::handleEvents() {
@@ -360,6 +398,7 @@ void Application::update(float dt) {
 
   standbyParticleRenderer.update(particleRendererGlobalState, dt);
   reactionParticleRenderer.update(particleRendererGlobalState, dt);
+  backgroundParticleRenderer.update(backgroundParticleRendererGlobalState, dt);
 }
 
 void Application::render() {
@@ -391,11 +430,27 @@ void Application::render() {
     }
 #endif
     reactionParticleRenderer.render(particleRendererGlobalState, parameters);
+
+    {
+      RendererParameters parameters(&particleSourceFramebuffer.getTexture(), &backgroundFramebuffer.getTexture(),
+                                &backgroundParticleOutputFramebuffer);
+      backgroundParticleRenderer.render(particleRendererGlobalState, parameters);
+    }
   } else {
     standbyParticleRenderer.render(particleRendererGlobalState, parameters);
   }
 
-  finalComposite.draw(particleOutputFramebuffer.getTexture(), screen_width, screen_height);
+  {
+    auto backgroundVisibility = 0.f;
+
+    if(reactionState == ReactionState::RenderReactionTimeline) {
+      const auto time = reactionParticleRenderer.getClock().getTime();
+      const auto period = reactionParticleRenderer.getClock().getPeriod();
+      backgroundVisibility = glm::clamp(glm::min(time, (period - time)) / BACKGROUND_FADE_TIME, 0.f, 1.f) * BACKGROUND_VISIBILITY;
+    }
+
+    finalComposite.draw(particleOutputFramebuffer.getTexture(), backgroundParticleOutputFramebuffer.getTexture(), backgroundVisibility, screen_width, screen_height);
+  }
 
   {
     GLenum error = glGetError();

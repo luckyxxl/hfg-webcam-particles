@@ -1,4 +1,5 @@
 #include "EffectRegistry.hpp"
+#include "BackgroundDifferenceGlowEffect.hpp"
 #include "ConvergeCircle2Effect.hpp"
 #include "ConvergeCircleEffect.hpp"
 #include "ConvergePoint2Effect.hpp"

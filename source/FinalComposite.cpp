@@ -22,6 +22,8 @@ void FinalComposite::create(const graphics::ScreenRectBuffer *rectangle) {
   static const char *fragmentShaderSource = R"glsl(
     #version 330 core
     uniform sampler2D source;
+    uniform sampler2D background;
+    uniform float backgroundVisibility;
 
     in vec2 screenCoord;
     in vec2 texcoord;
@@ -47,25 +49,31 @@ void FinalComposite::create(const graphics::ScreenRectBuffer *rectangle) {
 
     void main() {
       //vec3 c = texture(source, texcoord).rgb;
-      vec3 c = texelFetch(source, ivec2(gl_FragCoord.xy), 0).rgb;
-      frag_color = vec4(c * vignette(screenCoord), 0.);
+      vec4 b = texelFetch(background, ivec2(gl_FragCoord.xy), 0);
+      vec4 c = texelFetch(source, ivec2(gl_FragCoord.xy), 0);
+      frag_color = vec4(mix(c.rgb, b.rgb, (1 - c.a) * backgroundVisibility) * vignette(screenCoord), 0.);
     }
   )glsl";
 
   pipeline.create(vertexShaderSource, fragmentShaderSource, graphics::Pipeline::BlendMode::None);
 
   pipeline_source_location = pipeline.getUniformLocation("source");
+  pipeline_background_location = pipeline.getUniformLocation("background");
+  pipeline_backgroundVisibility_location = pipeline.getUniformLocation("backgroundVisibility");
 }
 
 void FinalComposite::destroy() {
   pipeline.destroy();
 }
 
-void FinalComposite::draw(graphics::Texture &source, uint32_t screen_width, uint32_t screen_height) {
+void FinalComposite::draw(graphics::Texture &source, graphics::Texture &background, float backgroundVisibility, uint32_t screen_width, uint32_t screen_height) {
   graphics::Framebuffer::unbind();
   glViewport(0, 0, screen_width, screen_height);
   pipeline.bind();
   source.bind(0u);
   glUniform1i(pipeline_source_location, 0u);
+  background.bind(1u);
+  glUniform1i(pipeline_background_location, 1u);
+  glUniform1f(pipeline_backgroundVisibility_location, backgroundVisibility);
   rectangle->draw();
 }
