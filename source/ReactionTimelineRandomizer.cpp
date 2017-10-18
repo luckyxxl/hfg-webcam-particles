@@ -13,7 +13,7 @@ constexpr auto WHOLE_SHOW_REDUCE_COUNT_TIME_OFFSET = 18000.f;
 constexpr auto WHOLE_SHOW_SIZE_MODIFY_TIME_OFFSET = 18000.f;
 
 constexpr auto FADE_PHASE_TIME = 28000.f;
-constexpr auto FADE_PHASE_FADE_TIME = 10000.f;
+constexpr auto FADE_PHASE_FADE_TIME = 2000.f;
 
 constexpr auto RANDOM_PHASE_MIN_LENGTH = 15000.f;
 constexpr auto RANDOM_PHASE_MAX_LENGTH = 45000.f;
@@ -62,8 +62,8 @@ std::unique_ptr<Timeline> ReactionTimelineRandomizer::createTimeline(EffectRegis
     wholeShowEffectInstances.push_back({wholeShowEffects.sizeModify, WHOLE_SHOW_SIZE_MODIFY_TIME_OFFSET});
 
     wholeShowEffects.convergeCircle = timeline->emplaceEffectInstance<ConvergeCircle2Effect>(2u);
-    wholeShowEffects.convergeCircle->easeInTime = wholeShowEffects.convergeCircle->easeOutTime = 1000.f;
-    wholeShowEffects.convergeCircle->easeInFunction = wholeShowEffects.convergeCircle->easeOutFunction = IEaseInOutEffect::EaseFunction::Linear;
+    wholeShowEffects.convergeCircle->easeInTime = wholeShowEffects.convergeCircle->easeOutTime = 2000.f;
+    wholeShowEffects.convergeCircle->easeInFunction = wholeShowEffects.convergeCircle->easeOutFunction = IEaseInOutEffect::EaseFunction::SineInOut;
     wholeShowEffects.convergeCircle->radius = .5f;
     wholeShowEffectInstances.push_back({wholeShowEffects.convergeCircle, FADE_PHASE_TIME});
 
