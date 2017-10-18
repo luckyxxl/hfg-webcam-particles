@@ -60,11 +60,17 @@ public:
     return play(sampleBuffer, PlayParameters());
   }
 
+  void glitch(double startDelay, double length, double bufferLength);
+
 private:
   SDL_AudioDeviceID audioDevice;
   SDL_AudioSpec audioSpec;
 
   std::array<Voice, 16> voices;
+
+  std::atomic<bool> glitchActive;
+  int32_t glitchSample, glitchLengthSamples, glitchBufferLengthSamples;
+  std::vector<float> glitchBuffer; // pre-allocated (using resize) with maximum glitchBufferLength
 
   void audioCallback(Uint8 *stream, int len);
   static void sdlAudioCallback(void *userdata, Uint8 *stream, int len);

@@ -211,6 +211,9 @@ bool Application::handleEvents() {
       case SDL_SCANCODE_5:
       soundRenderer->play(&whooshSamples[4]);
       break;
+      case SDL_SCANCODE_G:
+      soundRenderer->glitch(1000.f, 1000.f, 50.f);
+      break;
       */
       case SDL_SCANCODE_F1:
       // screenshot

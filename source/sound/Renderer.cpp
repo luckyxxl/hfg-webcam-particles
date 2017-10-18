@@ -38,6 +38,8 @@ bool Renderer::create() {
     voice.state = Voice::State::Empty;
   }
 
+  glitchBuffer.resize(audioSpec.freq * 2); // 1s stereo
+
   SDL_PauseAudioDevice(audioDevice, 0);
 
   return true;
@@ -104,6 +106,19 @@ Voice *Renderer::play(const SampleBuffer *sampleBuffer,
   std::cout << "out of voices\n";
 
   return nullptr;
+}
+
+void Renderer::glitch(double startDelay, double length, double bufferLength) {
+  if(glitchActive.load(std::memory_order_acquire)) return;
+
+  glitchSample = -startDelay * audioSpec.freq / 1000.;
+  glitchLengthSamples = length * audioSpec.freq / 1000.;
+  glitchBufferLengthSamples = std::min<int32_t>(bufferLength  * audioSpec.freq / 1000., glitchBuffer.size() / 2u);
+
+  // shouldn't be a problem, but you won't hear any difference if this condition is false
+  assert(glitchBufferLengthSamples < glitchLengthSamples);
+
+  glitchActive.store(true, std::memory_order_release);
 }
 
 void Renderer::sdlAudioCallback(void *userdata, Uint8 *stream, int len) {
@@ -187,6 +202,34 @@ void Renderer::audioCallback(Uint8 *stream, int len) {
   }
 
     voice.cursor.store(cursorValue);
+  }
+
+  if(glitchActive.load(std::memory_order_acquire)) {
+    int32_t bufferSample = 0;
+
+    if(glitchSample < 0) {
+      auto o = std::min(-glitchSample, bufferLengthSamples);
+      glitchSample += o;
+      bufferSample += o;
+    }
+
+    if(glitchSample >= 0) {
+      for(; glitchSample < glitchBufferLengthSamples && bufferSample < bufferLengthSamples; ++glitchSample, ++bufferSample) {
+        glitchBuffer[2*glitchSample+0] = buffer[2*bufferSample+0];
+        glitchBuffer[2*glitchSample+1] = buffer[2*bufferSample+1];
+      }
+
+      auto gi = glitchSample % glitchBufferLengthSamples;
+      for(; glitchSample < glitchLengthSamples && bufferSample < bufferLengthSamples; ++glitchSample, ++bufferSample) {
+        buffer[2*bufferSample+0] = glitchBuffer[2*gi+0];
+        buffer[2*bufferSample+1] = glitchBuffer[2*gi+1];
+        if(++gi == glitchBufferLengthSamples) gi = 0;
+      }
+
+      if(glitchSample == glitchLengthSamples) {
+        glitchActive.store(false, std::memory_order_release);
+      }
+    }
   }
 
   for(auto i=0; i<bufferLengthSamples*2; ++i) {
