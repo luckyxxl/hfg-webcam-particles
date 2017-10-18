@@ -33,7 +33,6 @@ private:
   struct {
     HueDisplace2Effect *displace;
     HueDisplace2Effect *displace2;
-    ConvergeCircle2Effect *convergeCircle;
   } fadeInEffects;
 
   struct WholeShowElement {
