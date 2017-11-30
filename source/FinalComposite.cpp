@@ -51,7 +51,7 @@ void FinalComposite::create(const graphics::ScreenRectBuffer *rectangle) {
       //vec3 c = texture(source, texcoord).rgb;
       vec4 b = texelFetch(background, ivec2(gl_FragCoord.xy), 0);
       vec4 c = texelFetch(source, ivec2(gl_FragCoord.xy), 0);
-      frag_color = vec4(mix(c.rgb, b.rgb, (1 - c.a) * backgroundVisibility) * vignette(screenCoord), 0.);
+      frag_color = vec4(mix(c.rgb, b.rgb, (1 - c.a) * backgroundVisibility) /* * vignette(screenCoord) */, 0.);
     }
   )glsl";
 
