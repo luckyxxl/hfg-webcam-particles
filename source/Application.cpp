@@ -402,7 +402,7 @@ void Application::update(float dt) {
 }
 
 void Application::render() {
-  faceBlitter.draw();
+  // faceBlitter.draw();
 
   // compose webcam and overlay into particleSourceFramebuffer
   {
