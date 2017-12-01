@@ -79,9 +79,9 @@ bool Application::create(Resources *resources, graphics::Window *window,
   screenRectBuffer.create();
 
   webcamImageTransform.create(&screenRectBuffer, imageProvider.width(), imageProvider.height(), particles_width, particles_height);
-  faceBlitter.create(&screenRectBuffer, particles_width, particles_height);
+  // faceBlitter.create(&screenRectBuffer, particles_width, particles_height);
 
-  overlayCompose.create(&screenRectBuffer);
+  // overlayCompose.create(&screenRectBuffer);
 
   particleRendererGlobalState.create(soundRenderer, &sampleLibrary, &random, &screenRectBuffer, screen_width, screen_height);
   backgroundParticleRendererGlobalState.create(soundRenderer, &sampleLibrary, &random, &screenRectBuffer, screen_width, screen_height);
@@ -127,7 +127,7 @@ bool Application::create(Resources *resources, graphics::Window *window,
   webcamInputTexture.create(imageProvider.width(), imageProvider.height());
   webcamFramebuffer.create(particles_width, particles_height);
   backgroundFramebuffer.create(particles_width, particles_height);
-  particleSourceFramebuffer.create(particles_width, particles_height);
+  // particleSourceFramebuffer.create(particles_width, particles_height);
   particleOutputFramebuffer.create(screen_width, screen_height);
   backgroundParticleOutputFramebuffer.create(screen_width, screen_height);
 
@@ -170,7 +170,7 @@ void Application::destroy() {
 
   backgroundParticleOutputFramebuffer.destroy();
   particleOutputFramebuffer.destroy();
-  particleSourceFramebuffer.destroy();
+  // particleSourceFramebuffer.destroy();
   backgroundFramebuffer.destroy();
   webcamFramebuffer.destroy();
   webcamInputTexture.destroy();
@@ -181,9 +181,9 @@ void Application::destroy() {
   particleRendererGlobalState.destroy();
   backgroundParticleRendererGlobalState.destroy();
 
-  overlayCompose.destroy();
+  // overlayCompose.destroy();
 
-  faceBlitter.destroy();
+  // faceBlitter.destroy();
   webcamImageTransform.destroy();
 
   screenRectBuffer.destroy();
@@ -287,11 +287,13 @@ bool Application::handleEvents() {
   return true;
 }
 
+/*
 static glm::vec2 sampleCircle(std::default_random_engine &random) {
   float a = std::uniform_real_distribution<float>(0.f, 2.f * PI)(random);
   float r = std::sqrt(std::uniform_real_distribution<float>(.5f, 1.f)(random));
   return glm::vec2(r * std::cos(a), r * std::sin(a));
 }
+*/
 
 void Application::update(float dt) {
 #if WITH_EDIT_TOOLS
@@ -316,6 +318,7 @@ void Application::update(float dt) {
       && (reactionState == ReactionState::Inactive || reactionState == ReactionState::FinishStandbyTimeline)
       && standbyBlitTimeout <= 0.f) {
 
+      /*
       {
         auto rect = imgData.faces[std::uniform_int_distribution<size_t>(0u, imgData.faces.size()-1u)(random)];
 
@@ -335,6 +338,7 @@ void Application::update(float dt) {
 
         faceBlitter.blit(webcamFramebuffer.getTexture(), faceMin, faceMax, targetMin, targetMax, backgroundFramebuffer.getTexture());
       }
+      */
 
       standbyBlitTimeout = std::normal_distribution<float>(250.f, 100.f)(random);
 
@@ -379,7 +383,7 @@ void Application::update(float dt) {
 
     std::cout << "end reaction\n";
 
-    faceBlitter.clear();
+    // faceBlitter.clear();
 
     standbyParticleRenderer.getClock().enableLooping();
     standbyParticleRenderer.getClock().play();
@@ -394,7 +398,7 @@ void Application::update(float dt) {
     reactionState = ReactionState::Inactive;
   }
 
-  faceBlitter.update(dt);
+  // faceBlitter.update(dt);
 
   standbyParticleRenderer.update(particleRendererGlobalState, dt);
   reactionParticleRenderer.update(particleRendererGlobalState, dt);
@@ -404,6 +408,7 @@ void Application::update(float dt) {
 void Application::render() {
   // faceBlitter.draw();
 
+  /*
   // compose webcam and overlay into particleSourceFramebuffer
   {
     float overlayVisibility = 1.f;
@@ -419,8 +424,9 @@ void Application::render() {
 
     overlayCompose.draw(webcamFramebuffer.getTexture(), faceBlitter.getResultTexture(), overlayVisibility, particleSourceFramebuffer);
   }
+  */
 
-  RendererParameters parameters(&particleSourceFramebuffer.getTexture(), &backgroundFramebuffer.getTexture(),
+  RendererParameters parameters(&webcamFramebuffer.getTexture(), &backgroundFramebuffer.getTexture(),
                                 &particleOutputFramebuffer);
 
   if (reactionState == ReactionState::RenderReactionTimeline) {
@@ -432,7 +438,7 @@ void Application::render() {
     reactionParticleRenderer.render(particleRendererGlobalState, parameters);
 
     {
-      RendererParameters parameters(&particleSourceFramebuffer.getTexture(), &backgroundFramebuffer.getTexture(),
+      RendererParameters parameters(&webcamFramebuffer.getTexture(), &backgroundFramebuffer.getTexture(),
                                 &backgroundParticleOutputFramebuffer);
       backgroundParticleRenderer.render(particleRendererGlobalState, parameters);
     }
