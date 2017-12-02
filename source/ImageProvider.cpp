@@ -59,7 +59,6 @@ void ImageProvider::stop() {
 }
 
 void ImageProvider::webcamThreadFunc() {
-  int frames_without_fd = 0;
   while(!kill_threads) {
     auto assigned = data.startWrite();
 
@@ -79,31 +78,26 @@ void ImageProvider::webcamThreadFunc() {
              static_cast<int>(S.height) == frame.rows);
     }
 #endif
-    if (frames_without_fd >= 4) {
-      frames_without_fd = 0;
-      cv::Mat frame_gray;
-      cv::cvtColor(frame, frame_gray, CV_BGR2GRAY);
-      cv::equalizeHist(frame_gray, frame_gray);
 
-      cv::Mat frame_gray_rot;
-      // TODO I have no idea why everything needs to be rotated clockwise
-      // I would have sworn it needs to be ccw
-      cv::rotate(frame_gray, frame_gray_rot, cv::ROTATE_90_CLOCKWISE);
+    cv::Mat frame_gray;
+    cv::cvtColor(frame, frame_gray, CV_BGR2GRAY);
+    cv::equalizeHist(frame_gray, frame_gray);
 
-      face_cascade.detectMultiScale(frame_gray_rot, faces, 1.1, 4,
-                                    0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
+    cv::Mat frame_gray_rot;
+    // TODO I have no idea why everything needs to be rotated clockwise
+    // I would have sworn it needs to be ccw
+    cv::rotate(frame_gray, frame_gray_rot, cv::ROTATE_90_CLOCKWISE);
+
+    face_cascade.detectMultiScale(frame_gray_rot, faces, 1.1, 4,
+                                  0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
 
 #if 0
-      std::cout << "Faces: " << faces.size() << "\n";
-      for(const auto &f : faces) {
-        cv::Rect f_rot(f.y, frame.rows - f.width - f.x, f.height, f.width);
-        cv::rectangle(frame, f_rot, cv::Scalar(0, 0, 255));
-      }
-#endif
-    } else {
-      faces = {};
-      ++frames_without_fd;
+    std::cout << "Faces: " << faces.size() << "\n";
+    for(const auto &f : faces) {
+      cv::Rect f_rot(f.y, frame.rows - f.width - f.x, f.height, f.width);
+      cv::rectangle(frame, f_rot, cv::Scalar(0, 0, 255));
     }
+#endif
 
     data.finishWrite();
   }
