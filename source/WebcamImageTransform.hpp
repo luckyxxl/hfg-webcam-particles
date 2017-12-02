@@ -32,7 +32,7 @@ private:
   uint32_t input_width, input_height;
   uint32_t output_width, output_height;
 
-  float brightnessMul = 1.8f, brightnessAdd = -.1f, saturation = 2.f;
+  float brightnessMul = 1.0f, brightnessAdd = 0.f, saturation = 1.5f;
 
   glm::mat3 transform, inverseTransform;
 };
