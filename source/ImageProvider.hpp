@@ -4,7 +4,7 @@
 
 struct ImageData {
   cv::Mat webcam_pixels;
-  std::vector<cv::Rect> faces;
+  size_t detected_faces;
 };
 
 class Resources;
@@ -33,4 +33,10 @@ private:
 
   void webcamThreadFunc();
   std::thread webcam_thread;
+
+  ThreadSyncTripleBuffer<cv::Mat> face_detection_data;
+  std::atomic<size_t> detected_faces{0u};
+
+  void faceDetectionThreadFunc();
+  std::thread face_detection_thread;
 };

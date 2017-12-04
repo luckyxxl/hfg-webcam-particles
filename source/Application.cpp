@@ -314,7 +314,7 @@ void Application::update(float dt) {
     std::swap(webcamFramebuffer, backgroundFramebuffer);
     webcamImageTransform.draw(webcamInputTexture, webcamFramebuffer);
 
-    if (!imgData.faces.empty()
+    if (imgData.detected_faces > 0u
       && (reactionState == ReactionState::Inactive || reactionState == ReactionState::FinishStandbyTimeline)
       && standbyBlitTimeout <= 0.f) {
 
