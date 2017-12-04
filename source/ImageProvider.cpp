@@ -84,9 +84,12 @@ void ImageProvider::webcamThreadFunc() {
     cv::equalizeHist(frame_gray, frame_gray);
 
     cv::Mat frame_gray_rot;
-    // TODO I have no idea why everything needs to be rotated clockwise
-    // I would have sworn it needs to be ccw
+#if CV_VERSION_EPOCH < 3 //TODO: not really, cv::rotate came out in 3.3.1 i think
+    cv::transpose(frame_gray, frame_gray_rot);
+    cv::flip(frame_gray_rot, frame_gray_rot, 1);
+#else
     cv::rotate(frame_gray, frame_gray_rot, cv::ROTATE_90_CLOCKWISE);
+#endif
 
     face_cascade.detectMultiScale(frame_gray_rot, faces, 1.1, 4,
                                   0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
