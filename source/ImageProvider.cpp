@@ -41,6 +41,7 @@ bool ImageProvider::start() {
       }
 
       webcam_thread = std::thread([this] { this->webcamThreadFunc(); });
+      face_detection_thread = std::thread([this] { this->faceDetectionThreadFunc(); });
 
       return true;
     }
@@ -53,6 +54,7 @@ void ImageProvider::stop() {
   if(webcam_thread.joinable()) {
     kill_threads = true;
     webcam_thread.join();
+    face_detection_thread.join();
   }
 
   capture.release();
@@ -61,9 +63,10 @@ void ImageProvider::stop() {
 void ImageProvider::webcamThreadFunc() {
   while(!kill_threads) {
     auto assigned = data.startWrite();
+    auto face_detection_frame = face_detection_data.startWrite();
 
     auto &frame = assigned->webcam_pixels;
-    auto &faces = assigned->faces;
+    auto &faces_size = assigned->detected_faces;
 
     if (!capture.isOpened()) {
       return;
@@ -79,7 +82,27 @@ void ImageProvider::webcamThreadFunc() {
     }
 #endif
 
-    cv::Mat frame_gray;
+    faces_size = detected_faces.load(std::memory_order_relaxed);
+    *face_detection_frame = frame;
+
+    face_detection_data.finishWrite();
+    data.finishWrite();
+  }
+}
+
+void ImageProvider::faceDetectionThreadFunc() {
+
+  cv::Mat frame_gray;
+  std::vector<cv::Rect> faces;
+
+  while(!kill_threads) {
+    auto frame_ptr = face_detection_data.startCopyNew();
+    if(!frame_ptr) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      continue;
+    }
+
+    auto frame = *frame_ptr;
 
     cv::cvtColor(frame, frame_gray, CV_BGR2GRAY);
     cv::equalizeHist(frame_gray, frame_gray);
@@ -92,6 +115,6 @@ void ImageProvider::webcamThreadFunc() {
     }
 #endif
 
-    data.finishWrite();
+    detected_faces.store(faces.size(), std::memory_order_relaxed);
   }
 }

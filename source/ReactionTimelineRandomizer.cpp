@@ -13,10 +13,10 @@ constexpr auto WHOLE_SHOW_REDUCE_COUNT_TIME_OFFSET = 18000.f;
 constexpr auto WHOLE_SHOW_SIZE_MODIFY_TIME_OFFSET = 18000.f;
 
 constexpr auto FADE_PHASE_TIME = 28000.f;
-constexpr auto FADE_PHASE_FADE_TIME = 10000.f;
+constexpr auto FADE_PHASE_FADE_TIME = 7500.f;
 
-constexpr auto RANDOM_PHASE_MIN_LENGTH = 15000.f;
-constexpr auto RANDOM_PHASE_MAX_LENGTH = 45000.f;
+constexpr auto RANDOM_PHASE_MIN_LENGTH = 7500.f;
+constexpr auto RANDOM_PHASE_MAX_LENGTH = 22500.f;
 constexpr auto RANDOM_PHASE_MIN_INSTANCE_LENGTH = 5000.f;
 constexpr auto RANDOM_PHASE_REP_P = .3f;
 constexpr auto RANDOM_PHASE_REP_MIN = 10;

@@ -45,9 +45,9 @@ private:
 
   WebcamImageTransform webcamImageTransform;
 
-  FaceBlitter faceBlitter;
+  // FaceBlitter faceBlitter;
 
-  OverlayCompose overlayCompose;
+  // OverlayCompose overlayCompose;
 
   ParticleRenderer::GlobalState particleRendererGlobalState;
 
@@ -73,7 +73,7 @@ private:
   graphics::Framebuffer webcamFramebuffer;
   graphics::Framebuffer backgroundFramebuffer;
 
-  graphics::Framebuffer particleSourceFramebuffer;
+  // graphics::Framebuffer particleSourceFramebuffer;
 
   graphics::Framebuffer particleOutputFramebuffer;
   graphics::Framebuffer backgroundParticleOutputFramebuffer;
