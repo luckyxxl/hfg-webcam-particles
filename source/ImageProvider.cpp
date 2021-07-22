@@ -7,7 +7,7 @@ static const char *face_cascade_xml = "haarcascade_frontalface_alt.xml";
 static const char *eyes_cascade_xml = "haarcascade_eye_tree_eyeglasses.xml";
 
 static cv::Size getFrameSize(cv::VideoCapture &capture) {
-#if CV_VERSION_EPOCH < 3
+#if defined(CV_VERSION_EPOCH)
   int w = capture.get(CV_CAP_PROP_FRAME_WIDTH);
   int h = capture.get(CV_CAP_PROP_FRAME_HEIGHT);
 #else
@@ -30,9 +30,15 @@ bool ImageProvider::create(Resources *resources) {
 bool ImageProvider::start() {
   capture.open(0);
   if (capture.isOpened()) {
+#if defined(CV_VERSION_EPOCH) || CV_VERSION_MAJOR < 3
     capture.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
     capture.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
     capture.set(CV_CAP_PROP_FPS, 30);
+#else
+    capture.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
+    capture.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
+    capture.set(cv::CAP_PROP_FPS, 30);
+#endif
     webcam_size = getFrameSize(capture);
     std::cout << "webcam resolution: " << webcam_size.width << "x" << webcam_size.height << "\n";
     if (webcam_size.width > 0 && webcam_size.height > 0) {
@@ -104,10 +110,19 @@ void ImageProvider::faceDetectionThreadFunc() {
 
     auto frame = *frame_ptr;
 
+#if defined(CV_VERSION_EPOCH) || CV_VERSION_MAJOR < 3
     cv::cvtColor(frame, frame_gray, CV_BGR2GRAY);
+#else
+    cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
+#endif
     cv::equalizeHist(frame_gray, frame_gray);
     face_cascade.detectMultiScale(frame_gray, faces, 1.1, 4,
-                                  0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
+#if defined(CV_VERSION_EPOCH) || CV_VERSION_MAJOR < 3
+                                  0 | CV_HAAR_SCALE_IMAGE,
+#else
+                                  0 | cv::CASCADE_SCALE_IMAGE,
+#endif
+				  cv::Size(30, 30));
 
 #if 0
     for(const auto &f : faces) {

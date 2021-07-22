@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
+cmake_policy(SET CMP0072 OLD) # use legacy opengl libraries (i.e. not GLVND)
+
 project(hfg-webcam-particles LANGUAGES C CXX)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
@@ -123,12 +125,17 @@ else()
   target_compile_definitions(${EXECUTABLE_NAME} PRIVATE WITH_EDIT_TOOLS=0)
 endif()
 
+find_path(HAARCASCADES_DIR haarcascade_frontalface_alt.xml PATHS "${OpenCV_DIR}" /usr/share/opencv /usr/share/opencv${OpenCV_VERSION_MAJOR} PATH_SUFFIXES haarcascades NO_CMAKE_PATH)
+if(NOT HAARCASCADES_DIR)
+	message(SEND_ERROR "cmake haarcascades directory could not be found, try to find it on your system manually and pass it via -DHAARCASCADES_DIR=/path/to/haarcascades")
+endif()
+
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/resource" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy "${OpenCV_DIR}/haarcascades/haarcascade_frontalface_alt.xml" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
+	COMMAND ${CMAKE_COMMAND} -E copy "${HAARCASCADES_DIR}/haarcascade_frontalface_alt.xml" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy "${OpenCV_DIR}/haarcascades/haarcascade_eye_tree_eyeglasses.xml" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
+  COMMAND ${CMAKE_COMMAND} -E copy "${HAARCASCADES_DIR}/haarcascade_eye_tree_eyeglasses.xml" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/resource")
 
 if(APPLE)
   set_target_properties(${EXECUTABLE_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
